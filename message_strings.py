@@ -35,8 +35,8 @@ if pyexe.get_version() < '20131017':
 if pyregf.get_version() < '20130716':
   raise ImportWarning('message_strings.py requires at least pyregf 20130716.')
 
-if pywrc.get_version() < '20131017':
-  raise ImportWarning('message_strings.py requires at least pywrc 20131017.')
+if pywrc.get_version() < '20131027':
+  raise ImportWarning('message_strings.py requires at least pywrc 20131027.')
 
 
 class OSDirectory(object):
@@ -102,7 +102,8 @@ class WindowsPathHelper(object):
       value: the value of the environment variable.
     """
     system_path = self.GetInSystemCase(value, expand_variables=False)
-    self._environment_variables[name] = system_path[len(self._root_path):]
+    self._environment_variables[name.upper()] = system_path[
+        len(self._root_path):]
 
   def GetInSystemCase(self, path, expand_variables=True):
     """Retrieves the path in system specific format.
@@ -131,7 +132,7 @@ class WindowsPathHelper(object):
         if (expand_variables and
             self._PATH_EXPANSION_VARIABLE.match(path_segment)):
           path_segment = self._environment_variables.get(
-              path_segment[1:-1], path_segment)
+              path_segment[1:-1].upper(), path_segment)
 
         directory = OSDirectory(system_path)
         path_segment = directory.GetEntryByNameNoCase(path_segment)
@@ -281,7 +282,7 @@ class RegistryFile(object):
 class MessageResourceFile(object):
   """Object to represent a Windows Message Resource file."""
 
-  _MESSAGE_TABLE_RESOURCE_IDENTIFIER = 0x0b
+  _RESOURCE_IDENTIFIER_MESSAGE_TABLE = 0x0b
 
   def __init__(self):
     """Initializes the Windows Message Resource file."""
@@ -308,6 +309,14 @@ class MessageResourceFile(object):
     self._wrc_stream.set_virtual_address(exe_section.virtual_address)
     self._wrc_stream.open_file_object(exe_section)
 
+    self._wrc_message_table = self._wrc_stream.get_resource_by_identifier(
+        self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
+
+    if not self._wrc_message_table:
+      self._wrc_stream.close()
+      self._exe_file.close()
+      return False
+
     return True
 
   def Close(self):
@@ -331,17 +340,30 @@ class StdoutWriter(object):
     """Closes the output writer object."""
     pass
 
+  def WriteEventLogType(self, event_log_type):
+    """Writes the Event Log provider to the output.
+
+    Args:
+      event_log_type: string containing the Event Log type.
+    """
+    print 'Event Log type: {0:s}'.format(event_log_type)
+
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider to the output.
 
     Args:
       event_log_provider: the Event Log provider.
     """
-    print '{0:s}\t{1:s}\t{2:s}\t{3:s}'.format(
-        event_log_provider.log_type,
-        event_log_provider.log_source,
-        event_log_provider.category_message_files,
+    print 'Source\t\t: {0:s}'.format(
+        event_log_provider.log_source)
+
+    print 'Categories\t: {0:s}'.format(
+        event_log_provider.category_message_files)
+
+    print 'Messages\t: {0:s}'.format(
         event_log_provider.event_message_files)
+
+    print ''
 
 
 def Main():
@@ -404,6 +426,7 @@ def Main():
   registry_file = RegistryFile()
   registry_file.Open(registry_filename)
 
+  # Sort the Event Log providers per type.
   event_log_types = {}
 
   for event_log_provider in registry_file.GetEventLogProviders():
@@ -418,11 +441,33 @@ def Main():
 
     event_log_sources[event_log_provider.log_source] = event_log_provider
 
-    if event_log_provider.event_message_files:
-      for message_filename in event_log_provider.event_message_files:
-        message_filename = path_helper.GetInSystemCase(message_filename)
+  message_file = MessageResourceFile()
 
-    writer.WriteEventLogProvider(event_log_provider)
+  processed_message_filenames = []
+
+  for event_log_type in sorted(event_log_types.keys()):
+    writer.WriteEventLogType(event_log_type)
+    event_log_sources = event_log_types[event_log_type]
+
+    for event_log_source in sorted(event_log_sources.keys()):
+      event_log_provider = event_log_sources[event_log_source]
+
+      writer.WriteEventLogProvider(event_log_provider)
+
+      if event_log_provider.event_message_files:
+        for message_filename in event_log_provider.event_message_files:
+
+          if message_filename not in processed_message_filenames:
+            system_message_filename = path_helper.GetInSystemCase(
+                message_filename)
+
+            if not system_message_filename:
+              logging.warning('Message file: {0:s} not found.'.format(
+                  message_filename))
+            elif message_file.Open(system_message_filename):
+              message_file.Close()
+
+            processed_message_filenames.append(message_filename)
 
   registry_file.Close()
 
