@@ -27,7 +27,7 @@ import pyexe
 import pyregf
 import pyvfs
 import pywrc
-#import sqlite3
+import sqlite3
 
 from pyvfs.analyzer import analyzer
 from pyvfs.lib import definitions
@@ -58,9 +58,6 @@ class CollectorError(Exception):
 class Collector(object):
   """Class that defines a collector."""
 
-  _REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
-  _REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
-
   _WINDOWS_DIRECTORIES = frozenset([
       u'C:\\Windows',
       u'C:\\WINNT',
@@ -68,56 +65,15 @@ class Collector(object):
       u'C:\\WINNT35',
   ])
 
+  REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
+  REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
+
   def __init__(self):
     """Initializes the collector object."""
     super(Collector, self).__init__()
     self._file_system = None
     self._path_resolver = None
     self.system_root = None
-
-  def _OpenMessageResourceFile(self, windows_path):
-    """Opens the message resource file specificed by the Windows path.
-
-    Args:
-      windows_path: the Windows path containing the messagge resource filename.
-
-    Returns:
-      The message resource file (instance of MessageResourceFile) or None.
-    """
-    path_spec = self._path_resolver.ResolvePath(windows_path)
-    if path_spec is None:
-      return None
-
-    file_object = resolver.Resolver.OpenFileObject(path_spec)
-    if file_object is None:
-      return None
-
-    message_file = MessageResourceFile()
-    if not message_file.Open(file_object):
-      return None
-
-    return message_file
-
-  def _OpenRegistryFile(self, windows_path):
-    """Opens the registry file specificed by the Windows path.
-
-    Args:
-      windows_path: the Windows path containing the Registry filename.
-
-    Returns:
-      The Registry file (instance of RegistryFile) or None.
-    """
-    path_spec = self._path_resolver.ResolvePath(windows_path)
-    if path_spec is None:
-      return None
-
-    file_object = resolver.Resolver.OpenFileObject(path_spec)
-    if file_object is None:
-      return None
-
-    registry_file = RegistryFile()
-    registry_file.Open(file_object)
-    return registry_file
 
   def GetSystemRootFromRegistry(self):
     """Determines the value of %SystemRoot% from the Windows Registry.
@@ -128,7 +84,7 @@ class Collector(object):
       True if successful or False otherwise.
     """
     # TODO: use the determined Windows directory to find the Registry file.
-    registry_file = self._OpenRegistryFile(self._REGISTRY_FILENAME_SOFTWARE)
+    registry_file = self.OpenRegistryFile(self.REGISTRY_FILENAME_SOFTWARE)
     system_root = registry_file.GetSystemRoot()
     registry_file.Close()
 
@@ -269,6 +225,50 @@ class Collector(object):
         self._file_system, path_spec)
 
     return True
+
+  def OpenMessageResourceFile(self, windows_path):
+    """Opens the message resource file specificed by the Windows path.
+
+    Args:
+      windows_path: the Windows path containing the messagge resource filename.
+
+    Returns:
+      The message resource file (instance of MessageResourceFile) or None.
+    """
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
+
+    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    if file_object is None:
+      return None
+
+    message_file = MessageResourceFile()
+    if not message_file.Open(file_object):
+      return None
+
+    return message_file
+
+  def OpenRegistryFile(self, windows_path):
+    """Opens the registry file specificed by the Windows path.
+
+    Args:
+      windows_path: the Windows path containing the Registry filename.
+
+    Returns:
+      The Registry file (instance of RegistryFile) or None.
+    """
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
+
+    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    if file_object is None:
+      return None
+
+    registry_file = RegistryFile()
+    registry_file.Open(file_object)
+    return registry_file
 
 
 class EventLogProvider(object):
@@ -485,11 +485,114 @@ class RegistryFile(object):
                 event_message_files)
 
 
+class Sqlite3Writer(object):
+  """Class that defines a sqlite3 writer."""
+
+  _EVENT_SOURCES_CREATE_QUERY = (
+      'CREATE TABLE event_sources ( name TEXT, windows_version TEXT, '
+      'categories TEXT, messages TEXT )')
+
+  _EVENT_SOURCES_INSERT_QUERY = (
+      'INSERT INTO event_sources VALUES ( "{0:s}", "{1:s}", "{2:s}", "{3:s}" )')
+
+  _EVENT_SOURCES_SELECT_QUERY = (
+      'SELECT name FROM event_sources WHERE name = "{0:s}" AND '
+      'windows_version = "{1:s}"')
+
+  def __init__(self, database_file, windows_version):
+    """Initializes the writer object.
+
+    Args:
+      database_file: the name of the database file.
+      windows_version: the Windows version.
+    """
+    super(Sqlite3Writer, self).__init__()
+    self._database_file = database_file
+    self._windows_version = windows_version
+
+  def Open(self):
+    """Opens the writer object.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    if os.path.exists(self._database_file):
+      self._create_new_database = False
+    else:
+      self._create_new_database = True
+
+    self._connection = sqlite3.connect(self._database_file)
+    if not self._connection:
+      return False
+
+    self._cursor = self._connection.cursor()
+    if not self._cursor:
+      return False
+
+    if self._create_new_database:
+      self._cursor.execute(self._EVENT_SOURCES_CREATE_QUERY)
+
+    return True
+
+  def Close(self):
+    """Closes the writer object."""
+    self._connection.close()
+
+  def WriteEventLogProvider(self, event_log_provider):
+    """Writes the Event Log provider to stdout.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+    """
+    if not self._create_new_database:
+      sql_query = self._EVENT_SOURCES_SELECT_QUERY.format(
+          event_log_provider.log_source, self._windows_version)
+
+      self._cursor.execute(sql_query)
+
+      if self._cursor.fetchone():
+        have_entry = True
+      else:
+        have_entry = False
+    else:
+      have_entry = False
+
+    if not have_entry:
+      sql_query = self._EVENT_SOURCES_INSERT_QUERY.format(
+          event_log_provider.log_source, self._windows_version,
+          event_log_provider.category_message_files,
+          event_log_provider.event_message_files)
+
+      self._cursor.execute(sql_query)
+      self._connection.commit()
+    else:
+      logging.info(u'Ignoring duplicate: {0:s}'.format(
+          event_log_provider.log_source))
+
+  def WriteEventLogType(self, event_log_type):
+    """Writes the Event Log provider to stdout
+
+    Args:
+      event_log_type: string containing the Event Log type.
+    """
+    # TODO: implement.
+    pass
+
+  def WriteMessageTable(self, message_table):
+    """Writes the Windows Message Resource file message table to stdout.
+
+    Args:
+      message_table: the message table (instance of pywrc.message_table).
+    """
+    # TODO: implement.
+    pass
+
+
 class StdoutWriter(object):
   """Class that defines a stdout writer."""
 
   def Open(self):
-    """Opens the output writer object.
+    """Opens the writer object.
 
     Returns:
       A boolean containing True if successful or False if not.
@@ -497,22 +600,14 @@ class StdoutWriter(object):
     return True
 
   def Close(self):
-    """Closes the output writer object."""
+    """Closes the writer object."""
     pass
 
-  def WriteEventLogType(self, event_log_type):
-    """Writes the Event Log provider to the output.
-
-    Args:
-      event_log_type: string containing the Event Log type.
-    """
-    print u'Event Log type: {0:s}'.format(event_log_type)
-
   def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider to the output.
+    """Writes the Event Log provider to stdout.
 
     Args:
-      event_log_provider: the Event Log provider.
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
     print u'Source\t\t: {0:s}'.format(
         event_log_provider.log_source)
@@ -524,6 +619,36 @@ class StdoutWriter(object):
         event_log_provider.event_message_files)
 
     print ''
+
+  def WriteEventLogType(self, event_log_type):
+    """Writes the Event Log provider to stdout
+
+    Args:
+      event_log_type: string containing the Event Log type.
+    """
+    print u'Event Log type: {0:s}'.format(event_log_type)
+
+  def WriteMessageTable(self, message_table):
+    """Writes the Windows Message Resource file message table to stdout.
+
+    Args:
+      message_table: the message table (instance of pywrc.message_table).
+    """
+    if message_table.number_of_languages > 0:
+      for language_identifier in message_table.language_identifiers:
+        number_of_messages = message_table.get_number_of_messages(
+            language_identifier)
+
+        for message_index in range(0, number_of_messages):
+          message_identifier = message_table.get_message_identifier(
+              language_identifier, message_index)
+          message_string = message_table.get_string(
+              language_identifier, message_index)
+
+          print u'0x{0:08x}\t: {1:s}'.format(
+              message_identifier, message_string)
+
+      print ''
 
 
 def Main():
@@ -537,7 +662,9 @@ def Main():
 
   args_parser.add_argument(
       'source', nargs='?', action='store', metavar='/mnt/c/',
-      default=None, help='path of the volume containing C:\\Windows.')
+      default=None, help=('path of the volume containing C:\\Windows or the '
+                          'filename of a storage media image containing the '
+                          'C:\\Windows directory.'))
 
   args_parser.add_argument(
       '--db', dest='database', action='store', metavar='messages.db',
@@ -557,13 +684,27 @@ def Main():
     print u''
     return False
 
+  if options.database and not options.windows_version:
+    print 'Windows version missing.'
+    print ''
+    args_parser.print_help()
+    print ''
+    return False
+
   logging.basicConfig(
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
-  collector = Collector()
-  writer = StdoutWriter()
+  if not options.database:
+    writer = StdoutWriter()
+  else:
+    writer = Sqlite3Writer(options.database, options.windows_version)
 
-  writer.Open()
+  if not writer.Open():
+    print 'Unable to open output writer.'
+    print ''
+    return False
+
+  collector = Collector()
 
   if not collector.GetWindowsVolumePathSpec(options.source):
     print (
@@ -579,8 +720,8 @@ def Main():
     return False
 
   # Determine the Event Log providers.
-  registry_file = collector._OpenRegistryFile(
-      collector._REGISTRY_FILENAME_SYSTEM)
+  registry_file = collector.OpenRegistryFile(
+      collector.REGISTRY_FILENAME_SYSTEM)
 
   # Sort the Event Log providers per type.
   event_log_types = {}
@@ -597,6 +738,8 @@ def Main():
 
     event_log_sources[event_log_provider.log_source] = event_log_provider
 
+  invalid_message_filenames = []
+  missing_table_message_filenames = []
   processed_message_filenames = []
 
   for event_log_type in sorted(event_log_types.keys()):
@@ -612,22 +755,37 @@ def Main():
         for message_filename in event_log_provider.event_message_files:
 
           if message_filename not in processed_message_filenames:
-            message_file = collector._OpenMessageResourceFile(message_filename)
+            message_file = collector.OpenMessageResourceFile(message_filename)
 
             if not message_file:
-              logging.warning((
-                  u'Message resouce file: {0:s} not found or missing resource '
-                  u'section.').format(message_filename))
+              invalid_message_filenames.append(message_filename)
+              continue
 
+            message_table = message_file.GetMessageTableResource()
+            if not message_table:
+              missing_table_message_filenames.append(message_filename)
             else:
-              message_table = message_file.GetMessageTableResource()
-              message_file.Close()
+              writer.WriteMessageTable(message_table)
+
+            message_file.Close()
 
             processed_message_filenames.append(message_filename)
 
   registry_file.Close()
 
   writer.Close()
+
+  if invalid_message_filenames:
+    print u'Message resource files not found or without resource section:'
+    for message_filename in invalid_message_filenames:
+      print u'{0:s}'.format(message_filename)
+    print u''
+
+  if missing_table_message_filenames:
+    print u'Message resource files without a message table resource:'
+    for message_filename in missing_table_message_filenames:
+      print u'{0:s}'.format(message_filename)
+    print u''
 
   return True
 
