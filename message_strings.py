@@ -20,136 +20,263 @@
 import argparse
 import logging
 import os
-import re
+import stat
 import sys
 
 import pyexe
 import pyregf
+import pyvfs
 import pywrc
-import sqlite3
+#import sqlite3
+
+from pyvfs.analyzer import analyzer
+from pyvfs.lib import definitions
+from pyvfs.path import factory as path_spec_factory
+from pyvfs.helpers import windows_path_resolver
+from pyvfs.resolver import resolver
+from pyvfs.vfs import os_file_system
+from pyvfs.volume import tsk_volume_system
 
 
-if pyexe.get_version() < '20131017':
-  raise ImportWarning('message_strings.py requires at least pyexe 20131017.')
+if pyexe.get_version() < '20131229':
+  raise ImportWarning('message_strings.py requires pyexe 20131229 or later.')
 
 if pyregf.get_version() < '20130716':
-  raise ImportWarning('message_strings.py requires at least pyregf 20130716.')
+  raise ImportWarning('message_strings.py requires pyregf 20130716 or later.')
 
-if pywrc.get_version() < '20131027':
-  raise ImportWarning('message_strings.py requires at least pywrc 20131027.')
+if pyvfs.__version__ < '20131229':
+  raise ImportWarning('message_strings.py requires pyvfs 20131229 or later.')
+
+if pywrc.get_version() < '20131229':
+  raise ImportWarning('message_strings.py requires pywrc 20131229 or later.')
 
 
-class OSDirectory(object):
-  """Directory object using operating system (OS) specific functions."""
-  def __init__(self, path):
-    self._path = path
+class CollectorError(Exception):
+  """Class that defines collector errors."""
 
-  def GetEntries(self):
-    """Retrieves the entries within the directory.
 
-    Yields:
-      An entry.
-    """
-    for entry in os.listdir(self._path):
-      yield entry
+class Collector(object):
+  """Class that defines a collector."""
 
-  def GetEntryByNameNoCase(self, entry_name):
-    """Retrieves an entry by name using a caseless comparison.
+  _REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
+  _REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
+
+  _WINDOWS_DIRECTORIES = frozenset([
+      u'C:\\Windows',
+      u'C:\\WINNT',
+      u'C:\\WTSRV',
+      u'C:\\WINNT35',
+  ])
+
+  def __init__(self):
+    """Initializes the collector object."""
+    super(Collector, self).__init__()
+    self._file_system = None
+    self._path_resolver = None
+    self.system_root = None
+
+  def _OpenMessageResourceFile(self, windows_path):
+    """Opens the message resource file specificed by the Windows path.
 
     Args:
-      entry_name: a string containing the name of the entry.
+      windows_path: the Windows path containing the messagge resource filename.
 
     Returns:
-      An entry.
+      The message resource file (instance of MessageResourceFile) or None.
     """
-    entry_found = None
-    entry_name_lower = entry_name.lower()
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
 
-    for entry in self.GetEntries():
-      if entry == entry_name:
-        return entry
+    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    if file_object is None:
+      return None
 
-      if entry.lower() == entry_name_lower:
-        if not entry_found:
-          entry_found = entry
+    message_file = MessageResourceFile()
+    if not message_file.Open(file_object):
+      return None
 
-    return entry_found
+    return message_file
 
-
-class WindowsPathHelper(object):
-  """Helper object for Windows paths."""
-  PATH_SEPARATOR = '\\'
-
-  _PATH_EXPANSION_VARIABLE = re.compile('^[%][^%]+[%]$')
-
-  def __init__(self, root_path=None):
-    """Initializes the Windows path helper.
+  def _OpenRegistryFile(self, windows_path):
+    """Opens the registry file specificed by the Windows path.
 
     Args:
-      root_path: optional string that contains the root path,
-                 or None by default if no root path is defined.
-                 The root path should be in system specific format.
-    """
-    self._environment_variables = {}
-    self._root_path = root_path
-
-  def SetEnvironmentVariable(self, name, value):
-    """Sets an environment variable in the Windows path helper.
-
-    Args:
-      name: the name of the environment variable without enclosing
-            %-characters, e.g. SystemRoot as in %SystemRoot%.
-      value: the value of the environment variable.
-    """
-    system_path = self.GetInSystemCase(value, expand_variables=False)
-    self._environment_variables[name.upper()] = system_path[
-        len(self._root_path):]
-
-  def GetInSystemCase(self, path, expand_variables=True):
-    """Retrieves the path in system specific format.
-
-    Args:
-      path: the Windows path to retrieve.
-      expand_variables: optional value to indicate path variables should be
-                        expanded or not. The default is to expand (True).
+      windows_path: the Windows path containing the Registry filename.
 
     Returns:
-      The path in system specific format.
+      The Registry file (instance of RegistryFile) or None.
     """
-    if path[1] == ':':
-      if path[2] != self.PATH_SEPARATOR:
-        return None
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
 
-      path = path[3:]
+    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    if file_object is None:
+      return None
 
-    if self._root_path:
-      system_path = self._root_path
+    registry_file = RegistryFile()
+    registry_file.Open(file_object)
+    return registry_file
+
+  def GetSystemRootFromRegistry(self):
+    """Determines the value of %SystemRoot% from the Windows Registry.
+
+       The Windows path resolver is updated to expand this environment variable.
+
+    Returns:
+      True if successful or False otherwise.
+    """
+    # TODO: use the determined Windows directory to find the Registry file.
+    registry_file = self._OpenRegistryFile(self._REGISTRY_FILENAME_SOFTWARE)
+    system_root = registry_file.GetSystemRoot()
+    registry_file.Close()
+
+    if system_root:
+      self.system_root = system_root
     else:
-      system_path = os.getcwd()
+      # TODO: use the determined Windows directory instead of harding coding
+      # the fallback.
+      self.system_root = u'C:\\Windows\\System32'
 
-    for path_segment in path.split(self.PATH_SEPARATOR):
-      if path_segment not in ['.', '..']:
-        if (expand_variables and
-            self._PATH_EXPANSION_VARIABLE.match(path_segment)):
-          path_segment = self._environment_variables.get(
-              path_segment[1:-1].upper(), path_segment)
+    self._path_resolver.SetEnvironmentVariable('SystemRoot', self.system_root)
 
-        directory = OSDirectory(system_path)
-        path_segment = directory.GetEntryByNameNoCase(path_segment)
+    return system_root is not None
 
-        if not path_segment:
-          return None
+  def GetWindowsVolumePathSpec(self, source_path):
+    """Determines the file system path specification of the Windows volume.
 
-      system_path = os.path.join(system_path, path_segment)
+    Args:
+      source_path: the source path.
 
-    return system_path
+    Returns:
+      True if successful or False otherwise.
+
+    Raises:
+      CollectorError: if the source path does not exists, or if the source path
+                      is not a file or directory, or if the format of or within
+                      the source file is not supported.
+    """
+    if not os.path.exists(source_path):
+      raise CollectorError(u'No such source: {0:s}.'.format(source_path))
+
+    stat_info = os.stat(source_path)
+
+    if (not stat.S_ISDIR(stat_info.st_mode) and
+        not stat.S_ISREG(stat_info.st_mode)):
+      raise CollectorError(
+          u'Unsupported source: {0:s} not a file or directory.'.format(
+              source_path))
+
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        definitions.TYPE_INDICATOR_OS, location=source_path)
+
+    if stat.S_ISREG(stat_info.st_mode):
+      type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
+          path_spec)
+
+      if len(type_indicators) > 1:
+        raise CollectorError((
+            u'Unsupported source: {0:s} found more than one storage media '
+            u'image types.').format(source_path))
+
+      if len(type_indicators) == 1:
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            type_indicators[0], parent=path_spec)
+
+      type_indicators = analyzer.Analyzer.GetVolumeSystemTypeIndicators(
+          path_spec)
+
+      if len(type_indicators) > 1:
+        raise CollectorError((
+            u'Unsupported source: {0:s} found more than one volume system '
+            u'types.').format(source_path))
+
+      if len(type_indicators) == 1:
+        if type_indicators[0] == definitions.TYPE_INDICATOR_TSK_PARTITION:
+          vs_path_spec = path_spec_factory.Factory.NewPathSpec(
+              type_indicators[0], location='/', parent=path_spec)
+
+          volume_system = tsk_volume_system.TSKVolumeSystem()
+          volume_system.Open(vs_path_spec)
+
+          result = False
+
+          for volume in volume_system.volumes:
+            if not hasattr(volume, 'identifier'):
+              continue
+
+            volume_location = u'/{0:s}'.format(volume.identifier)
+            volume_path_spec = path_spec_factory.Factory.NewPathSpec(
+                type_indicators[0], location=volume_location, parent=path_spec)
+
+            fs_path_spec = path_spec_factory.Factory.NewPathSpec(
+                definitions.TYPE_INDICATOR_TSK, location=u'/',
+                parent=volume_path_spec)
+            file_system = resolver.Resolver.OpenFileSystem(fs_path_spec)
+
+            if file_system is None:
+              continue
+
+            path_resolver = windows_path_resolver.WindowsPathResolver(
+                file_system, volume_path_spec)
+
+            for windows_path in self._WINDOWS_DIRECTORIES:
+              windows_path_spec = path_resolver.ResolvePath(windows_path)
+
+              result = windows_path_spec is not None
+
+              if result:
+                path_spec = volume_path_spec
+                break
+
+            if result:
+              break
+
+          if not result:
+            return False
+
+        elif type_indicators[0] != definitions.TYPE_INDICATOR_VSHADOW:
+          raise CollectorError((
+              u'Unsupported source: {0:s} found unsupported volume system '
+              u'type: {1:s}.').format(source_path, type_indicators[0]))
+
+      type_indicators = analyzer.Analyzer.GetFileSystemTypeIndicators(
+          path_spec)
+
+      if len(type_indicators) == 0:
+        return False
+
+      if len(type_indicators) > 1:
+        raise CollectorError((
+            u'Unsupported source: {0:s} found more than one file system '
+            u'types.').format(source_path))
+
+      if type_indicators[0] != definitions.TYPE_INDICATOR_TSK:
+        raise CollectorError((
+            u'Unsupported source: {0:s} found unsupported file system '
+            u'type: {1:s}.').format(source_path, type_indicators[0]))
+
+      fs_path_spec = path_spec_factory.Factory.NewPathSpec(
+          definitions.TYPE_INDICATOR_TSK, location=u'/',
+          parent=path_spec)
+      self._file_system = resolver.Resolver.OpenFileSystem(fs_path_spec)
+
+    elif stat.S_ISDIR(stat_info.st_mode):
+      self._file_system = os_file_system.OSFileSystem()
+
+    self._path_resolver = windows_path_resolver.WindowsPathResolver(
+        self._file_system, path_spec)
+
+    return True
 
 
 class EventLogProvider(object):
-  """Object to represent a Windows Event Log provider."""
+  """Class that defines a Windows Event Log provider."""
 
-  def __init__(self, log_type, log_source, category_message_filenames,
-               event_message_filenames):
+  def __init__(
+      self, log_type, log_source, category_message_filenames,
+      event_message_filenames):
     """Initializes the Windows Event Log provider.
 
     Args:
@@ -160,6 +287,7 @@ class EventLogProvider(object):
       event_message_filenames: the message filenames that contain
                                the event messages.
     """
+    super(EventLogProvider, self).__init__()
     self.log_type = log_type
     self.log_source = log_source
 
@@ -176,29 +304,106 @@ class EventLogProvider(object):
       self.event_message_files = event_message_filenames
 
 
-class RegistryFile(object):
-  """Object to represent a Windows Registry file."""
+class MessageResourceFile(object):
+  """Class that defines a Windows Message Resource file."""
 
-  def __init__(self):
-    """Initializes the Windows Registry file."""
-    self._regf_file = pyregf.file()
+  _RESOURCE_IDENTIFIER_MESSAGE_TABLE = 0x0b
 
-  def Open(self, filename):
-    """Opens the Windows Registry file.
+  def __init__(self, ascii_codepage='cp1252'):
+    """Initializes the Windows Message Resource file.
 
     Args:
-      filename: the name of the Windows Registry file.
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+    """
+    super(MessageResourceFile, self).__init__()
+    self._exe_file = pyexe.file()
+    self._exe_file.set_ascii_codepage(ascii_codepage)
+    self._is_open = False
+    self._wrc_stream = pywrc.stream()
+    # TODO: wrc stream set codepage?
+
+  def GetMessageTableResource(self):
+    """Retrieves the message table resource."""
+    return self._wrc_stream.get_resource_by_identifier(
+        self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
+
+  def Open(self, file_object):
+    """Opens the Windows Message Resource file using a file-like object.
+
+    Args:
+      file_object: the file-like object.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+
+    Raises:
+      IOError: if already open.
+    """
+    if self._is_open:
+      raise IOError(u'Already open.')
+
+    self._file_object = file_object
+    self._exe_file.open_file_object(self._file_object)
+    exe_section = self._exe_file.get_section_by_name('.rsrc')
+
+    if not exe_section:
+      self._exe_file.close()
+      return False
+
+    self._wrc_stream.set_virtual_address(exe_section.virtual_address)
+    self._wrc_stream.open_file_object(exe_section)
+
+    return True
+
+  def Close(self):
+    """Closes the Windows Message Resource file.
+
+    Raises:
+      IOError: if not open.
+    """
+    if self._is_open:
+      raise IOError(u'Not opened.')
+
+    self._wrc_stream.close()
+    self._exe_file.close()
+    self._file_object.close()
+    self._file_object = None
+
+
+class RegistryFile(object):
+  """Class that defines a Windows Registry file."""
+
+  def __init__(self, ascii_codepage='cp1252'):
+    """Initializes the Windows Registry file.
+
+    Args:
+      ascii_codepage: optional ASCII string codepage. The default is cp1252
+                      (or windows-1252).
+    """
+    super(RegistryFile, self).__init__()
+    self._file_object = None
+    self._regf_file = pyregf.file()
+    self._regf_file.set_ascii_codepage(ascii_codepage)
+
+  def Open(self, file_object):
+    """Opens the Windows Registry file using a file-like object.
+
+    Args:
+      file_object: the file-like object.
 
     Returns:
       A boolean containing True if successful or False if not.
     """
-    # TODO: allow to set ASCII codepage.
-    self._regf_file.open(filename)
+    self._file_object = file_object
+    self._regf_file.open_file_object(self._file_object)
     return True
 
   def Close(self):
     """Closes the Windows Registry file."""
     self._regf_file.close()
+    self._file_object.close()
+    self._file_object = None
 
   def GetSystemRoot(self):
     """Retrieves the value of %SystemRoot%.
@@ -262,7 +467,8 @@ class RegistryFile(object):
                 'CategoryMessageFile')
   
             if category_message_file_value:
-              category_message_files = category_message_file_value.data_as_string
+              category_message_files = (
+                  category_message_file_value.data_as_string)
             else:
               category_message_files = None
   
@@ -279,54 +485,8 @@ class RegistryFile(object):
                 event_message_files)
 
 
-class MessageResourceFile(object):
-  """Object to represent a Windows Message Resource file."""
-
-  _RESOURCE_IDENTIFIER_MESSAGE_TABLE = 0x0b
-
-  def __init__(self):
-    """Initializes the Windows Message Resource file."""
-    self._exe_file = pyexe.file()
-    self._wrc_stream = pywrc.stream()
-
-  def Open(self, filename):
-    """Opens the Windows Message Resource file.
-
-    Args:
-      filename: the name of the Windows Message Resource file.
-
-    Returns:
-      A boolean containing True if successful or False if not.
-    """
-    # TODO: allow to set ASCII codepage.
-    self._exe_file.open(filename)
-    exe_section = self._exe_file.get_section_by_name('.rsrc')
-
-    if not exe_section:
-      self._exe_file.close()
-      return False
-
-    self._wrc_stream.set_virtual_address(exe_section.virtual_address)
-    self._wrc_stream.open_file_object(exe_section)
-
-    self._wrc_message_table = self._wrc_stream.get_resource_by_identifier(
-        self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
-
-    if not self._wrc_message_table:
-      self._wrc_stream.close()
-      self._exe_file.close()
-      return False
-
-    return True
-
-  def Close(self):
-    """Closes the Windows Message Resource file."""
-    self._wrc_stream.close()
-    self._exe_file.close()
-
-
 class StdoutWriter(object):
-  """Output writer object to write to stdout."""
+  """Class that defines a stdout writer."""
 
   def Open(self):
     """Opens the output writer object.
@@ -346,7 +506,7 @@ class StdoutWriter(object):
     Args:
       event_log_type: string containing the Event Log type.
     """
-    print 'Event Log type: {0:s}'.format(event_log_type)
+    print u'Event Log type: {0:s}'.format(event_log_type)
 
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider to the output.
@@ -354,13 +514,13 @@ class StdoutWriter(object):
     Args:
       event_log_provider: the Event Log provider.
     """
-    print 'Source\t\t: {0:s}'.format(
+    print u'Source\t\t: {0:s}'.format(
         event_log_provider.log_source)
 
-    print 'Categories\t: {0:s}'.format(
+    print u'Categories\t: {0:s}'.format(
         event_log_provider.category_message_files)
 
-    print 'Messages\t: {0:s}'.format(
+    print u'Messages\t: {0:s}'.format(
         event_log_provider.event_message_files)
 
     print ''
@@ -376,7 +536,7 @@ def Main():
       'Extract the message strings for the known Event Log sources.'))
 
   args_parser.add_argument(
-      'windows_volume_path', nargs='?', action='store', metavar='/mnt/c/',
+      'source', nargs='?', action='store', metavar='/mnt/c/',
       default=None, help='path of the volume containing C:\\Windows.')
 
   args_parser.add_argument(
@@ -390,41 +550,37 @@ def Main():
 
   options = args_parser.parse_args()
 
-  if not options.windows_volume_path:
-    print 'Windows volume path missing.'
-    print ''
+  if not options.source:
+    print u'Source value is missing.'
+    print u''
     args_parser.print_help()
-    print ''
+    print u''
     return False
 
   logging.basicConfig(
-      level=logging.INFO, format='[%(levelname)s] %(message)s')
+      level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
+  collector = Collector()
   writer = StdoutWriter()
 
   writer.Open()
 
-  path_helper = WindowsPathHelper(options.windows_volume_path)
+  if not collector.GetWindowsVolumePathSpec(options.source):
+    print (
+        u'Unable to retrieve the volume with the Windows directory from: '
+        u'{0:s}.').format(options.source)
+    print ''
+    return False
 
   # Determine the value of %SystemRoot%.
-  registry_filename = 'C:\\Windows\\System32\\config\\SOFTWARE'
-  registry_filename = path_helper.GetInSystemCase(registry_filename)
-
-  registry_file = RegistryFile()
-  registry_file.Open(registry_filename)
-
-  system_root = registry_file.GetSystemRoot()
-
-  registry_file.Close()
-
-  path_helper.SetEnvironmentVariable('SystemRoot', system_root)
+  if not collector.GetSystemRootFromRegistry():
+    print u'Unable to retrieve %SystemRoot%.'
+    print u''
+    return False
 
   # Determine the Event Log providers.
-  registry_filename = 'C:\\Windows\\System32\\config\\SYSTEM'
-  registry_filename = path_helper.GetInSystemCase(registry_filename)
-
-  registry_file = RegistryFile()
-  registry_file.Open(registry_filename)
+  registry_file = collector._OpenRegistryFile(
+      collector._REGISTRY_FILENAME_SYSTEM)
 
   # Sort the Event Log providers per type.
   event_log_types = {}
@@ -435,13 +591,11 @@ def Main():
 
     event_log_sources = event_log_types[event_log_provider.log_type]
     if event_log_provider.log_source in event_log_sources:
-      logging.warning(('Found duplicate Event Log source: '
-                       '{0:s} in type: {1:s}').format(
-          event_log_provider.log_source, event_log_provider.log_type))
+      logging.warning((
+          u'Found duplicate Event Log source: {0:s} in type: {1:s}.').format(
+              event_log_provider.log_source, event_log_provider.log_type))
 
     event_log_sources[event_log_provider.log_source] = event_log_provider
-
-  message_file = MessageResourceFile()
 
   processed_message_filenames = []
 
@@ -458,13 +612,15 @@ def Main():
         for message_filename in event_log_provider.event_message_files:
 
           if message_filename not in processed_message_filenames:
-            system_message_filename = path_helper.GetInSystemCase(
-                message_filename)
+            message_file = collector._OpenMessageResourceFile(message_filename)
 
-            if not system_message_filename:
-              logging.warning('Message file: {0:s} not found.'.format(
-                  message_filename))
-            elif message_file.Open(system_message_filename):
+            if not message_file:
+              logging.warning((
+                  u'Message resouce file: {0:s} not found or missing resource '
+                  u'section.').format(message_filename))
+
+            else:
+              message_table = message_file.GetMessageTableResource()
               message_file.Close()
 
             processed_message_filenames.append(message_filename)
