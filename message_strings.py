@@ -23,29 +23,29 @@ import os
 import stat
 import sys
 
+import dfvfs
 import pyexe
 import pyregf
-import pyvfs
 import pywrc
 import sqlite3
 
-from pyvfs.analyzer import analyzer
-from pyvfs.lib import definitions
-from pyvfs.path import factory as path_spec_factory
-from pyvfs.helpers import windows_path_resolver
-from pyvfs.resolver import resolver
-from pyvfs.vfs import os_file_system
-from pyvfs.volume import tsk_volume_system
+from dfvfs.analyzer import analyzer
+from dfvfs.lib import definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.helpers import windows_path_resolver
+from dfvfs.resolver import resolver
+from dfvfs.vfs import os_file_system
+from dfvfs.volume import tsk_volume_system
 
+
+if dfvfs.__version__ < '20140102':
+  raise ImportWarning('message_strings.py requires dfvfs 20140102 or later.')
 
 if pyexe.get_version() < '20131229':
   raise ImportWarning('message_strings.py requires pyexe 20131229 or later.')
 
 if pyregf.get_version() < '20130716':
   raise ImportWarning('message_strings.py requires pyregf 20130716 or later.')
-
-if pyvfs.__version__ < '20131229':
-  raise ImportWarning('message_strings.py requires pyvfs 20131229 or later.')
 
 if pywrc.get_version() < '20131229':
   raise ImportWarning('message_strings.py requires pywrc 20131229 or later.')
@@ -499,6 +499,20 @@ class Sqlite3Writer(object):
       'SELECT name FROM event_sources WHERE name = "{0:s}" AND '
       'windows_version = "{1:s}"')
 
+  # TODO: create table of the resource files, have an id per resource file.
+  # Use the in the resource table names e.g. message_table_00000001.
+
+  _MESSAGE_TABLE_CREATE_QUERY = (
+      'CREATE TABLE message_table_{0:s} ( message_identifier TEXT, '
+      'windows_version TEXT, string TEXT )')
+
+  _MESSAGE_TABLE_INSERT_QUERY = (
+      'INSERT INTO message_table_{0:s} VALUES ( "{1:s}", "{2:s}", "{3:s}" )')
+
+  _MESSAGE_TABLE_SELECT_QUERY = (
+      'SELECT message_identifier, string FROM message_table_{0:s} '
+      'WHERE message_identifier = "{1:s}" AND windows_version = "{2:s}"')
+
   def __init__(self, database_file, windows_version):
     """Initializes the writer object.
 
@@ -544,6 +558,8 @@ class Sqlite3Writer(object):
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
+    # TODO: write message files in a separate table and use the key
+    # instead of writing the list.
     if not self._create_new_database:
       sql_query = self._EVENT_SOURCES_SELECT_QUERY.format(
           event_log_provider.log_source, self._windows_version)
