@@ -38,8 +38,8 @@ from dfvfs.vfs import os_file_system
 from dfvfs.volume import tsk_volume_system
 
 
-if dfvfs.__version__ < '20140102':
-  raise ImportWarning('message_strings.py requires dfvfs 20140102 or later.')
+if dfvfs.__version__ < '20140127':
+  raise ImportWarning('message_strings.py requires dfvfs 20140127 or later.')
 
 if pyexe.get_version() < '20131229':
   raise ImportWarning('message_strings.py requires pyexe 20131229 or later.')
@@ -47,16 +47,16 @@ if pyexe.get_version() < '20131229':
 if pyregf.get_version() < '20130716':
   raise ImportWarning('message_strings.py requires pyregf 20130716 or later.')
 
-if pywrc.get_version() < '20131229':
-  raise ImportWarning('message_strings.py requires pywrc 20131229 or later.')
+if pywrc.get_version() < '20140127':
+  raise ImportWarning('message_strings.py requires pywrc 20140127 or later.')
 
 
 class CollectorError(Exception):
   """Class that defines collector errors."""
 
 
-class Collector(object):
-  """Class that defines a collector."""
+class WindowsVolumeCollector(object):
+  """Class that defines a Windows volume collector."""
 
   _WINDOWS_DIRECTORIES = frozenset([
       u'C:\\Windows',
@@ -65,39 +65,11 @@ class Collector(object):
       u'C:\\WINNT35',
   ])
 
-  REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
-  REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
-
   def __init__(self):
-    """Initializes the collector object."""
-    super(Collector, self).__init__()
+    """Initializes the Windows volume collector object."""
+    super(WindowsVolumeCollector, self).__init__()
     self._file_system = None
     self._path_resolver = None
-    self.system_root = None
-
-  def GetSystemRootFromRegistry(self):
-    """Determines the value of %SystemRoot% from the Windows Registry.
-
-       The Windows path resolver is updated to expand this environment variable.
-
-    Returns:
-      True if successful or False otherwise.
-    """
-    # TODO: use the determined Windows directory to find the Registry file.
-    registry_file = self.OpenRegistryFile(self.REGISTRY_FILENAME_SOFTWARE)
-    system_root = registry_file.GetSystemRoot()
-    registry_file.Close()
-
-    if system_root:
-      self.system_root = system_root
-    else:
-      # TODO: use the determined Windows directory instead of harding coding
-      # the fallback.
-      self.system_root = u'C:\\Windows\\System32'
-
-    self._path_resolver.SetEnvironmentVariable('SystemRoot', self.system_root)
-
-    return system_root is not None
 
   def GetWindowsVolumePathSpec(self, source_path):
     """Determines the file system path specification of the Windows volume.
@@ -226,6 +198,58 @@ class Collector(object):
 
     return True
 
+  def OpenFile(self, windows_path):
+    """Opens the file specificed by the Windows path.
+
+    Args:
+      windows_path: the Windows path to the file.
+
+    Returns:
+      The file-like object (instance of dfvfs.FileIO) or None if
+      the file does not exist.
+    """
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
+
+    return resolver.Resolver.OpenFileObject(path_spec)
+
+
+class EventMessageStringCollector(WindowsVolumeCollector):
+  """Class that defines an event message string collector."""
+
+  REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
+  REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
+
+  def __init__(self):
+    """Initializes the event message string collector object."""
+    super(EventMessageStringCollector, self).__init__()
+    self.system_root = None
+
+  def GetSystemRootFromRegistry(self):
+    """Determines the value of %SystemRoot% from the Windows Registry.
+
+       The Windows path resolver is updated to expand this environment variable.
+
+    Returns:
+      True if successful or False otherwise.
+    """
+    # TODO: use the determined Windows directory to find the Registry file.
+    registry_file = self.OpenRegistryFile(self.REGISTRY_FILENAME_SOFTWARE)
+    system_root = registry_file.GetSystemRoot()
+    registry_file.Close()
+
+    if system_root:
+      self.system_root = system_root
+    else:
+      # TODO: use the determined Windows directory instead of harding coding
+      # the fallback.
+      self.system_root = u'C:\\Windows\\System32'
+
+    self._path_resolver.SetEnvironmentVariable('SystemRoot', self.system_root)
+
+    return system_root is not None
+
   def OpenMessageResourceFile(self, windows_path):
     """Opens the message resource file specificed by the Windows path.
 
@@ -235,11 +259,7 @@ class Collector(object):
     Returns:
       The message resource file (instance of MessageResourceFile) or None.
     """
-    path_spec = self._path_resolver.ResolvePath(windows_path)
-    if path_spec is None:
-      return None
-
-    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    file_object = self.OpenFile(windows_path)
     if file_object is None:
       return None
 
@@ -258,11 +278,7 @@ class Collector(object):
     Returns:
       The Registry file (instance of RegistryFile) or None.
     """
-    path_spec = self._path_resolver.ResolvePath(windows_path)
-    if path_spec is None:
-      return None
-
-    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    file_object = self.OpenFile(windows_path)
     if file_object is None:
       return None
 
@@ -327,6 +343,10 @@ class MessageResourceFile(object):
     """Retrieves the message table resource."""
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
+
+  def GetMuiResource(self):
+    """Retrieves the MUI resource."""
+    return self._wrc_stream.get_resource_by_name('MUI')
 
   def Open(self, file_object):
     """Opens the Windows Message Resource file using a file-like object.
@@ -486,7 +506,7 @@ class RegistryFile(object):
 
 
 class Sqlite3Writer(object):
-  """Class that defines a sqlite3 writer."""
+  """Class that defines a sqlite3 output writer."""
 
   _EVENT_SOURCES_CREATE_QUERY = (
       'CREATE TABLE event_sources ( name TEXT, windows_version TEXT, '
@@ -514,7 +534,7 @@ class Sqlite3Writer(object):
       'WHERE message_identifier = "{1:s}" AND windows_version = "{2:s}"')
 
   def __init__(self, database_file, windows_version):
-    """Initializes the writer object.
+    """Initializes the output writer object.
 
     Args:
       database_file: the name of the database file.
@@ -525,7 +545,7 @@ class Sqlite3Writer(object):
     self._windows_version = windows_version
 
   def Open(self):
-    """Opens the writer object.
+    """Opens the output writer object.
 
     Returns:
       A boolean containing True if successful or False if not.
@@ -549,7 +569,7 @@ class Sqlite3Writer(object):
     return True
 
   def Close(self):
-    """Closes the writer object."""
+    """Closes the output writer object."""
     self._connection.close()
 
   def WriteEventLogProvider(self, event_log_provider):
@@ -605,10 +625,10 @@ class Sqlite3Writer(object):
 
 
 class StdoutWriter(object):
-  """Class that defines a stdout writer."""
+  """Class that defines a stdout output writer."""
 
   def Open(self):
-    """Opens the writer object.
+    """Opens the output writer object.
 
     Returns:
       A boolean containing True if successful or False if not.
@@ -616,7 +636,7 @@ class StdoutWriter(object):
     return True
 
   def Close(self):
-    """Closes the writer object."""
+    """Closes the output writer object."""
     pass
 
   def WriteEventLogProvider(self, event_log_provider):
@@ -661,8 +681,7 @@ class StdoutWriter(object):
           message_string = message_table.get_string(
               language_identifier, message_index)
 
-          print u'0x{0:08x}\t: {1:s}'.format(
-              message_identifier, message_string)
+          print u'0x{0:08x}\t: {1:s}'.format(message_identifier, message_string)
 
       print ''
 
@@ -711,16 +730,16 @@ def Main():
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
   if not options.database:
-    writer = StdoutWriter()
+    output_writer = StdoutWriter()
   else:
-    writer = Sqlite3Writer(options.database, options.windows_version)
+    output_writer = Sqlite3Writer(options.database, options.windows_version)
 
-  if not writer.Open():
+  if not output_writer.Open():
     print 'Unable to open output writer.'
     print ''
     return False
 
-  collector = Collector()
+  collector = EventMessageStringCollector()
 
   if not collector.GetWindowsVolumePathSpec(options.source):
     print (
@@ -728,6 +747,8 @@ def Main():
         u'{0:s}.').format(options.source)
     print ''
     return False
+
+  # TODO: move this into to EventMessageStringCollector class.
 
   # Determine the value of %SystemRoot%.
   if not collector.GetSystemRootFromRegistry():
@@ -759,13 +780,13 @@ def Main():
   processed_message_filenames = []
 
   for event_log_type in sorted(event_log_types.keys()):
-    writer.WriteEventLogType(event_log_type)
+    output_writer.WriteEventLogType(event_log_type)
     event_log_sources = event_log_types[event_log_type]
 
     for event_log_source in sorted(event_log_sources.keys()):
       event_log_provider = event_log_sources[event_log_source]
 
-      writer.WriteEventLogProvider(event_log_provider)
+      output_writer.WriteEventLogProvider(event_log_provider)
 
       if event_log_provider.event_message_files:
         for message_filename in event_log_provider.event_message_files:
@@ -779,9 +800,36 @@ def Main():
 
             message_table = message_file.GetMessageTableResource()
             if not message_table:
+              # Windows Vista and later use a MUI resource to redirect to
+              # a language specific message file.
+              mui = message_file.GetMuiResource()
+
+              if mui:
+                for language_identifier in mui.language_identifiers:
+                  mui_language = mui.get_language(language_identifier)
+                  if mui_language:
+                    break;
+
+                message_filename_path, _, message_filename_name = (
+                    message_filename.rpartition(u'\\'))
+
+                mui_message_filename = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+                    message_filename_path, mui_language, message_filename_name)
+
+                mui_message_file = collector.OpenMessageResourceFile(
+                    mui_message_filename)
+
+                if mui_message_file:
+                  message_file.Close()
+                  message_file = mui_message_file
+
+                  print "MUI:", mui_message_filename
+                  message_table = message_file.GetMessageTableResource()
+
+            if not message_table:
               missing_table_message_filenames.append(message_filename)
             else:
-              writer.WriteMessageTable(message_table)
+              output_writer.WriteMessageTable(message_table)
 
             message_file.Close()
 
@@ -789,7 +837,7 @@ def Main():
 
   registry_file.Close()
 
-  writer.Close()
+  output_writer.Close()
 
   if invalid_message_filenames:
     print u'Message resource files not found or without resource section:'
