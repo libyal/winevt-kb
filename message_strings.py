@@ -359,15 +359,27 @@ class EventMessageStringCollector(WindowsVolumeCollector):
               if not message_table:
                 # Windows Vista and later use a MUI resource to redirect to
                 # a language specific message file.
-                mui_message_file_path = message_file.GetMuiMessageFilePath(
-                    message_filename)
+                mui_language = message_file.GetMuiLanguage()
 
-                if mui_message_file_path:
-                  print u'MUI message file: {0:s}'.format(mui_message_file_path)
+                if mui_language:
+                  message_filename_path, _, message_filename_name = (
+                      message_filename.rpartition(u'\\'))
+
+                  mui_message_file_path = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+                      message_filename_path, mui_language, message_filename_name)
+
                   mui_message_file = self._OpenMessageResourceFile(
                       mui_message_file_path)
 
+                  if not mui_message_file:
+                    mui_message_file_path = u'{0:s}\\{1:s}.mui'.format(
+                      message_filename_path, message_filename_name)
+
+                    mui_message_file = self._OpenMessageResourceFile(
+                        mui_message_file_path)
+
                   if mui_message_file:
+                    print u'MUI message file: {0:s}'.format(mui_message_file_path)
                     message_file.Close()
                     message_file = mui_message_file
 
@@ -437,8 +449,8 @@ class MessageResourceFile(object):
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
 
-  def GetMuiMessageFilePath(self, message_filename):
-    """Retrieves the MUI message file path or None if not available."""
+  def GetMuiLanguage(self):
+    """Retrieves the MUI language or None if not available."""
     mui_resource = self._wrc_stream.get_resource_by_name('MUI')
     if not mui_resource:
       return
@@ -454,11 +466,7 @@ class MessageResourceFile(object):
         if mui_language:
           break
 
-    message_filename_path, _, message_filename_name = (
-        message_filename.rpartition(u'\\'))
-
-    return u'{0:s}\\{1:s}\\{2:s}.mui'.format(
-        message_filename_path, mui_language, message_filename_name)
+    return mui_language
 
   def GetVersion(self):
     """Retrieves the file (or product) version.
