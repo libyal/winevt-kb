@@ -47,8 +47,8 @@ if pyexe.get_version() < '20131229':
 if pyregf.get_version() < '20130716':
   raise ImportWarning('message_strings.py requires pyregf 20130716 or later.')
 
-if pywrc.get_version() < '20140127':
-  raise ImportWarning('message_strings.py requires pywrc 20140127 or later.')
+if pywrc.get_version() < '20140128':
+  raise ImportWarning('message_strings.py requires pywrc 20140128 or later.')
 
 
 class CollectorError(Exception):
@@ -215,78 +215,6 @@ class WindowsVolumeCollector(object):
     return resolver.Resolver.OpenFileObject(path_spec)
 
 
-class EventMessageStringCollector(WindowsVolumeCollector):
-  """Class that defines an event message string collector."""
-
-  REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
-  REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
-
-  def __init__(self):
-    """Initializes the event message string collector object."""
-    super(EventMessageStringCollector, self).__init__()
-    self.system_root = None
-
-  def GetSystemRootFromRegistry(self):
-    """Determines the value of %SystemRoot% from the Windows Registry.
-
-       The Windows path resolver is updated to expand this environment variable.
-
-    Returns:
-      True if successful or False otherwise.
-    """
-    # TODO: use the determined Windows directory to find the Registry file.
-    registry_file = self.OpenRegistryFile(self.REGISTRY_FILENAME_SOFTWARE)
-    system_root = registry_file.GetSystemRoot()
-    registry_file.Close()
-
-    if system_root:
-      self.system_root = system_root
-    else:
-      # TODO: use the determined Windows directory instead of harding coding
-      # the fallback.
-      self.system_root = u'C:\\Windows\\System32'
-
-    self._path_resolver.SetEnvironmentVariable('SystemRoot', self.system_root)
-
-    return system_root is not None
-
-  def OpenMessageResourceFile(self, windows_path):
-    """Opens the message resource file specificed by the Windows path.
-
-    Args:
-      windows_path: the Windows path containing the messagge resource filename.
-
-    Returns:
-      The message resource file (instance of MessageResourceFile) or None.
-    """
-    file_object = self.OpenFile(windows_path)
-    if file_object is None:
-      return None
-
-    message_file = MessageResourceFile()
-    if not message_file.Open(file_object):
-      return None
-
-    return message_file
-
-  def OpenRegistryFile(self, windows_path):
-    """Opens the registry file specificed by the Windows path.
-
-    Args:
-      windows_path: the Windows path containing the Registry filename.
-
-    Returns:
-      The Registry file (instance of RegistryFile) or None.
-    """
-    file_object = self.OpenFile(windows_path)
-    if file_object is None:
-      return None
-
-    registry_file = RegistryFile()
-    registry_file.Open(file_object)
-    return registry_file
-
-
 class EventLogProvider(object):
   """Class that defines a Windows Event Log provider."""
 
@@ -320,22 +248,187 @@ class EventLogProvider(object):
       self.event_message_files = event_message_filenames
 
 
+class EventMessageStringCollector(WindowsVolumeCollector):
+  """Class that defines an event message string collector."""
+
+  _REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
+  _REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
+
+  def __init__(self):
+    """Initializes the event message string collector object."""
+    super(EventMessageStringCollector, self).__init__()
+    self.ascii_codepage='cp1252'
+    self.invalid_message_filenames = None
+    self.missing_table_message_filenames = None
+    self.preferred_language_identifier = 0x0409
+    self.system_root = None
+
+  def _CollectEventLogTypes(self):
+    """Collects the Event Log types form the SYSTEM Registry file.
+
+    Returns:
+      A dictionary containing a dictionary of Event Log providers per event
+      log type. E.g. { 'Application': { 'EventSystem': instance of 
+                                        EventLogProvider, ... }, ... }
+    """
+    event_log_types = {}
+    registry_file = self._OpenRegistryFile(self._REGISTRY_FILENAME_SYSTEM)
+
+    for event_log_provider in registry_file.GetEventLogProviders():
+      if event_log_provider.log_type not in event_log_types:
+        event_log_types[event_log_provider.log_type] = {}
+
+      event_log_sources = event_log_types[event_log_provider.log_type]
+      if event_log_provider.log_source in event_log_sources:
+        logging.warning((
+            u'Found duplicate Event Log source: {0:s} in type: {1:s}.').format(
+                event_log_provider.log_source, event_log_provider.log_type))
+
+      event_log_sources[event_log_provider.log_source] = event_log_provider
+
+    registry_file.Close()
+
+    return event_log_types
+
+  def _OpenMessageResourceFile(self, windows_path):
+    """Opens the message resource file specificed by the Windows path.
+
+    Args:
+      windows_path: the Windows path containing the messagge resource filename.
+
+    Returns:
+      The message resource file (instance of MessageResourceFile) or None.
+    """
+    file_object = self.OpenFile(windows_path)
+    if file_object is None:
+      return None
+
+    message_file = MessageResourceFile(
+        ascii_codepage=self.ascii_codepage,
+        preferred_language_identifier=self.preferred_language_identifier)
+    if not message_file.Open(file_object):
+      return None
+
+    return message_file
+
+  def _OpenRegistryFile(self, windows_path):
+    """Opens the registry file specificed by the Windows path.
+
+    Args:
+      windows_path: the Windows path containing the Registry filename.
+
+    Returns:
+      The Registry file (instance of RegistryFile) or None.
+    """
+    file_object = self.OpenFile(windows_path)
+    if file_object is None:
+      return None
+
+    registry_file = RegistryFile()
+    registry_file.Open(file_object)
+    return registry_file
+
+  def CollectEventLogMessageStrings(self, output_writer):
+    """Collects the Event Log message strings from the message files."""
+    self.invalid_message_filenames = []
+    self.missing_table_message_filenames = []
+    processed_message_filenames = []
+    event_log_types = self._CollectEventLogTypes()
+
+    for event_log_type, event_log_sources in event_log_types.iteritems():
+      output_writer.WriteEventLogType(event_log_type)
+
+      for event_log_source, event_log_provider in event_log_sources.iteritems():
+        output_writer.WriteEventLogProvider(event_log_provider)
+
+        if event_log_provider.event_message_files:
+          for message_filename in event_log_provider.event_message_files:
+
+            if message_filename not in processed_message_filenames:
+              message_file = self._OpenMessageResourceFile(message_filename)
+
+              if not message_file:
+                self.invalid_message_filenames.append(message_filename)
+                continue
+
+              message_file_version = message_file.GetVersion()
+              if message_file_version:
+                print u'Message file version: {0:s}'.format(message_file_version)
+
+              message_table = message_file.GetMessageTableResource()
+              if not message_table:
+                # Windows Vista and later use a MUI resource to redirect to
+                # a language specific message file.
+                mui_message_file_path = message_file.GetMuiMessageFilePath(
+                    message_filename)
+
+                if mui_message_file_path:
+                  print u'MUI message file: {0:s}'.format(mui_message_file_path)
+                  mui_message_file = self._OpenMessageResourceFile(
+                      mui_message_file_path)
+
+                  if mui_message_file:
+                    message_file.Close()
+                    message_file = mui_message_file
+
+                    message_table = message_file.GetMessageTableResource()
+
+              if not message_table:
+                self.missing_table_message_filenames.append(message_filename)
+              else:
+                output_writer.WriteMessageTable(message_table)
+
+              message_file.Close()
+
+              processed_message_filenames.append(message_filename)
+
+  def GetSystemRootFromRegistry(self):
+    """Determines the value of %SystemRoot% from the SOFTWARE Registry file.
+
+       The Windows path resolver is updated to expand this environment variable.
+
+    Returns:
+      True if successful or False otherwise.
+    """
+    # TODO: use the determined Windows directory to find the Registry file.
+    registry_file = self._OpenRegistryFile(self._REGISTRY_FILENAME_SOFTWARE)
+    system_root = registry_file.GetSystemRoot()
+    registry_file.Close()
+
+    if system_root:
+      self.system_root = system_root
+    else:
+      # TODO: use the determined Windows directory instead of harding coding
+      # the fallback.
+      self.system_root = u'C:\\Windows\\System32'
+
+    self._path_resolver.SetEnvironmentVariable('SystemRoot', self.system_root)
+
+    return self.system_root is not None
+
+
 class MessageResourceFile(object):
   """Class that defines a Windows Message Resource file."""
 
   _RESOURCE_IDENTIFIER_MESSAGE_TABLE = 0x0b
+  _RESOURCE_IDENTIFIER_VERSION = 0x10
 
-  def __init__(self, ascii_codepage='cp1252'):
+  def __init__(
+      self, ascii_codepage='cp1252', preferred_language_identifier=0x0409):
     """Initializes the Windows Message Resource file.
 
     Args:
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
+      preferred_language_identifier: optional preferred language identifier
+                                     (LCID). The default is 0x0409 (en-US).
     """
     super(MessageResourceFile, self).__init__()
+    self._ascii_codepage = ascii_codepage
     self._exe_file = pyexe.file()
-    self._exe_file.set_ascii_codepage(ascii_codepage)
+    self._exe_file.set_ascii_codepage(self._ascii_codepage)
     self._is_open = False
+    self._preferred_language_identifier = preferred_language_identifier
     self._wrc_stream = pywrc.stream()
     # TODO: wrc stream set codepage?
 
@@ -344,9 +437,71 @@ class MessageResourceFile(object):
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
 
-  def GetMuiResource(self):
-    """Retrieves the MUI resource."""
-    return self._wrc_stream.get_resource_by_name('MUI')
+  def GetMuiMessageFilePath(self, message_filename):
+    """Retrieves the MUI message file path or None if not available."""
+    mui_resource = self._wrc_stream.get_resource_by_name('MUI')
+    if not mui_resource:
+      return
+
+    mui_language = None
+    language_identifier = self._preferred_language_identifier
+    if language_identifier in mui_resource.language_identifiers:
+      mui_language = mui_resource.get_language(language_identifier)
+
+    if not mui_language:
+      for language_identifier in mui_resource.language_identifiers:
+        mui_language = mui_resource.get_language(language_identifier)
+        if mui_language:
+          break
+
+    message_filename_path, _, message_filename_name = (
+        message_filename.rpartition(u'\\'))
+
+    return u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+        message_filename_path, mui_language, message_filename_name)
+
+  def GetVersion(self):
+    """Retrieves the file (or product) version.
+
+    Returns:
+      A string containing the file (or product) version or None
+      if not available.
+    """
+    version_resource = self._wrc_stream.get_resource_by_identifier(
+        self._RESOURCE_IDENTIFIER_VERSION)
+    if not version_resource:
+      return
+
+    file_version = None
+    language_identifier = self._preferred_language_identifier
+    if language_identifier in version_resource.language_identifiers:
+      file_version = version_resource.get_file_version(language_identifier)
+      product_version = version_resource.get_product_version(
+          language_identifier)
+
+    if not file_version:
+      for language_identifier in version_resource.language_identifiers:
+        file_version = version_resource.get_file_version(language_identifier)
+        product_version = version_resource.get_product_version(
+            language_identifier)
+
+        if file_version:
+          break
+
+    file_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+        (file_version >> 48) & 0xffff, (file_version >> 32) & 0xffff,
+        (file_version >> 16) & 0xffff, file_version & 0xffff)
+
+    if file_version != product_version:
+      product_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+          (product_version >> 48) & 0xffff, (product_version >> 32) & 0xffff,
+          (product_version >> 16) & 0xffff, product_version & 0xffff)
+
+      logging.warning((
+          u'Mismatch in file version: {0:s} and product version: '
+          u'{1:s}.').format(file_version_string, product_version_string))
+
+    return file_version_string
 
   def Open(self, file_object):
     """Opens the Windows Message Resource file using a file-like object.
@@ -463,10 +618,10 @@ class RegistryFile(object):
     return control_set
 
   def GetEventLogProviders(self):
-    """Retrieves the event log providers.
+    """Retrieves the Event Log providers.
 
     Yields:
-      An event log provider object (EventLogProvider).
+      An Event Log provider object (EventLogProvider).
     """
     control_set = self.GetCurrentControlSet()
   
@@ -681,7 +836,10 @@ class StdoutWriter(object):
           message_string = message_table.get_string(
               language_identifier, message_index)
 
-          print u'0x{0:08x}\t: {1:s}'.format(message_identifier, message_string)
+          ouput_string = u'0x{0:08x}\t: {1:s}'.format(
+              message_identifier, message_string)
+
+          print ouput_string.encode('utf8')
 
       print ''
 
@@ -748,106 +906,24 @@ def Main():
     print ''
     return False
 
-  # TODO: move this into to EventMessageStringCollector class.
-
   # Determine the value of %SystemRoot%.
   if not collector.GetSystemRootFromRegistry():
     print u'Unable to retrieve %SystemRoot%.'
     print u''
     return False
 
-  # Determine the Event Log providers.
-  registry_file = collector.OpenRegistryFile(
-      collector.REGISTRY_FILENAME_SYSTEM)
-
-  # Sort the Event Log providers per type.
-  event_log_types = {}
-
-  for event_log_provider in registry_file.GetEventLogProviders():
-    if event_log_provider.log_type not in event_log_types:
-      event_log_types[event_log_provider.log_type] = {}
-
-    event_log_sources = event_log_types[event_log_provider.log_type]
-    if event_log_provider.log_source in event_log_sources:
-      logging.warning((
-          u'Found duplicate Event Log source: {0:s} in type: {1:s}.').format(
-              event_log_provider.log_source, event_log_provider.log_type))
-
-    event_log_sources[event_log_provider.log_source] = event_log_provider
-
-  invalid_message_filenames = []
-  missing_table_message_filenames = []
-  processed_message_filenames = []
-
-  for event_log_type in sorted(event_log_types.keys()):
-    output_writer.WriteEventLogType(event_log_type)
-    event_log_sources = event_log_types[event_log_type]
-
-    for event_log_source in sorted(event_log_sources.keys()):
-      event_log_provider = event_log_sources[event_log_source]
-
-      output_writer.WriteEventLogProvider(event_log_provider)
-
-      if event_log_provider.event_message_files:
-        for message_filename in event_log_provider.event_message_files:
-
-          if message_filename not in processed_message_filenames:
-            message_file = collector.OpenMessageResourceFile(message_filename)
-
-            if not message_file:
-              invalid_message_filenames.append(message_filename)
-              continue
-
-            message_table = message_file.GetMessageTableResource()
-            if not message_table:
-              # Windows Vista and later use a MUI resource to redirect to
-              # a language specific message file.
-              mui = message_file.GetMuiResource()
-
-              if mui:
-                for language_identifier in mui.language_identifiers:
-                  mui_language = mui.get_language(language_identifier)
-                  if mui_language:
-                    break;
-
-                message_filename_path, _, message_filename_name = (
-                    message_filename.rpartition(u'\\'))
-
-                mui_message_filename = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
-                    message_filename_path, mui_language, message_filename_name)
-
-                mui_message_file = collector.OpenMessageResourceFile(
-                    mui_message_filename)
-
-                if mui_message_file:
-                  message_file.Close()
-                  message_file = mui_message_file
-
-                  print "MUI:", mui_message_filename
-                  message_table = message_file.GetMessageTableResource()
-
-            if not message_table:
-              missing_table_message_filenames.append(message_filename)
-            else:
-              output_writer.WriteMessageTable(message_table)
-
-            message_file.Close()
-
-            processed_message_filenames.append(message_filename)
-
-  registry_file.Close()
-
+  collector.CollectEventLogMessageStrings(output_writer)
   output_writer.Close()
 
-  if invalid_message_filenames:
+  if collector.invalid_message_filenames:
     print u'Message resource files not found or without resource section:'
-    for message_filename in invalid_message_filenames:
+    for message_filename in collector.invalid_message_filenames:
       print u'{0:s}'.format(message_filename)
     print u''
 
-  if missing_table_message_filenames:
+  if collector.missing_table_message_filenames:
     print u'Message resource files without a message table resource:'
-    for message_filename in missing_table_message_filenames:
+    for message_filename in collector.missing_table_message_filenames:
       print u'{0:s}'.format(message_filename)
     print u''
 
