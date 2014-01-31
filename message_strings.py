@@ -886,10 +886,10 @@ def Main():
     return False
 
   if options.database and not options.windows_version:
-    print 'Windows version missing.'
-    print ''
+    print u'Windows version missing.'
+    print u''
     args_parser.print_help()
-    print ''
+    print u''
     return False
 
   logging.basicConfig(
@@ -901,8 +901,8 @@ def Main():
     output_writer = Sqlite3Writer(options.database, options.windows_version)
 
   if not output_writer.Open():
-    print 'Unable to open output writer.'
-    print ''
+    print u'Unable to open output writer.'
+    print u''
     return False
 
   collector = EventMessageStringCollector()
