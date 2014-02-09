@@ -38,8 +38,8 @@ from dfvfs.vfs import os_file_system
 from dfvfs.volume import tsk_volume_system
 
 
-if dfvfs.__version__ < '20140127':
-  raise ImportWarning('message_strings.py requires dfvfs 20140127 or later.')
+if dfvfs.__version__ < '20140209':
+  raise ImportWarning('message_strings.py requires dfvfs 20140209 or later.')
 
 if pyexe.get_version() < '20131229':
   raise ImportWarning('message_strings.py requires pyexe 20131229 or later.')
@@ -299,12 +299,20 @@ class EventMessageStringCollector(WindowsVolumeCollector):
     Returns:
       The message resource file (instance of MessageResourceFile) or None.
     """
-    file_object = self.OpenFile(windows_path)
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
+
+    windows_path = self._path_resolver.GetWindowsPath(path_spec)
+    if windows_path is None:
+      logging.warning(u'Unable to retrieve Windows path.')
+
+    file_object = resolver.Resolver.OpenFileObject(path_spec)
     if file_object is None:
       return None
 
     message_file = MessageResourceFile(
-        ascii_codepage=self.ascii_codepage,
+        windows_path, ascii_codepage=self.ascii_codepage,
         preferred_language_identifier=self.preferred_language_identifier)
     if not message_file.Open(file_object):
       return None
@@ -343,56 +351,81 @@ class EventMessageStringCollector(WindowsVolumeCollector):
 
         if event_log_provider.event_message_files:
           for message_filename in event_log_provider.event_message_files:
+            if message_filename in processed_message_filenames:
+              continue
 
-            if message_filename not in processed_message_filenames:
-              message_file = self._OpenMessageResourceFile(message_filename)
+            message_file = self._OpenMessageResourceFile(message_filename)
 
-              if not message_file:
-                self.invalid_message_filenames.append(message_filename)
-                continue
+            if not message_file:
+              self.invalid_message_filenames.append(message_filename)
+              continue
 
-              message_file_version = message_file.GetVersion()
-              if message_file_version:
-                print u'Message file version: {0:s}'.format(message_file_version)
+            if message_file.windows_path in processed_message_filenames:
+              message_file.Close()
+              continue
 
-              message_table = message_file.GetMessageTableResource()
-              if not message_table:
-                # Windows Vista and later use a MUI resource to redirect to
-                # a language specific message file.
-                mui_language = message_file.GetMuiLanguage()
+            file_version, product_version = (
+                message_file.GetVersionInformation())
 
-                if mui_language:
-                  message_filename_path, _, message_filename_name = (
-                      message_filename.rpartition(u'\\'))
+            if file_version != product_version:
+              logging.warning((
+                  u'Mismatch between file version: {0:s} and product version: '
+                  u'{1:s} in message file: {2:s}.').format(
+                      file_version, product_version, message_filename))
 
-                  mui_message_file_path = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
-                      message_filename_path, mui_language, message_filename_name)
+            print u'Message file:'
+            print u'Path\t\t: {0:s}'.format(message_file.windows_path)
+            if file_version:
+              print u'File version\t: {0:s}'.format(file_version)
+
+            if product_version:
+              print u'Product version\t: {0:s}'.format(
+                  product_version)
+
+            message_table = message_file.GetMessageTableResource()
+            if not message_table:
+              # Windows Vista and later use a MUI resource to redirect to
+              # a language specific message file.
+              mui_language = message_file.GetMuiLanguage()
+
+              if mui_language:
+                message_filename_path, _, message_filename_name = (
+                    message_filename.rpartition(u'\\'))
+
+                mui_message_file_path = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+                    message_filename_path, mui_language, message_filename_name)
+
+                mui_message_file = self._OpenMessageResourceFile(
+                    mui_message_file_path)
+
+                if not mui_message_file:
+                  mui_message_file_path = u'{0:s}\\{1:s}.mui'.format(
+                    message_filename_path, message_filename_name)
 
                   mui_message_file = self._OpenMessageResourceFile(
                       mui_message_file_path)
 
-                  if not mui_message_file:
-                    mui_message_file_path = u'{0:s}\\{1:s}.mui'.format(
-                      message_filename_path, message_filename_name)
+                if mui_message_file:
+                  print u'Path MUI file\t: {0:s}'.format(
+                      mui_message_file.windows_path)
+                  message_file.Close()
+                  message_file = mui_message_file
 
-                    mui_message_file = self._OpenMessageResourceFile(
-                        mui_message_file_path)
+                  message_table = message_file.GetMessageTableResource()
 
-                  if mui_message_file:
-                    print u'MUI message file: {0:s}'.format(mui_message_file_path)
-                    message_file.Close()
-                    message_file = mui_message_file
+            print u''
 
-                    message_table = message_file.GetMessageTableResource()
+            if not message_table:
+              self.missing_table_message_filenames.append(message_filename)
+            else:
+              print u'Message table:'
+              output_writer.WriteMessageTable(message_table)
 
-              if not message_table:
-                self.missing_table_message_filenames.append(message_filename)
-              else:
-                output_writer.WriteMessageTable(message_table)
+            if message_filename != message_file.windows_path:
+              processed_message_filenames.append(message_file.windows_path)
+            processed_message_filenames.append(message_filename)
 
-              message_file.Close()
-
-              processed_message_filenames.append(message_filename)
+            message_file.Close()
 
   def GetSystemRootFromRegistry(self):
     """Determines the value of %SystemRoot% from the SOFTWARE Registry file.
@@ -418,18 +451,48 @@ class EventMessageStringCollector(WindowsVolumeCollector):
 
     return self.system_root is not None
 
+  def GetWindowsVersion(self):
+    """Determines the Windows version from kernel executable file.
+
+    Returns:
+      A string containing the Windows version or None otherwise.
+    """
+    # Window NT variants.
+    kernel_executable_path = u'C:\\Windows\\System32\\ntoskrnl.exe'
+    message_file = self._OpenMessageResourceFile(kernel_executable_path)
+
+    if not message_file:
+      # Window 9x variants.
+      kernel_executable_path = u'C:\\Windows\\System32\\kernel32.dll'
+      message_file = self._OpenMessageResourceFile(kernel_executable_path)
+
+    if not message_file:
+      return None
+
+    file_version, product_version = message_file.GetVersionInformation()
+
+    if file_version != product_version:
+      logging.warning((
+          u'Mismatch in file version: {0:s} and product version: '
+          u'{1:s}.').format(file_version, product_version))
+
+    return file_version
+
 
 class MessageResourceFile(object):
   """Class that defines a Windows Message Resource file."""
 
+  _RESOURCE_IDENTIFIER_STRING = 0x06
   _RESOURCE_IDENTIFIER_MESSAGE_TABLE = 0x0b
   _RESOURCE_IDENTIFIER_VERSION = 0x10
 
   def __init__(
-      self, ascii_codepage='cp1252', preferred_language_identifier=0x0409):
+      self, windows_path, ascii_codepage='cp1252',
+      preferred_language_identifier=0x0409):
     """Initializes the Windows Message Resource file.
 
     Args:
+      windows_path: normalized version of the Windows path.
       ascii_codepage: optional ASCII string codepage. The default is cp1252
                       (or windows-1252).
       preferred_language_identifier: optional preferred language identifier
@@ -443,6 +506,7 @@ class MessageResourceFile(object):
     self._preferred_language_identifier = preferred_language_identifier
     self._wrc_stream = pywrc.stream()
     # TODO: wrc stream set codepage?
+    self.windows_path = windows_path
 
   def GetMessageTableResource(self):
     """Retrieves the message table resource."""
@@ -453,7 +517,7 @@ class MessageResourceFile(object):
     """Retrieves the MUI language or None if not available."""
     mui_resource = self._wrc_stream.get_resource_by_name('MUI')
     if not mui_resource:
-      return
+      return None
 
     mui_language = None
     language_identifier = self._preferred_language_identifier
@@ -468,48 +532,49 @@ class MessageResourceFile(object):
 
     return mui_language
 
-  def GetVersion(self):
-    """Retrieves the file (or product) version.
+  def GetStringResource(self):
+    """Retrieves the string resource."""
+    return self._wrc_stream.get_resource_by_identifier(
+        self._RESOURCE_IDENTIFIER_STRING)
+
+  def GetVersionInformation(self):
+    """Retrieves the file and product version.
 
     Returns:
-      A string containing the file (or product) version or None
-      if not available.
+      A tuple of strings containing the file and product version or
+      None if not available.
     """
     version_resource = self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_VERSION)
     if not version_resource:
-      return
+      return None, None
 
     file_version = None
+    product_version = None
     language_identifier = self._preferred_language_identifier
     if language_identifier in version_resource.language_identifiers:
       file_version = version_resource.get_file_version(language_identifier)
       product_version = version_resource.get_product_version(
           language_identifier)
 
-    if not file_version:
+    if not file_version or not product_version:
       for language_identifier in version_resource.language_identifiers:
         file_version = version_resource.get_file_version(language_identifier)
         product_version = version_resource.get_product_version(
             language_identifier)
 
-        if file_version:
+        if file_version and product_version:
           break
 
     file_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
         (file_version >> 48) & 0xffff, (file_version >> 32) & 0xffff,
         (file_version >> 16) & 0xffff, file_version & 0xffff)
 
-    if file_version != product_version:
-      product_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
-          (product_version >> 48) & 0xffff, (product_version >> 32) & 0xffff,
-          (product_version >> 16) & 0xffff, product_version & 0xffff)
+    product_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+        (product_version >> 48) & 0xffff, (product_version >> 32) & 0xffff,
+        (product_version >> 16) & 0xffff, product_version & 0xffff)
 
-      logging.warning((
-          u'Mismatch in file version: {0:s} and product version: '
-          u'{1:s}.').format(file_version_string, product_version_string))
-
-    return file_version_string
+    return file_version_string, product_version_string
 
   def Open(self, file_object):
     """Opens the Windows Message Resource file using a file-like object.
@@ -885,13 +950,6 @@ def Main():
     print u''
     return False
 
-  if options.database and not options.windows_version:
-    print u'Windows version missing.'
-    print u''
-    args_parser.print_help()
-    print u''
-    return False
-
   logging.basicConfig(
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
@@ -914,11 +972,27 @@ def Main():
     print ''
     return False
 
+  # Determine the Windows version.
+  windows_version = collector.GetWindowsVersion()
+  if not windows_version:
+    windows_version = options.windows_version
+
+  if not windows_version:
+    print u'Unable to determine Windows version.'
+
+    if options.database:
+      print u'Database output requires a Windows version, specify one with --winver.'
+      print u''
+      return False
+
   # Determine the value of %SystemRoot%.
   if not collector.GetSystemRootFromRegistry():
     print u'Unable to retrieve %SystemRoot%.'
     print u''
     return False
+
+  print u'Windows version: {0:s}.'.format(windows_version)
+  print u''
 
   collector.CollectEventLogMessageStrings(output_writer)
   output_writer.Close()
