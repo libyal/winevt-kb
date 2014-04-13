@@ -450,8 +450,7 @@ class EventMessageStringCollector(WindowsVolumeCollector):
 
     for event_log_type, event_log_sources in event_log_types.iteritems():
       for event_log_source, event_log_provider in event_log_sources.iteritems():
-        output_writer.WriteEventLogProvider(
-            event_log_provider, self.windows_version)
+        output_writer.WriteEventLogProvider(event_log_provider)
 
         if event_log_provider.event_message_files:
           for message_filename in event_log_provider.event_message_files:
@@ -503,8 +502,23 @@ class EventMessageStringCollector(WindowsVolumeCollector):
               if message_filename not in self.missing_table_message_filenames:
                 self.missing_table_message_filenames.append(message_filename)
             else:
+              normalized_message_filename = message_filename.lower()
+
+              if normalized_message_filename.startswith(
+                  self._windows_path.lower()):
+                normalized_message_filename = u'%SystemRoot%{0:s}'.format(
+                    message_filename[len(self._windows_path):])
+
+              elif normalized_message_filename.startswith(
+                  u'%SystemRoot%'.lower()):
+                normalized_message_filename = u'%SystemRoot%{0:s}'.format(
+                    message_filename[len(u'%SystemRoot%'):])
+
+              else:
+                normalized_message_filename = message_filename
+
               output_writer.WriteMessageFile(
-                  message_file, message_filename, mui_message_filename)
+                  event_log_provider, message_file, normalized_message_filename)
 
             if message_filename != message_file.windows_path:
               processed_message_filenames.append(message_file.windows_path)
@@ -859,11 +873,12 @@ class Sqlite3DatabaseFile(object):
         values[column_name] = row[column_index]
       yield values
 
-  def InsertValues(self, table_name, values):
+  def InsertValues(self, table_name, column_names, values):
     """Inserts values into a table.
 
     Args:
       table_name: the table name.
+      column_names: list of column names.
       values: list of values formatted as a string.
     """
     if not values:
@@ -875,8 +890,8 @@ class Sqlite3DatabaseFile(object):
       value = u'"{0:s}"'.format(re.sub('"', '""', value))
       sql_values.append(value)
 
-    sql_query = u'INSERT INTO {0:s} VALUES ( {1:s} )'.format(
-        table_name, u', '.join(sql_values))
+    sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
+        table_name, u', '.join(column_names), u', '.join(sql_values))
 
     self._cursor.execute(sql_query)
 
@@ -922,6 +937,48 @@ class Sqlite3EventProvidersWriter(object):
     super(Sqlite3EventProvidersWriter, self).__init__()
     self._database_file = Sqlite3DatabaseFile()
 
+  def Close(self):
+    """Closes the Event Log providers writer object."""
+    self._database_file.Close()
+
+  def GetEventLogProviderKey(self, event_log_provider):
+    """Retrieves the key of an Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+    """
+    table_name = 'event_log_providers'
+    column_names = ['event_log_provider_key']
+    condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+        event_log_provider.log_source, event_log_provider.log_type)
+    values_list = list(self._database_file.GetValues(
+        table_name, column_names, condition))
+
+    if len(values_list) == 1:
+      values = values_list[0]
+      return values['event_log_provider_key']
+
+    # TODO print error
+
+  def GetMessageFileKey(self, message_file, message_filename):
+    """Retrieves the key of a message file.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_filename: the message filename.
+    """
+    table_name = 'message_files'
+    column_names = ['message_file_key']
+    condition = 'message_filename = "{0:s}"'.format(message_filename)
+    values_list = list(self._database_file.GetValues(
+        table_name, column_names, condition))
+
+    if len(values_list) == 1:
+      values = values_list[0]
+      return values['message_file_key']
+
+    # TODO print error
+
   def Open(self, filename):
     """Opens the Event Log providers writer object.
 
@@ -933,92 +990,75 @@ class Sqlite3EventProvidersWriter(object):
     """
     self._database_file.Open(filename)
 
-  def Close(self):
-    """Closes the Event Log providers writer object."""
-    self._database_file.Close()
-
-  def WriteEventLogProvider(self, event_log_provider, windows_version):
+  def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
-      windows_version: the Windows version.
     """
-    # TODO: create table of the resource files, have an id per resource file.
-    # Use the in the resource table names e.g. message_table_00000001.
-    table_name = 'event_providers'
+    table_name = 'event_log_providers'
+    column_names = ['log_source', 'log_type']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       # TODO: write message files in a separate table and use the key
       # instead of writing the list.
       column_definitions = [
-          'log_source TEXT', 'log_type TEXT', 'windows_version TEXT',
-          'categories TEXT', 'messages TEXT']
+          'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'log_source TEXT', 'log_type TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      column_names = [
-          'log_source', 'log_type', 'windows_version', 'categories', 'messages']
-      condition = 'log_source = "{0:s}" AND windows_version = "{1:s}"'.format(
-        event_log_provider.log_source, windows_version)
+      condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+          event_log_provider.log_source, event_log_provider.log_type)
       values_list = list(self._database_file.GetValues(
-        table_name, column_names, condition))
+          table_name, column_names, condition))
 
       if len(values_list) == 0:
         insert_values = True
       else:
+        # TODO: check if more than 1 result.
         insert_values = False
 
-        # TODO: handle duplicate event log providers.
-        logging.info(u'Duplicate Event Log provider: {0:s}'.format(
-            event_log_provider.log_source))
-
     if insert_values:
-      values = [
-          event_log_provider.log_source, event_log_provider.log_type,
-          windows_version,
-          u'{0!s}'.format(event_log_provider.category_message_files),
-          u'{0!s}'.format(event_log_provider.event_message_files)]
-      self._database_file.InsertValues(table_name, values)
+      values = [event_log_provider.log_source, event_log_provider.log_type]
+      self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(
-      self, message_file, message_filename, mui_message_filename,
-      database_filename):
+      self, message_file, message_filename, database_filename):
     """Writes the Windows Message Resource file.
 
     Args:
       message_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
-      mui_message_filename: the MUI message filename.
       database_filename: the database filename.
     """
     table_name = 'message_files'
+    column_names = ['message_filename', 'database_filename']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT',
           'message_filename TEXT', 'database_filename TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      column_names = [
-          'message_filename', 'database_filename']
       condition = 'message_filename = "{0:s}"'.format(message_filename)
       values_list = list(self._database_file.GetValues(
-        table_name, column_names, condition))
+          table_name, column_names, condition))
 
       if len(values_list) == 0:
         insert_values = True
       else:
+        # TODO: check if more than 1 result.
         insert_values = False
 
     if insert_values:
-      values = [
-          message_filename, database_filename]
-      self._database_file.InsertValues(table_name, values)
+      values = [message_filename, database_filename]
+      self._database_file.InsertValues(table_name, column_names, values)
 
 
 class Sqlite3MessageFileWriter(MessageFileWriter):
@@ -1046,6 +1086,8 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
       has_table: boolean value to indicate the table previously existed in
                  the database.
     """
+    column_names = ['message_identifier', 'message_string']
+
     message_identifier = message_table.get_message_identifier(
         language_identifier, message_index)
     message_identifier = '0x{0:08x}'.format(message_identifier)
@@ -1055,13 +1097,12 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
 
     if not has_table:
       values = [message_identifier, message_string]
-      self._database_file.InsertValues(table_name, values)
+      self._database_file.InsertValues(table_name, column_names, values)
 
     else:
-      column_names = ['message_identifier', 'message_string']
       condition = 'message_identifier = "{0:s}"'.format(message_identifier)
       values_list = list(self._database_file.GetValues(
-        table_name, column_names, condition))
+          table_name, column_names, condition))
 
       if len(values_list) == 1:
         values = values_list[0]
@@ -1161,37 +1202,43 @@ class Sqlite3Writer(object):
     """Closes the output writer object."""
     self._event_providers_writer.Close()
 
-  def WriteEventLogProvider(self, event_log_provider, windows_version):
+  def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
-      windows_version: the Windows version.
     """
-    self._event_providers_writer.WriteEventLogProvider(
-        event_log_provider, windows_version)
+    self._event_providers_writer.WriteEventLogProvider(event_log_provider)
 
   def WriteMessageFile(
-      self, message_file, message_filename, mui_message_filename):
+      self, event_log_provider, message_file, message_filename):
     """Writes the Windows Message Resource file.
 
     Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
       message_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
-      mui_message_filename: the MUI message filename.
     """
     _, _, database_filename = message_file.windows_path.rpartition(u'\\')
     database_filename = u'{0:s}.db'.format(database_filename.lower())
     database_filename = re.sub('\.mui', '', database_filename)
-    database_filename = os.path.join(self._databases_path, database_filename)
 
     message_file_writer = Sqlite3MessageFileWriter(message_file)
-    message_file_writer.Open(database_filename)
+    message_file_writer.Open(
+        os.path.join(self._databases_path, database_filename))
     message_file_writer.WriteMessageTables()
     message_file_writer.Close()
 
     self._event_providers_writer.WriteMessageFile(
-        message_file, message_filename, mui_message_filename, database_filename)
+        message_file, message_filename, database_filename)
+
+    event_log_provider_key = self._event_providers_writer.GetEventLogProviderKey(
+        event_log_provider)
+    message_file_key = self._event_providers_writer.GetMessageFileKey(
+        message_file, message_filename)
+
+    # TODO: write the relationship between the event log provider and
+    # the message file and the Windows version?
 
 
 class StdoutWriter(object):
@@ -1236,12 +1283,11 @@ class StdoutWriter(object):
     """Closes the output writer object."""
     pass
 
-  def WriteEventLogProvider(self, event_log_provider, windows_version):
+  def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
-      windows_version: the Windows version.
     """
     print u'Source\t\t: {0:s}'.format(
         event_log_provider.log_source)
@@ -1258,13 +1304,13 @@ class StdoutWriter(object):
     print ''
 
   def WriteMessageFile(
-      self, message_file, message_filename, mui_message_filename):
+      self, event_log_provider, message_file, message_filename):
     """Writes the Windows Message Resource file.
 
     Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
       message_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
-      mui_message_filename: the MUI message filename.
     """
     file_version = getattr(message_file, 'file_version', '')
     product_version = getattr(message_file, 'product_version', '')
@@ -1363,24 +1409,23 @@ class WikiWriter(object):
       return False
     return True
 
-  def WriteEventLogProvider(self, event_log_provider, windows_version):
+  def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
-      windows_version: the Windows version.
     """
     # TODO: implement.
     return
 
   def WriteMessageFile(
-      self, message_file, message_filename, mui_message_filename):
+      self, event_log_provider, message_file, message_filename):
     """Writes the Windows Message Resource file.
 
     Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
       message_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
-      mui_message_filename: the MUI message filename.
     """
     # TODO: create file.
 
