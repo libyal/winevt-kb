@@ -3,7 +3,7 @@
 #
 # Script to print the message strings for all known Event Log sources.
 #
-# Copyright (c) 2013, Joachim Metz <joachim.metz@gmail.com>
+# Copyright (c) 2013-2014, Joachim Metz <joachim.metz@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
 import argparse
 import logging
 import os
+import re
 import stat
 import sys
 
@@ -38,8 +40,8 @@ from dfvfs.vfs import os_file_system
 from dfvfs.volume import tsk_volume_system
 
 
-if dfvfs.__version__ < '20140209':
-  raise ImportWarning('message_strings.py requires dfvfs 20140209 or later.')
+if dfvfs.__version__ < '20140413':
+  raise ImportWarning('message_strings.py requires dfvfs 20140413 or later.')
 
 if pyexe.get_version() < '20131229':
   raise ImportWarning('message_strings.py requires pyexe 20131229 or later.')
@@ -70,6 +72,32 @@ class WindowsVolumeCollector(object):
     super(WindowsVolumeCollector, self).__init__()
     self._file_system = None
     self._path_resolver = None
+    self._windows_path = None
+
+  def _ScanForWindowsDirectory(self, file_system, mount_point):
+    """Scans a path specification for the Windows directory.
+
+    Args:
+      file_system: the file system object (instance of vfs.FileSystem).
+      mount_point: the mount point path specification (instance of
+                   dfvfs.PathSpec). The default is None.
+
+    Returns:
+      True if a Windows directory was found, False otherwise.
+    """
+    path_resolver = windows_path_resolver.WindowsPathResolver(
+        file_system, mount_point)
+
+    for windows_path in self._WINDOWS_DIRECTORIES:
+      windows_path_spec = path_resolver.ResolvePath(windows_path)
+
+      result = windows_path_spec is not None
+
+      if result:
+        self._windows_path = windows_path
+        return True
+
+    return False
 
   def GetWindowsVolumePathSpec(self, source_path):
     """Determines the file system path specification of the Windows volume.
@@ -96,8 +124,10 @@ class WindowsVolumeCollector(object):
           u'Unsupported source: {0:s} not a file or directory.'.format(
               source_path))
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
+    source_path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_OS, location=source_path)
+
+    path_spec = source_path_spec
 
     if stat.S_ISREG(stat_info.st_mode):
       type_indicators = analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
@@ -146,19 +176,9 @@ class WindowsVolumeCollector(object):
             if file_system is None:
               continue
 
-            path_resolver = windows_path_resolver.WindowsPathResolver(
-                file_system, volume_path_spec)
-
-            for windows_path in self._WINDOWS_DIRECTORIES:
-              windows_path_spec = path_resolver.ResolvePath(windows_path)
-
-              result = windows_path_spec is not None
-
-              if result:
-                path_spec = volume_path_spec
-                break
-
+            result = self._ScanForWindowsDirectory(file_system, volume_path_spec)
             if result:
+              path_spec = volume_path_spec
               break
 
           if not result:
@@ -191,7 +211,14 @@ class WindowsVolumeCollector(object):
       self._file_system = resolver.Resolver.OpenFileSystem(fs_path_spec)
 
     elif stat.S_ISDIR(stat_info.st_mode):
-      self._file_system = os_file_system.OSFileSystem()
+      self._file_system = resolver.Resolver.OpenFileSystem(source_path_spec)
+
+      result = self._ScanForWindowsDirectory(
+          self._file_system, source_path_spec)
+      if not result:
+        return False
+
+      path_spec = source_path_spec
 
     self._path_resolver = windows_path_resolver.WindowsPathResolver(
         self._file_system, path_spec)
@@ -251,17 +278,15 @@ class EventLogProvider(object):
 class EventMessageStringCollector(WindowsVolumeCollector):
   """Class that defines an event message string collector."""
 
-  _REGISTRY_FILENAME_SOFTWARE = u'C:\\Windows\\System32\\config\\SOFTWARE'
-  _REGISTRY_FILENAME_SYSTEM = u'C:\\Windows\\System32\\config\\SYSTEM'
-
   def __init__(self):
     """Initializes the event message string collector object."""
     super(EventMessageStringCollector, self).__init__()
+    self._system_root = None
+    self._windows_version = None
     self.ascii_codepage='cp1252'
     self.invalid_message_filenames = None
     self.missing_table_message_filenames = None
     self.preferred_language_identifier = 0x0409
-    self.system_root = None
 
   def _CollectEventLogTypes(self):
     """Collects the Event Log types form the SYSTEM Registry file.
@@ -271,8 +296,11 @@ class EventMessageStringCollector(WindowsVolumeCollector):
       log type. E.g. { 'Application': { 'EventSystem': instance of 
                                         EventLogProvider, ... }, ... }
     """
+    registry_filename = u'\\'.join([
+        self._windows_path, u'System32', u'config', u'SYSTEM'])
+
+    registry_file = self._OpenRegistryFile(registry_filename)
     event_log_types = {}
-    registry_file = self._OpenRegistryFile(self._REGISTRY_FILENAME_SYSTEM)
 
     for event_log_provider in registry_file.GetEventLogProviders():
       if event_log_provider.log_type not in event_log_types:
@@ -289,6 +317,67 @@ class EventMessageStringCollector(WindowsVolumeCollector):
     registry_file.Close()
 
     return event_log_types
+
+  def _GetSystemRoot(self):
+    """Retrieves the value of %SystemRoot%.
+
+    Returns:
+      A string containing the system root.
+    """
+    if not self._system_root:
+      self._system_root = self._GetSystemRootFromRegistry()
+
+    if self._system_root:
+      self._path_resolver.SetEnvironmentVariable(
+          'SystemRoot', self._system_root)
+
+    return self._system_root
+
+  def _GetSystemRootFromRegistry(self):
+    """Determines the value of %SystemRoot% from the SOFTWARE Registry file.
+
+       The Windows path resolver is updated to expand this environment variable.
+
+    Returns:
+      A string containing the System Root or None otherwise.
+    """
+    registry_filename = u'\\'.join([
+        self._windows_path, u'System32', u'config', u'SOFTWARE'])
+
+    registry_file = self._OpenRegistryFile(registry_filename)
+    system_root = registry_file.GetSystemRoot()
+    registry_file.Close()
+
+    if system_root:
+      system_root = system_root
+    else:
+      system_root = self._windows_path
+
+    return system_root
+
+  def _GetWindowsVersion(self):
+    """Determines the Windows version from kernel executable file.
+
+    Returns:
+      A string containing the Windows version or None otherwise.
+    """
+    system_root = self._GetSystemRoot()
+
+    # Window NT variants.
+    kernel_executable_path = u'\\'.join([
+          system_root, u'System32', u'ntoskrnl.exe'])
+    message_file = self._OpenMessageResourceFile(kernel_executable_path)
+
+    if not message_file:
+      # Window 9x variants.
+      kernel_executable_path = u'\\'.join([
+          system_root, u'System32', u'\kernel32.dll'])
+      message_file = self._OpenMessageResourceFile(kernel_executable_path)
+
+    if not message_file:
+      return None
+
+    return message_file.file_version
 
   def _OpenMessageResourceFile(self, windows_path):
     """Opens the message resource file specificed by the Windows path.
@@ -336,18 +425,33 @@ class EventMessageStringCollector(WindowsVolumeCollector):
     registry_file.Open(file_object)
     return registry_file
 
+  @property
+  def windows_version(self):
+    """The Windows version."""
+    if self._windows_version is None:
+      self._windows_version = self._GetWindowsVersion()
+    return self._windows_version
+
+  @windows_version.setter
+  def windows_version(self, value):
+    """The Windows version."""
+    self._windows_version = value
+
   def CollectEventLogMessageStrings(self, output_writer):
-    """Collects the Event Log message strings from the message files."""
+    """Collects the Event Log message strings from the message files.
+
+    Args:
+      output_writer: the output writer (instance of OutputWriter).
+    """
     self.invalid_message_filenames = []
     self.missing_table_message_filenames = []
     processed_message_filenames = []
     event_log_types = self._CollectEventLogTypes()
 
     for event_log_type, event_log_sources in event_log_types.iteritems():
-      output_writer.WriteEventLogType(event_log_type)
-
       for event_log_source, event_log_provider in event_log_sources.iteritems():
-        output_writer.WriteEventLogProvider(event_log_provider)
+        output_writer.WriteEventLogProvider(
+            event_log_provider, self.windows_version)
 
         if event_log_provider.event_message_files:
           for message_filename in event_log_provider.event_message_files:
@@ -355,32 +459,16 @@ class EventMessageStringCollector(WindowsVolumeCollector):
               continue
 
             message_file = self._OpenMessageResourceFile(message_filename)
+            mui_message_filename = None
 
             if not message_file:
-              self.invalid_message_filenames.append(message_filename)
+              if message_filename in self.invalid_message_filenames:
+                self.invalid_message_filenames.append(message_filename)
               continue
 
             if message_file.windows_path in processed_message_filenames:
               message_file.Close()
               continue
-
-            file_version, product_version = (
-                message_file.GetVersionInformation())
-
-            if file_version != product_version:
-              logging.warning((
-                  u'Mismatch between file version: {0:s} and product version: '
-                  u'{1:s} in message file: {2:s}.').format(
-                      file_version, product_version, message_filename))
-
-            print u'Message file:'
-            print u'Path\t\t: {0:s}'.format(message_file.windows_path)
-            if file_version:
-              print u'File version\t: {0:s}'.format(file_version)
-
-            if product_version:
-              print u'Product version\t: {0:s}'.format(
-                  product_version)
 
             message_table = message_file.GetMessageTableResource()
             if not message_table:
@@ -392,91 +480,37 @@ class EventMessageStringCollector(WindowsVolumeCollector):
                 message_filename_path, _, message_filename_name = (
                     message_filename.rpartition(u'\\'))
 
-                mui_message_file_path = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+                mui_message_filename = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
                     message_filename_path, mui_language, message_filename_name)
 
                 mui_message_file = self._OpenMessageResourceFile(
-                    mui_message_file_path)
+                    mui_message_filename)
 
                 if not mui_message_file:
-                  mui_message_file_path = u'{0:s}\\{1:s}.mui'.format(
+                  mui_message_filename = u'{0:s}\\{1:s}.mui'.format(
                     message_filename_path, message_filename_name)
 
                   mui_message_file = self._OpenMessageResourceFile(
-                      mui_message_file_path)
+                      mui_message_filename)
 
                 if mui_message_file:
-                  print u'Path MUI file\t: {0:s}'.format(
-                      mui_message_file.windows_path)
                   message_file.Close()
                   message_file = mui_message_file
 
                   message_table = message_file.GetMessageTableResource()
 
-            print u''
-
             if not message_table:
-              self.missing_table_message_filenames.append(message_filename)
+              if message_filename not in self.missing_table_message_filenames:
+                self.missing_table_message_filenames.append(message_filename)
             else:
-              print u'Message table:'
-              output_writer.WriteMessageTable(message_table)
+              output_writer.WriteMessageFile(
+                  message_file, message_filename, mui_message_filename)
 
             if message_filename != message_file.windows_path:
               processed_message_filenames.append(message_file.windows_path)
             processed_message_filenames.append(message_filename)
 
             message_file.Close()
-
-  def GetSystemRootFromRegistry(self):
-    """Determines the value of %SystemRoot% from the SOFTWARE Registry file.
-
-       The Windows path resolver is updated to expand this environment variable.
-
-    Returns:
-      True if successful or False otherwise.
-    """
-    # TODO: use the determined Windows directory to find the Registry file.
-    registry_file = self._OpenRegistryFile(self._REGISTRY_FILENAME_SOFTWARE)
-    system_root = registry_file.GetSystemRoot()
-    registry_file.Close()
-
-    if system_root:
-      self.system_root = system_root
-    else:
-      # TODO: use the determined Windows directory instead of harding coding
-      # the fallback.
-      self.system_root = u'C:\\Windows\\System32'
-
-    self._path_resolver.SetEnvironmentVariable('SystemRoot', self.system_root)
-
-    return self.system_root is not None
-
-  def GetWindowsVersion(self):
-    """Determines the Windows version from kernel executable file.
-
-    Returns:
-      A string containing the Windows version or None otherwise.
-    """
-    # Window NT variants.
-    kernel_executable_path = u'C:\\Windows\\System32\\ntoskrnl.exe'
-    message_file = self._OpenMessageResourceFile(kernel_executable_path)
-
-    if not message_file:
-      # Window 9x variants.
-      kernel_executable_path = u'C:\\Windows\\System32\\kernel32.dll'
-      message_file = self._OpenMessageResourceFile(kernel_executable_path)
-
-    if not message_file:
-      return None
-
-    file_version, product_version = message_file.GetVersionInformation()
-
-    if file_version != product_version:
-      logging.warning((
-          u'Mismatch in file version: {0:s} and product version: '
-          u'{1:s}.').format(file_version, product_version))
-
-    return file_version
 
 
 class MessageResourceFile(object):
@@ -502,11 +536,65 @@ class MessageResourceFile(object):
     self._ascii_codepage = ascii_codepage
     self._exe_file = pyexe.file()
     self._exe_file.set_ascii_codepage(self._ascii_codepage)
+    self._file_version = None
     self._is_open = False
     self._preferred_language_identifier = preferred_language_identifier
+    self._product_version = None
     self._wrc_stream = pywrc.stream()
     # TODO: wrc stream set codepage?
     self.windows_path = windows_path
+
+  def _GetVersionInformation(self):
+    """Retrieves the file and product version."""
+    version_resource = self._wrc_stream.get_resource_by_identifier(
+        self._RESOURCE_IDENTIFIER_VERSION)
+    if not version_resource:
+      return None, None
+
+    file_version = None
+    product_version = None
+    language_identifier = self._preferred_language_identifier
+    if language_identifier in version_resource.language_identifiers:
+      file_version = version_resource.get_file_version(language_identifier)
+      product_version = version_resource.get_product_version(
+          language_identifier)
+
+    if not file_version or not product_version:
+      for language_identifier in version_resource.language_identifiers:
+        file_version = version_resource.get_file_version(language_identifier)
+        product_version = version_resource.get_product_version(
+            language_identifier)
+
+        if file_version and product_version:
+          break
+
+    self._file_version = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+        (file_version >> 48) & 0xffff, (file_version >> 32) & 0xffff,
+        (file_version >> 16) & 0xffff, file_version & 0xffff)
+
+    self._product_version = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+        (product_version >> 48) & 0xffff, (product_version >> 32) & 0xffff,
+        (product_version >> 16) & 0xffff, product_version & 0xffff)
+
+    if file_version != product_version:
+      logging.warning((
+          u'Mismatch between file version: {0:s} and product version: '
+          u'{1:s} in message file: {2:s}.').format(
+              self._file_version, self._product_version, self.windows_path))
+
+  @property
+  def file_version(self):
+    """The file version."""
+    if self._file_version is None:
+      self._GetVersionInformation()
+    return self._file_version
+
+  @property
+  def product_version(self):
+    """The product version."""
+    if self._product_version is None:
+      self._GetVersionInformation()
+    return self._product_version
 
   def GetMessageTableResource(self):
     """Retrieves the message table resource."""
@@ -536,45 +624,6 @@ class MessageResourceFile(object):
     """Retrieves the string resource."""
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_STRING)
-
-  def GetVersionInformation(self):
-    """Retrieves the file and product version.
-
-    Returns:
-      A tuple of strings containing the file and product version or
-      None if not available.
-    """
-    version_resource = self._wrc_stream.get_resource_by_identifier(
-        self._RESOURCE_IDENTIFIER_VERSION)
-    if not version_resource:
-      return None, None
-
-    file_version = None
-    product_version = None
-    language_identifier = self._preferred_language_identifier
-    if language_identifier in version_resource.language_identifiers:
-      file_version = version_resource.get_file_version(language_identifier)
-      product_version = version_resource.get_product_version(
-          language_identifier)
-
-    if not file_version or not product_version:
-      for language_identifier in version_resource.language_identifiers:
-        file_version = version_resource.get_file_version(language_identifier)
-        product_version = version_resource.get_product_version(
-            language_identifier)
-
-        if file_version and product_version:
-          break
-
-    file_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
-        (file_version >> 48) & 0xffff, (file_version >> 32) & 0xffff,
-        (file_version >> 16) & 0xffff, file_version & 0xffff)
-
-    product_version_string = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
-        (product_version >> 48) & 0xffff, (product_version >> 32) & 0xffff,
-        (product_version >> 16) & 0xffff, product_version & 0xffff)
-
-    return file_version_string, product_version_string
 
   def Open(self, file_object):
     """Opens the Windows Message Resource file using a file-like object.
@@ -733,57 +782,115 @@ class RegistryFile(object):
                 event_message_files)
 
 
-class Sqlite3Writer(object):
-  """Class that defines a sqlite3 output writer."""
+class Sqlite3DatabaseFile(object):
+  """Class that defines a sqlite3 database file."""
 
-  _EVENT_SOURCES_CREATE_QUERY = (
-      'CREATE TABLE event_sources ( name TEXT, windows_version TEXT, '
-      'categories TEXT, messages TEXT )')
+  _HAS_TABLE_QUERY = (
+      u'SELECT name FROM sqlite_master '
+      u'WHERE type = "table" AND name = "{0:s}"')
 
-  _EVENT_SOURCES_INSERT_QUERY = (
-      'INSERT INTO event_sources VALUES ( "{0:s}", "{1:s}", "{2:s}", "{3:s}" )')
+  def __init__(self):
+    """Initializes the database file object."""
+    super(Sqlite3DatabaseFile, self).__init__()
+    self._connection = None
+    self._cursor = None
+    self.filename = None
 
-  _EVENT_SOURCES_SELECT_QUERY = (
-      'SELECT name FROM event_sources WHERE name = "{0:s}" AND '
-      'windows_version = "{1:s}"')
+  def Close(self):
+    """Closes the database file."""
+    # We need to run commit or not all data is stored in the database.
+    self._connection.commit()
+    self._connection.close()
 
-  # TODO: create table of the resource files, have an id per resource file.
-  # Use the in the resource table names e.g. message_table_00000001.
+    self._connection = None
+    self._cursor = None
+    self.filename = None
 
-  _MESSAGE_TABLE_CREATE_QUERY = (
-      'CREATE TABLE message_table_{0:s} ( message_identifier TEXT, '
-      'windows_version TEXT, string TEXT )')
-
-  _MESSAGE_TABLE_INSERT_QUERY = (
-      'INSERT INTO message_table_{0:s} VALUES ( "{1:s}", "{2:s}", "{3:s}" )')
-
-  _MESSAGE_TABLE_SELECT_QUERY = (
-      'SELECT message_identifier, string FROM message_table_{0:s} '
-      'WHERE message_identifier = "{1:s}" AND windows_version = "{2:s}"')
-
-  def __init__(self, database_file, windows_version):
-    """Initializes the output writer object.
+  def CreateTable(self, table_name, column_definitions):
+    """Creates a table.
 
     Args:
-      database_file: the name of the database file.
-      windows_version: the Windows version.
+      table_name: the table name.
+      column_definitions: list of strings containing column definitions.
     """
-    super(Sqlite3Writer, self).__init__()
-    self._database_file = database_file
-    self._windows_version = windows_version
+    sql_query = u'CREATE TABLE {0:s} ( {1:s} )'.format(
+        table_name, u', '.join(column_definitions))
 
-  def Open(self):
-    """Opens the output writer object.
+    self._cursor.execute(sql_query)
+
+  def HasTable(self, table_name):
+    """Determines if a specific table exists.
+
+    Args:
+      table_name: the table name.
+
+    Returns:
+      True if the table exists, false otheriwse.
+    """
+    sql_query = self._HAS_TABLE_QUERY.format(table_name)
+
+    self._cursor.execute(sql_query)
+    if self._cursor.fetchone():
+      has_table = True
+    else:
+      has_table = False
+    return has_table
+
+  def GetValues(self, table_name, column_names, condition):
+    """Retrieves values from a table.
+
+    Args:
+      table_name: the table name.
+      column_names: list of column names.
+      condition: string containing the condition.
+
+    Yields:
+      A row object (instance of sqlite3.row).
+    """
+    sql_query = u'SELECT {1:s} FROM {0:s} WHERE {2:s}'.format(
+        table_name, u', '.join(column_names), condition)
+
+    self._cursor.execute(sql_query)
+
+    for row in self._cursor:
+      values = {}
+      for column_index in range(0, len(column_names)):
+        column_name = column_names[column_index]
+        values[column_name] = row[column_index]
+      yield values
+
+  def InsertValues(self, table_name, values):
+    """Inserts values into a table.
+
+    Args:
+      table_name: the table name.
+      values: list of values formatted as a string.
+    """
+    if not values:
+      return
+
+    sql_values = []
+    for value in values:
+      # In sqlite3 the double quote is escaped with a second double quote.
+      value = u'"{0:s}"'.format(re.sub('"', '""', value))
+      sql_values.append(value)
+
+    sql_query = u'INSERT INTO {0:s} VALUES ( {1:s} )'.format(
+        table_name, u', '.join(sql_values))
+
+    self._cursor.execute(sql_query)
+
+  def Open(self, filename):
+    """Opens the database file.
+
+    Args:
+      filename: the filename of the database.
 
     Returns:
       A boolean containing True if successful or False if not.
     """
-    if os.path.exists(self._database_file):
-      self._create_new_database = False
-    else:
-      self._create_new_database = True
-
-    self._connection = sqlite3.connect(self._database_file)
+    self.filename = filename
+    self._connection = sqlite3.connect(filename)
     if not self._connection:
       return False
 
@@ -791,69 +898,249 @@ class Sqlite3Writer(object):
     if not self._cursor:
       return False
 
-    if self._create_new_database:
-      self._cursor.execute(self._EVENT_SOURCES_CREATE_QUERY)
-
     return True
 
-  def Close(self):
-    """Closes the output writer object."""
-    self._connection.close()
 
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider to stdout.
+class MessageFileWriter(object):
+  """Class to represent a message file writer."""
+
+  def __init__(self, message_file):
+    """Initializes the message file writer object.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+    """
+    super(MessageFileWriter, self).__init__()
+    self._message_file = message_file
+
+
+class Sqlite3EventProvidersWriter(object):
+  """Class to represent a sqlite3 Event Log providers writer."""
+
+  def __init__(self):
+    """Initializes the Event Log providers writer object."""
+    super(Sqlite3EventProvidersWriter, self).__init__()
+    self._database_file = Sqlite3DatabaseFile()
+
+  def Open(self, filename):
+    """Opens the Event Log providers writer object.
+
+    Args:
+      filename: the filename of the database.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    self._database_file.Open(filename)
+
+  def Close(self):
+    """Closes the Event Log providers writer object."""
+    self._database_file.Close()
+
+  def WriteEventLogProvider(self, event_log_provider, windows_version):
+    """Writes the Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
+      windows_version: the Windows version.
     """
-    # TODO: write message files in a separate table and use the key
-    # instead of writing the list.
-    if not self._create_new_database:
-      sql_query = self._EVENT_SOURCES_SELECT_QUERY.format(
-          event_log_provider.log_source, self._windows_version)
+    # TODO: create table of the resource files, have an id per resource file.
+    # Use the in the resource table names e.g. message_table_00000001.
+    table_name = 'event_providers'
 
-      self._cursor.execute(sql_query)
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      # TODO: write message files in a separate table and use the key
+      # instead of writing the list.
+      column_definitions = [
+          'log_source TEXT', 'log_type TEXT', 'windows_version TEXT',
+          'categories TEXT', 'messages TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
 
-      if self._cursor.fetchone():
-        have_entry = True
+    else:
+      column_names = [
+          'log_source', 'log_type', 'windows_version', 'categories', 'messages']
+      condition = 'log_source = "{0:s}" AND windows_version = "{1:s}"'.format(
+        event_log_provider.log_source, windows_version)
+      values_list = list(self._database_file.GetValues(
+        table_name, column_names, condition))
+
+      if len(values_list) == 0:
+        insert_values = True
       else:
-        have_entry = False
-    else:
-      have_entry = False
+        insert_values = False
 
-    if not have_entry:
-      sql_query = self._EVENT_SOURCES_INSERT_QUERY.format(
-          event_log_provider.log_source, self._windows_version,
-          event_log_provider.category_message_files,
-          event_log_provider.event_message_files)
+        # TODO: handle duplicate event log providers.
+        logging.info(u'Duplicate Event Log provider: {0:s}'.format(
+            event_log_provider.log_source))
 
-      self._cursor.execute(sql_query)
-      self._connection.commit()
-    else:
-      logging.info(u'Ignoring duplicate: {0:s}'.format(
-          event_log_provider.log_source))
+    if insert_values:
+      values = [
+          event_log_provider.log_source, event_log_provider.log_type,
+          windows_version,
+          u'{0!s}'.format(event_log_provider.category_message_files),
+          u'{0!s}'.format(event_log_provider.event_message_files)]
+      self._database_file.InsertValues(table_name, values)
 
-  def WriteEventLogType(self, event_log_type):
-    """Writes the Event Log provider to stdout
+  def WriteMessageFile(
+      self, message_file, message_filename, mui_message_filename,
+      database_filename):
+    """Writes the Windows Message Resource file.
 
     Args:
-      event_log_type: string containing the Event Log type.
+      message_file: the message file (instance of MessageResourceFile).
+      message_filename: the message filename.
+      mui_message_filename: the MUI message filename.
+      database_filename: the database filename.
     """
-    # TODO: implement.
-    pass
+    table_name = 'message_files'
 
-  def WriteMessageTable(self, message_table):
-    """Writes the Windows Message Resource file message table to stdout.
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'message_filename TEXT', 'database_filename TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      column_names = [
+          'message_filename', 'database_filename']
+      condition = 'message_filename = "{0:s}"'.format(message_filename)
+      values_list = list(self._database_file.GetValues(
+        table_name, column_names, condition))
+
+      if len(values_list) == 0:
+        insert_values = True
+      else:
+        insert_values = False
+
+    if insert_values:
+      values = [
+          message_filename, database_filename]
+      self._database_file.InsertValues(table_name, values)
+
+
+class Sqlite3MessageFileWriter(MessageFileWriter):
+  """Class to represent a sqlite3 message file writer."""
+
+  def __init__(self, message_file):
+    """Initializes the message file writer object.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+    """
+    super(Sqlite3MessageFileWriter, self).__init__(message_file)
+    self._database_file = Sqlite3DatabaseFile()
+
+  def _WriteMessage(
+      self, message_table, language_identifier, message_index, table_name,
+      has_table):
+    """Writes a message to a specific message table.
 
     Args:
       message_table: the message table (instance of pywrc.message_table).
+      language_identifier: the language identifier (LCID).
+      message_index: the message index.
+      table_name: the name of the table.
+      has_table: boolean value to indicate the table previously existed in
+                 the database.
     """
-    # TODO: implement.
-    pass
+    message_identifier = message_table.get_message_identifier(
+        language_identifier, message_index)
+    message_identifier = '0x{0:08x}'.format(message_identifier)
+
+    message_string = message_table.get_string(
+        language_identifier, message_index)
+
+    if not has_table:
+      values = [message_identifier, message_string]
+      self._database_file.InsertValues(table_name, values)
+
+    else:
+      column_names = ['message_identifier', 'message_string']
+      condition = 'message_identifier = "{0:s}"'.format(message_identifier)
+      values_list = list(self._database_file.GetValues(
+        table_name, column_names, condition))
+
+      if len(values_list) == 1:
+        values = values_list[0]
+        if message_string != values['message_string']:
+          logging.warning((
+              u'Message string mismatch for LCID: 0x{0:08x}, '
+              u'file version: {1:s}, message identifier: {2:s}.\n'
+              u'Found: {2:s}\nStored: {3:s}\n').format(
+                  language_identifier, self._message_file.file_version,
+                  message_identifier, message_string,
+                  values['message_string']))
+
+      elif len(values_list) != 0:
+        logging.warning((
+             u'More than one message string found for LCID: 0x{0:08x}, '
+             u'file version: {1:s}, message identifier: {2:s}.').format(
+                 language_identifier, self._message_file.file_version,
+                 message_identifier))
+
+  def _WriteMessageTable(self, message_table, language_identifier):
+    """Writes a message table for a specific language identifier.
+
+    Args:
+      message_table: the message table (instance of pywrc.message_table).
+      language_identifier: the language identifier (LCID).
+    """
+    number_of_messages = message_table.get_number_of_messages(
+        language_identifier)
+
+    if number_of_messages > 0:
+      table_name = u'message_table_0x{0:08x}_{1:s}'.format(
+          language_identifier, self._message_file.file_version)
+      table_name = re.sub('\.', '_', table_name)
+
+      has_table = self._database_file.HasTable(table_name)
+      if not has_table:
+        column_definitions = ['message_identifier TEXT', 'message_string TEXT']
+        self._database_file.CreateTable(table_name, column_definitions)
+
+      for message_index in range(0, number_of_messages):
+        self._WriteMessage(
+            message_table, language_identifier, message_index, table_name,
+            has_table)
+
+  def Close(self):
+    """Closes the message file writer object."""
+    self._database_file.Close()
+
+  def Open(self, filename):
+    """Opens the message file writer object.
+
+    Args:
+      filename: the filename of the database.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    self._database_file.Open(filename)
+
+  def WriteMessageTables(self):
+    """Writes the message tables."""
+    message_table = self._message_file.GetMessageTableResource()
+
+    if message_table.number_of_languages > 0:
+      for language_identifier in message_table.language_identifiers:
+        self._WriteMessageTable(message_table, language_identifier)
 
 
-class StdoutWriter(object):
-  """Class that defines a stdout output writer."""
+class Sqlite3Writer(object):
+  """Class that defines a sqlite3 output writer."""
+
+  def __init__(self, databases_path):
+    """Initializes the output writer object.
+
+    Args:
+      databases_path: the path to the database files.
+    """
+    super(Sqlite3Writer, self).__init__()
+    self._databases_path = databases_path
 
   def Open(self):
     """Opens the output writer object.
@@ -861,39 +1148,57 @@ class StdoutWriter(object):
     Returns:
       A boolean containing True if successful or False if not.
     """
+    if not os.path.isdir(self._databases_path):
+      return False
+
+    self._event_providers_writer = Sqlite3EventProvidersWriter()
+    self._event_providers_writer.Open(
+        os.path.join(self._databases_path, 'winevt-kb.db'))
+
     return True
 
   def Close(self):
     """Closes the output writer object."""
-    pass
+    self._event_providers_writer.Close()
 
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider to stdout.
+  def WriteEventLogProvider(self, event_log_provider, windows_version):
+    """Writes the Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
+      windows_version: the Windows version.
     """
-    print u'Source\t\t: {0:s}'.format(
-        event_log_provider.log_source)
+    self._event_providers_writer.WriteEventLogProvider(
+        event_log_provider, windows_version)
 
-    print u'Categories\t: {0:s}'.format(
-        event_log_provider.category_message_files)
-
-    print u'Messages\t: {0:s}'.format(
-        event_log_provider.event_message_files)
-
-    print ''
-
-  def WriteEventLogType(self, event_log_type):
-    """Writes the Event Log provider to stdout
+  def WriteMessageFile(
+      self, message_file, message_filename, mui_message_filename):
+    """Writes the Windows Message Resource file.
 
     Args:
-      event_log_type: string containing the Event Log type.
+      message_file: the message file (instance of MessageResourceFile).
+      message_filename: the message filename.
+      mui_message_filename: the MUI message filename.
     """
-    print u'Event Log type: {0:s}'.format(event_log_type)
+    _, _, database_filename = message_file.windows_path.rpartition(u'\\')
+    database_filename = u'{0:s}.db'.format(database_filename.lower())
+    database_filename = re.sub('\.mui', '', database_filename)
+    database_filename = os.path.join(self._databases_path, database_filename)
 
-  def WriteMessageTable(self, message_table):
-    """Writes the Windows Message Resource file message table to stdout.
+    message_file_writer = Sqlite3MessageFileWriter(message_file)
+    message_file_writer.Open(database_filename)
+    message_file_writer.WriteMessageTables()
+    message_file_writer.Close()
+
+    self._event_providers_writer.WriteMessageFile(
+        message_file, message_filename, mui_message_filename, database_filename)
+
+
+class StdoutWriter(object):
+  """Class that defines a stdout output writer."""
+
+  def _WriteMessageTable(self, message_table):
+    """Writes the Windows Message Resource file message table.
 
     Args:
       message_table: the message table (instance of pywrc.message_table).
@@ -903,18 +1208,193 @@ class StdoutWriter(object):
         number_of_messages = message_table.get_number_of_messages(
             language_identifier)
 
-        for message_index in range(0, number_of_messages):
-          message_identifier = message_table.get_message_identifier(
-              language_identifier, message_index)
-          message_string = message_table.get_string(
-              language_identifier, message_index)
+        if number_of_messages > 0:
+          print u'Message table:'
+          print u'LCID\t\t: 0x{0:08x}'.format(language_identifier)
+          for message_index in range(0, number_of_messages):
+            message_identifier = message_table.get_message_identifier(
+                language_identifier, message_index)
+            message_string = message_table.get_string(
+                language_identifier, message_index)
 
-          ouput_string = u'0x{0:08x}\t: {1:s}'.format(
-              message_identifier, message_string)
+            ouput_string = u'0x{0:08x}\t: {1:s}'.format(
+                message_identifier, message_string)
 
-          print ouput_string.encode('utf8')
+            print ouput_string.encode('utf8')
 
-      print ''
+          print ''
+
+  def Open(self):
+    """Opens the output writer object.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    return True
+
+  def Close(self):
+    """Closes the output writer object."""
+    pass
+
+  def WriteEventLogProvider(self, event_log_provider, windows_version):
+    """Writes the Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      windows_version: the Windows version.
+    """
+    print u'Source\t\t: {0:s}'.format(
+        event_log_provider.log_source)
+
+    print u'Event Log type\t: {0:s}'.format(
+        event_log_provider.log_type)
+
+    print u'Categories\t: {0:s}'.format(
+        event_log_provider.category_message_files)
+
+    print u'Messages\t: {0:s}'.format(
+        event_log_provider.event_message_files)
+
+    print ''
+
+  def WriteMessageFile(
+      self, message_file, message_filename, mui_message_filename):
+    """Writes the Windows Message Resource file.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_filename: the message filename.
+      mui_message_filename: the MUI message filename.
+    """
+    file_version = getattr(message_file, 'file_version', '')
+    product_version = getattr(message_file, 'product_version', '')
+
+    print u'Message file:'
+    print u'Path\t\t: {0:s}'.format(message_file.windows_path)
+    print u'File version\t: {0:s}'.format(file_version)
+    print u'Product version\t: {0:s}'.format(product_version)
+
+    message_table = message_file.GetMessageTableResource()
+    self._WriteMessageTable(message_table)
+
+
+class WikiMessageFileWriter(object):
+  """Class to represent a Google Code wiki message file writer."""
+  # TODO: aparantly the filename should only contain 1 dot and end with .wiki
+
+  def Open(self, filename):
+    """Opens the file.
+
+    Args:
+      filename: the filename.
+    """
+    # Using binary mode to make sure to write Unix end of lines.
+    self._file = open(filename, 'wb')
+
+  def Close(self):
+    """Closes the file."""
+    self._file.close()
+
+  def WriteLine(self, line):
+    """Writes a line."""
+    self._file.write('{0:s}\r\n'.format(line))
+
+  def WriteLines(self, lines):
+    """Writes lines."""
+    for line in lines:
+      self.WriteLine(line)
+
+
+class WikiWriter(object):
+  """Class that defines a Google Code wiki output writer."""
+
+  def __init__(self, wiki_path):
+    """Initializes the Windows volume collector object.
+
+    Args:
+      wiki_path: the path to the directory containing the wiki files.
+    """
+    super(WikiWriter, self).__init__()
+    self._wiki_path = wiki_path
+
+  def _WriteMessageTable(self, message_table):
+    """Writes the Windows Message Resource file message table.
+
+    Args:
+      message_table: the message table (instance of pywrc.message_table).
+    """
+    if message_table.number_of_languages > 0:
+      for language_identifier in message_table.language_identifiers:
+        number_of_messages = message_table.get_number_of_messages(
+            language_identifier)
+
+        if number_of_messages > 0:
+          print '== LCID: 0x{0:08x} =='.format(language_identifier)
+          print '|| *Message identifier* || *Message string* ||'
+
+          for message_index in range(0, number_of_messages):
+            message_identifier = message_table.get_message_identifier(
+                language_identifier, message_index)
+            message_string = message_table.get_string(
+                language_identifier, message_index)
+
+            message_string = re.sub(r'\n', '\\\\n', message_string)
+            message_string = re.sub(r'\r', '\\\\r', message_string)
+            message_string = re.sub(r'\t', '\\\\t', message_string)
+
+            ouput_string = u'|| 0x{0:08x} || {{{{{{ {1:s} }}}}}} ||'.format(
+                message_identifier, message_string)
+
+            print ouput_string.encode('utf8')
+
+          print ''
+
+  def Close(self):
+    """Closes the output writer object."""
+    pass
+
+  def Open(self):
+    """Opens the output writer object.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    if not os.path.isdir(self._wiki_path):
+      return False
+    return True
+
+  def WriteEventLogProvider(self, event_log_provider, windows_version):
+    """Writes the Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      windows_version: the Windows version.
+    """
+    # TODO: implement.
+    return
+
+  def WriteMessageFile(
+      self, message_file, message_filename, mui_message_filename):
+    """Writes the Windows Message Resource file.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_filename: the message filename.
+      mui_message_filename: the MUI message filename.
+    """
+    # TODO: create file.
+
+    file_version = getattr(message_file, 'file_version', '')
+    product_version = getattr(message_file, 'product_version', '')
+
+    print u'= Message file ='
+    print u'|| *Path:* || {0:s} ||'.format(message_file.windows_path)
+    print u'|| *File version:* || {0:s} ||'.format(file_version)
+    print u'|| *Product version:* || {0:s} ||'.format(product_version)
+    print ''
+
+    message_table = message_file.GetMessageTableResource()
+    self.WriteMessageTable(message_table)
 
 
 def Main():
@@ -933,8 +1413,12 @@ def Main():
                           'C:\\Windows directory.'))
 
   args_parser.add_argument(
-      '--db', dest='database', action='store', metavar='messages.db',
-      default=None, help='path of the sqlite3 database to write to.')
+      '--db', dest='database', action='store', metavar='./winevt-db/',
+      default=None, help='path to write the sqlite3 databases to.')
+
+  args_parser.add_argument(
+      '--wiki', dest='wiki', action='store', metavar='./winevt-kb.wiki/',
+      default=None, help='path to write the wiki pages to.')
 
   args_parser.add_argument(
       '--winver', dest='windows_version', action='store', metavar='xp',
@@ -953,10 +1437,12 @@ def Main():
   logging.basicConfig(
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
-  if not options.database:
-    output_writer = StdoutWriter()
+  if options.database:
+    output_writer = Sqlite3Writer(options.database)
+  elif options.wiki:
+    output_writer = WikiWriter(options.wiki)
   else:
-    output_writer = Sqlite3Writer(options.database, options.windows_version)
+    output_writer = StdoutWriter()
 
   if not output_writer.Open():
     print u'Unable to open output writer.'
@@ -972,26 +1458,18 @@ def Main():
     print ''
     return False
 
-  # Determine the Windows version.
-  windows_version = collector.GetWindowsVersion()
-  if not windows_version:
-    windows_version = options.windows_version
+  if not collector.windows_version:
+    if not options.windows_version:
+      print u'Unable to determine Windows version.'
 
-  if not windows_version:
-    print u'Unable to determine Windows version.'
+      if options.database:
+        print u'Database output requires a Windows version, specify one with --winver.'
+        print u''
+        return False
 
-    if options.database:
-      print u'Database output requires a Windows version, specify one with --winver.'
-      print u''
-      return False
+    collector.windows_version = options.windows_version
 
-  # Determine the value of %SystemRoot%.
-  if not collector.GetSystemRootFromRegistry():
-    print u'Unable to retrieve %SystemRoot%.'
-    print u''
-    return False
-
-  print u'Windows version: {0:s}.'.format(windows_version)
+  print u'Windows version: {0:s}.'.format(collector.windows_version)
   print u''
 
   collector.CollectEventLogMessageStrings(output_writer)
