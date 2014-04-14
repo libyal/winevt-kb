@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Script to print the message strings for all known Event Log sources.
+# Script to extract the strings from message resouce files for
+# Event Log sources.
 #
 # Copyright (c) 2013-2014, Joachim Metz <joachim.metz@gmail.com>
 #
@@ -41,16 +42,16 @@ from dfvfs.volume import tsk_volume_system
 
 
 if dfvfs.__version__ < '20140413':
-  raise ImportWarning('message_strings.py requires dfvfs 20140413 or later.')
+  raise ImportWarning('extract.py requires dfvfs 20140413 or later.')
 
 if pyexe.get_version() < '20131229':
-  raise ImportWarning('message_strings.py requires pyexe 20131229 or later.')
+  raise ImportWarning('extract.py requires pyexe 20131229 or later.')
 
 if pyregf.get_version() < '20130716':
-  raise ImportWarning('message_strings.py requires pyregf 20130716 or later.')
+  raise ImportWarning('extract.py requires pyregf 20130716 or later.')
 
 if pywrc.get_version() < '20140128':
-  raise ImportWarning('message_strings.py requires pywrc 20140128 or later.')
+  raise ImportWarning('extract.py requires pywrc 20140128 or later.')
 
 
 LANGUAGES = {
@@ -670,15 +671,15 @@ class EventLogProvider(object):
       self.event_message_files = event_message_filenames
 
 
-class EventMessageStringCollector(WindowsVolumeCollector):
-  """Class that defines an event message string collector."""
+class EventMessageStringExtractor(WindowsVolumeCollector):
+  """Class that defines an event message string extractor."""
 
   def __init__(self):
-    """Initializes the event message string collector object."""
-    super(EventMessageStringCollector, self).__init__()
+    """Initializes the event message string extractor object."""
+    super(EventMessageStringExtractor, self).__init__()
     self._system_root = None
     self._windows_version = None
-    self.ascii_codepage='cp1252'
+    self.ascii_codepage = 'cp1252'
     self.invalid_message_filenames = None
     self.missing_table_message_filenames = None
     self.preferred_language_identifier = 0x0409
@@ -832,8 +833,8 @@ class EventMessageStringCollector(WindowsVolumeCollector):
     """The Windows version."""
     self._windows_version = value
 
-  def CollectEventLogMessageStrings(self, output_writer):
-    """Collects the Event Log message strings from the message files.
+  def ExtractEventLogMessageStrings(self, output_writer):
+    """Extracts the Event Log message strings from the message files.
 
     Args:
       output_writer: the output writer (instance of OutputWriter).
@@ -1245,19 +1246,22 @@ class Sqlite3DatabaseFile(object):
       has_table = False
     return has_table
 
-  def GetValues(self, table_name, column_names, condition):
+  def GetValues(self, table_names, column_names, condition):
     """Retrieves values from a table.
 
     Args:
-      table_name: the table name.
+      table_names: list of table names.
       column_names: list of column names.
       condition: string containing the condition.
 
     Yields:
       A row object (instance of sqlite3.row).
     """
-    sql_query = u'SELECT {1:s} FROM {0:s} WHERE {2:s}'.format(
-        table_name, u', '.join(column_names), condition)
+    if condition:
+      condition = u' WHERE {0:s}'.format(condition)
+
+    sql_query = u'SELECT {1:s} FROM {0:s}{2:s}'.format(
+        u', '.join(table_names), u', '.join(column_names), condition)
 
     self._cursor.execute(sql_query)
 
@@ -1321,19 +1325,6 @@ class Sqlite3DatabaseFile(object):
     return True
 
 
-class MessageFileWriter(object):
-  """Class to represent a message file writer."""
-
-  def __init__(self, message_file):
-    """Initializes the message file writer object.
-
-    Args:
-      message_file: the message file (instance of MessageResourceFile).
-    """
-    super(MessageFileWriter, self).__init__()
-    self._message_file = message_file
-
-
 class Sqlite3EventProvidersWriter(object):
   """Class to represent a sqlite3 Event Log providers writer."""
 
@@ -1352,12 +1343,12 @@ class Sqlite3EventProvidersWriter(object):
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
-    table_name = 'event_log_providers'
+    table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
     condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
         event_log_provider.log_source, event_log_provider.log_type)
     values_list = list(self._database_file.GetValues(
-        table_name, column_names, condition))
+        table_names, column_names, condition))
 
     if len(values_list) == 1:
       values = values_list[0]
@@ -1372,11 +1363,11 @@ class Sqlite3EventProvidersWriter(object):
       message_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
     """
-    table_name = 'message_files'
+    table_names = ['message_files']
     column_names = ['message_file_key']
     condition = 'message_filename = "{0:s}"'.format(message_filename)
     values_list = list(self._database_file.GetValues(
-        table_name, column_names, condition))
+        table_names, column_names, condition))
 
     if len(values_list) == 1:
       values = values_list[0]
@@ -1418,7 +1409,7 @@ class Sqlite3EventProvidersWriter(object):
       condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
           event_log_provider.log_source, event_log_provider.log_type)
       values_list = list(self._database_file.GetValues(
-          table_name, column_names, condition))
+          [table_name], column_names, condition))
 
       if len(values_list) == 0:
         insert_values = True
@@ -1453,7 +1444,7 @@ class Sqlite3EventProvidersWriter(object):
     else:
       condition = 'message_filename = "{0:s}"'.format(message_filename)
       values_list = list(self._database_file.GetValues(
-          table_name, column_names, condition))
+          [table_name], column_names, condition))
 
       if len(values_list) == 0:
         insert_values = True
@@ -1466,7 +1457,7 @@ class Sqlite3EventProvidersWriter(object):
       self._database_file.InsertValues(table_name, column_names, values)
 
 
-class Sqlite3MessageFileWriter(MessageFileWriter):
+class Sqlite3MessageFileWriter(object):
   """Class to represent a sqlite3 message file writer."""
 
   def __init__(self, message_file):
@@ -1475,8 +1466,9 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
     Args:
       message_file: the message file (instance of MessageResourceFile).
     """
-    super(Sqlite3MessageFileWriter, self).__init__(message_file)
+    super(Sqlite3MessageFileWriter, self).__init__()
     self._database_file = Sqlite3DatabaseFile()
+    self._message_file = message_file
 
   def _GetMessageFileKey(self, message_file):
     """Retrieves the key of a message file.
@@ -1484,7 +1476,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
     Args:
       message_file: the message file (instance of MessageResourceFile).
     """
-    table_name = 'message_files'
+    table_names = ['message_files']
     column_names = ['message_file_key']
     condition = (
         'path = "{0:s}" AND file_version = "{1:s}" AND '
@@ -1492,7 +1484,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
             message_file.windows_path, message_file.file_version,
             message_file.product_version)
     values_list = list(self._database_file.GetValues(
-        table_name, column_names, condition))
+        table_names, column_names, condition))
 
     if len(values_list) == 1:
       values = values_list[0]
@@ -1524,7 +1516,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
       condition = 'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
           language_identifier, message_file_key)
       values_list = list(self._database_file.GetValues(
-          table_name, column_names, condition))
+          [table_name], column_names, condition))
 
       if len(values_list) == 0:
         insert_values = True
@@ -1566,7 +1558,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
     else:
       condition = 'message_identifier = "{0:s}"'.format(message_identifier)
       values_list = list(self._database_file.GetValues(
-          table_name, column_names, condition))
+          [table_name], column_names, condition))
 
       if len(values_list) == 1:
         values = values_list[0]
@@ -1619,7 +1611,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
               message_file.windows_path, message_file.file_version,
               message_file.product_version)
       values_list = list(self._database_file.GetValues(
-          table_name, column_names, condition))
+          [table_name], column_names, condition))
 
       if len(values_list) == 0:
         insert_values = True
@@ -1687,8 +1679,10 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
             self._message_file, message_table, language_identifier)
 
 
-class Sqlite3Writer(object):
+class Sqlite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
+
+  EVENT_PROVIDERS_DATABASE_FILENAME = u'winevt-kb.db'
 
   def __init__(self, databases_path):
     """Initializes the output writer object.
@@ -1696,8 +1690,14 @@ class Sqlite3Writer(object):
     Args:
       databases_path: the path to the database files.
     """
-    super(Sqlite3Writer, self).__init__()
+    super(Sqlite3OutputWriter, self).__init__()
     self._databases_path = databases_path
+    self._event_providers_writer = None
+
+  def Close(self):
+    """Closes the output writer object."""
+    self._event_providers_writer.Close()
+    self._event_providers_writer = None
 
   def Open(self):
     """Opens the output writer object.
@@ -1709,14 +1709,10 @@ class Sqlite3Writer(object):
       return False
 
     self._event_providers_writer = Sqlite3EventProvidersWriter()
-    self._event_providers_writer.Open(
-        os.path.join(self._databases_path, 'winevt-kb.db'))
+    self._event_providers_writer.Open(os.path.join(
+        self._databases_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
     return True
-
-  def Close(self):
-    """Closes the output writer object."""
-    self._event_providers_writer.Close()
 
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
@@ -1757,7 +1753,7 @@ class Sqlite3Writer(object):
     # the message file and the Windows version?
 
 
-class StdoutWriter(object):
+class StdoutOutputWriter(object):
   """Class that defines a stdout output writer."""
 
   def _WriteMessageTable(self, message_table):
@@ -1787,6 +1783,10 @@ class StdoutWriter(object):
 
           print ''
 
+  def Close(self):
+    """Closes the output writer object."""
+    pass
+
   def Open(self):
     """Opens the output writer object.
 
@@ -1794,10 +1794,6 @@ class StdoutWriter(object):
       A boolean containing True if successful or False if not.
     """
     return True
-
-  def Close(self):
-    """Closes the output writer object."""
-    pass
 
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
@@ -1840,124 +1836,6 @@ class StdoutWriter(object):
     self._WriteMessageTable(message_table)
 
 
-class WikiMessageFileWriter(object):
-  """Class to represent a Google Code wiki message file writer."""
-  # TODO: aparantly the filename should only contain 1 dot and end with .wiki
-
-  def Open(self, filename):
-    """Opens the file.
-
-    Args:
-      filename: the filename.
-    """
-    # Using binary mode to make sure to write Unix end of lines.
-    self._file = open(filename, 'wb')
-
-  def Close(self):
-    """Closes the file."""
-    self._file.close()
-
-  def WriteLine(self, line):
-    """Writes a line."""
-    self._file.write('{0:s}\r\n'.format(line))
-
-  def WriteLines(self, lines):
-    """Writes lines."""
-    for line in lines:
-      self.WriteLine(line)
-
-
-class WikiWriter(object):
-  """Class that defines a Google Code wiki output writer."""
-
-  def __init__(self, wiki_path):
-    """Initializes the Windows volume collector object.
-
-    Args:
-      wiki_path: the path to the directory containing the wiki files.
-    """
-    super(WikiWriter, self).__init__()
-    self._wiki_path = wiki_path
-
-  def _WriteMessageTable(self, message_table):
-    """Writes the Windows Message Resource file message table.
-
-    Args:
-      message_table: the message table (instance of pywrc.message_table).
-    """
-    if message_table.number_of_languages > 0:
-      for language_identifier in message_table.language_identifiers:
-        number_of_messages = message_table.get_number_of_messages(
-            language_identifier)
-
-        if number_of_messages > 0:
-          print '== LCID: 0x{0:08x} =='.format(language_identifier)
-          print '|| *Message identifier* || *Message string* ||'
-
-          for message_index in range(0, number_of_messages):
-            message_identifier = message_table.get_message_identifier(
-                language_identifier, message_index)
-            message_string = message_table.get_string(
-                language_identifier, message_index)
-
-            message_string = re.sub(r'\n', '\\\\n', message_string)
-            message_string = re.sub(r'\r', '\\\\r', message_string)
-            message_string = re.sub(r'\t', '\\\\t', message_string)
-
-            ouput_string = u'|| 0x{0:08x} || {{{{{{ {1:s} }}}}}} ||'.format(
-                message_identifier, message_string)
-
-            print ouput_string.encode('utf8')
-
-          print ''
-
-  def Close(self):
-    """Closes the output writer object."""
-    pass
-
-  def Open(self):
-    """Opens the output writer object.
-
-    Returns:
-      A boolean containing True if successful or False if not.
-    """
-    if not os.path.isdir(self._wiki_path):
-      return False
-    return True
-
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider.
-
-    Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-    """
-    # TODO: implement.
-    return
-
-  def WriteMessageFile(
-      self, event_log_provider, message_file, message_filename):
-    """Writes the Windows Message Resource file.
-
-    Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageResourceFile).
-      message_filename: the message filename.
-    """
-    # TODO: create file.
-
-    file_version = getattr(message_file, 'file_version', '')
-    product_version = getattr(message_file, 'product_version', '')
-
-    print u'= Message file ='
-    print u'|| *Path:* || {0:s} ||'.format(message_file.windows_path)
-    print u'|| *File version:* || {0:s} ||'.format(file_version)
-    print u'|| *Product version:* || {0:s} ||'.format(product_version)
-    print ''
-
-    message_table = message_file.GetMessageTableResource()
-    self.WriteMessageTable(message_table)
-
-
 def Main():
   """The main program function.
 
@@ -1965,7 +1843,7 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
-      'Extract the message strings for the known Event Log sources.'))
+      'Extract strings from message resouces files for Event Log sources.'))
 
   args_parser.add_argument(
       'source', nargs='?', action='store', metavar='/mnt/c/',
@@ -1976,10 +1854,6 @@ def Main():
   args_parser.add_argument(
       '--db', dest='database', action='store', metavar='./winevt-db/',
       default=None, help='path to write the sqlite3 databases to.')
-
-  args_parser.add_argument(
-      '--wiki', dest='wiki', action='store', metavar='./winevt-kb.wiki/',
-      default=None, help='path to write the wiki pages to.')
 
   args_parser.add_argument(
       '--winver', dest='windows_version', action='store', metavar='xp',
@@ -1999,52 +1873,51 @@ def Main():
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
   if options.database:
-    output_writer = Sqlite3Writer(options.database)
-  elif options.wiki:
-    output_writer = WikiWriter(options.wiki)
+    output_writer = Sqlite3OutputWriter(options.database)
   else:
-    output_writer = StdoutWriter()
+    output_writer = StdoutOutputWriter()
 
   if not output_writer.Open():
     print u'Unable to open output writer.'
     print u''
     return False
 
-  collector = EventMessageStringCollector()
+  extractor = EventMessageStringExtractor()
 
-  if not collector.GetWindowsVolumePathSpec(options.source):
+  if not extractor.GetWindowsVolumePathSpec(options.source):
     print (
         u'Unable to retrieve the volume with the Windows directory from: '
         u'{0:s}.').format(options.source)
     print ''
     return False
 
-  if not collector.windows_version:
+  if not extractor.windows_version:
     if not options.windows_version:
       print u'Unable to determine Windows version.'
 
       if options.database:
-        print u'Database output requires a Windows version, specify one with --winver.'
+        print (u'Database output requires a Windows version, specify one with '
+               u'--winver.')
         print u''
         return False
 
-    collector.windows_version = options.windows_version
+    extractor.windows_version = options.windows_version
 
-  print u'Windows version: {0:s}.'.format(collector.windows_version)
+  print u'Windows version: {0:s}.'.format(extractor.windows_version)
   print u''
 
-  collector.CollectEventLogMessageStrings(output_writer)
+  extractor.ExtractEventLogMessageStrings(output_writer)
   output_writer.Close()
 
-  if collector.invalid_message_filenames:
+  if extractor.invalid_message_filenames:
     print u'Message resource files not found or without resource section:'
-    for message_filename in collector.invalid_message_filenames:
+    for message_filename in extractor.invalid_message_filenames:
       print u'{0:s}'.format(message_filename)
     print u''
 
-  if collector.missing_table_message_filenames:
+  if extractor.missing_table_message_filenames:
     print u'Message resource files without a message table resource:'
-    for message_filename in collector.missing_table_message_filenames:
+    for message_filename in extractor.missing_table_message_filenames:
       print u'{0:s}'.format(message_filename)
     print u''
 
