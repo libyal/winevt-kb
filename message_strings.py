@@ -1074,11 +1074,12 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
     self._database_file = Sqlite3DatabaseFile()
 
   def _WriteMessage(
-      self, message_table, language_identifier, message_index, table_name,
-      has_table):
+      self, message_file, message_table, language_identifier, message_index,
+      table_name, has_table):
     """Writes a message to a specific message table.
 
     Args:
+      message_file: the message file (instance of MessageResourceFile).
       message_table: the message table (instance of pywrc.message_table).
       language_identifier: the language identifier (LCID).
       message_index: the message index.
@@ -1096,8 +1097,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
         language_identifier, message_index)
 
     if not has_table:
-      values = [message_identifier, message_string]
-      self._database_file.InsertValues(table_name, column_names, values)
+      insert_values = True
 
     else:
       condition = 'message_identifier = "{0:s}"'.format(message_identifier)
@@ -1111,7 +1111,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
               u'Message string mismatch for LCID: 0x{0:08x}, '
               u'file version: {1:s}, message identifier: {2:s}.\n'
               u'Found: {2:s}\nStored: {3:s}\n').format(
-                  language_identifier, self._message_file.file_version,
+                  language_identifier, message_file.file_version,
                   message_identifier, message_string,
                   values['message_string']))
 
@@ -1119,13 +1119,60 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
         logging.warning((
              u'More than one message string found for LCID: 0x{0:08x}, '
              u'file version: {1:s}, message identifier: {2:s}.').format(
-                 language_identifier, self._message_file.file_version,
+                 language_identifier, message_file.file_version,
                  message_identifier))
 
-  def _WriteMessageTable(self, message_table, language_identifier):
+      # TODO: warn if new message has been found.
+      insert_values = False
+
+    if insert_values:
+      values = [message_identifier, message_string]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def _WriteMessageFileInfo(self, message_file):
+    """Writes message file information.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+    """
+    table_name = 'message_files'
+    column_names = ['path', 'file_version', 'product_version']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'path TEXT', 'file_version TEXT', 'product_version TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+
+    if not has_table:
+      insert_values = True
+
+    else:
+      condition = (
+          'path = "{0:s}" AND file_version = "{1:s}" AND '
+          'product_version = "{2:s}"').format(
+              message_file.windows_path, message_file.file_version,
+              message_file.product_version)
+      values_list = list(self._database_file.GetValues(
+          table_name, column_names, condition))
+
+      if len(values_list) == 0:
+        insert_values = True
+      else:
+        insert_values = False
+
+    if insert_values:
+      values = [
+          message_file.windows_path, message_file.file_version,
+          message_file.product_version]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def _WriteMessageTable(
+      self, message_file, message_table, language_identifier):
     """Writes a message table for a specific language identifier.
 
     Args:
+      message_file: the message file (instance of MessageResourceFile).
       message_table: the message table (instance of pywrc.message_table).
       language_identifier: the language identifier (LCID).
     """
@@ -1134,7 +1181,7 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
 
     if number_of_messages > 0:
       table_name = u'message_table_0x{0:08x}_{1:s}'.format(
-          language_identifier, self._message_file.file_version)
+          language_identifier, message_file.file_version)
       table_name = re.sub('\.', '_', table_name)
 
       has_table = self._database_file.HasTable(table_name)
@@ -1144,8 +1191,8 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
 
       for message_index in range(0, number_of_messages):
         self._WriteMessage(
-            message_table, language_identifier, message_index, table_name,
-            has_table)
+            message_file, message_table, language_identifier, message_index,
+            table_name, has_table)
 
   def Close(self):
     """Closes the message file writer object."""
@@ -1164,11 +1211,14 @@ class Sqlite3MessageFileWriter(MessageFileWriter):
 
   def WriteMessageTables(self):
     """Writes the message tables."""
+    self._WriteMessageFileInfo(self._message_file)
+
     message_table = self._message_file.GetMessageTableResource()
 
     if message_table.number_of_languages > 0:
       for language_identifier in message_table.language_identifiers:
-        self._WriteMessageTable(message_table, language_identifier)
+        self._WriteMessageTable(
+            self._message_file, message_table, language_identifier)
 
 
 class Sqlite3Writer(object):
