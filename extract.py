@@ -1675,6 +1675,7 @@ class Sqlite3MessageFileWriter(object):
     message_table = self._message_file.GetMessageTableResource()
     if message_table.number_of_languages > 0:
       for language_identifier in message_table.language_identifiers:
+        # TODO track the languages in a table.
         self._WriteMessageTable(
             self._message_file, message_table, language_identifier)
 
