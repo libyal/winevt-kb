@@ -667,7 +667,7 @@ class EventLogProvider(object):
 
   def __init__(
       self, log_type, log_source, category_message_filenames,
-      event_message_filenames):
+      event_message_filenames, parameter_message_filenames):
     """Initializes the Windows Event Log provider.
 
     Args:
@@ -677,6 +677,8 @@ class EventLogProvider(object):
                                   the category strings.
       event_message_filenames: the message filenames that contain
                                the event messages.
+      parameter_message_filenames: the message filenames that contain
+                                   the parameter strings.
     """
     super(EventLogProvider, self).__init__()
     self.log_type = log_type
@@ -693,6 +695,11 @@ class EventLogProvider(object):
       self.event_message_files = event_message_filenames.split(';')
     else:
       self.event_message_files = event_message_filenames
+
+    if parameter_message_filenames:
+      self.parameter_message_files = parameter_message_filenames.split(';')
+    else:
+      self.parameter_message_files = parameter_message_filenames
 
 
 class EventMessageStringExtractor(WindowsVolumeCollector):
@@ -872,6 +879,7 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
       for event_log_source, event_log_provider in event_log_sources.iteritems():
         output_writer.WriteEventLogProvider(event_log_provider)
 
+        # TODO: parse category and parameter messages files.
         if event_log_provider.event_message_files:
           for message_filename in event_log_provider.event_message_files:
             if message_filename in processed_message_filenames:
@@ -1212,9 +1220,17 @@ class RegistryFile(object):
             else:
               event_message_files = None
 
+            parameter_message_file_value = log_source_key.get_value_by_name(
+                'ParameterMessageFile')
+  
+            if parameter_message_file_value:
+              parameter_message_files = parameter_message_file_value.data_as_string
+            else:
+              parameter_message_files = None
+
             yield EventLogProvider(
                 log_type, log_source, category_message_files,
-                event_message_files)
+                event_message_files, parameter_message_files)
 
 
 class Sqlite3DatabaseFile(object):
@@ -1367,6 +1383,9 @@ class Sqlite3EventProvidersWriter(object):
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
+
+    Returns:
+      The key of the Event Log provider.
     """
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
@@ -1838,6 +1857,9 @@ class StdoutOutputWriter(object):
 
     print u'Messages\t: {0:s}'.format(
         event_log_provider.event_message_files)
+
+    print u'Parameters\t: {0:s}'.format(
+        event_log_provider.parameter_message_files)
 
     print ''
 
