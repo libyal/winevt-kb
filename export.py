@@ -17,10 +17,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import logging
 import os
+import re
+import sys
 
 import sqlite3
+
+
+class Message(object):
+  """Class that contains a message."""
+
+  def __init__(self, identifier, string):
+    """Initializes the message object.
+
+    Args:
+      identifier: the message identifier.
+      string: the message string.
+    """
+    super(Message, self).__init__()
+    self.identifier = identifier
+    self.string = string
+
+
+class MessageFile(object):
+  """Class that contains the messages per file."""
+
+  def __init__(self):
+    """Initializes the message file object."""
+    super(MessageFile, self).__init__()
+    self.tables_per_language = {}
+
+  def AppendTable(self, lcid, table_name):
+    """Appens a table for a specific language.
+
+    Args:
+      lcid: the language identifier.
+      table_name: the table name.
+    """
+    if lcid not in self.tables_per_language:
+      self.tables_per_language[lcid] = MessageTable(lcid)
+
+    self.tables_per_language[lcid].tables.append(table_name)
+
+  def GetTables(self, lcid):
+    """Retrieves the tables for a specific language.
+
+    Args:
+      lcid: the language identifier.
+
+    Returns:
+      The table name.
+    """
+    for table_name in self.tables_per_language[lcid]:
+      yield table_name
+
+
+class MessageTable(object):
+  """Class that contains the messages per language."""
+
+  def __init__(self, lcid):
+    """Initializes the message table object.
+
+    Args:
+      lcid: the language identifier.
+    """
+    super(MessageTable, self).__init__()
+    self.lcid = lcid
+    self.tables = []
+    self.messages = []
 
 
 class Exporter(object):
@@ -48,25 +114,31 @@ class Exporter(object):
 
     for values in event_provider_database.GetValues(
         table_names, column_names, condition):
-      message_file_path = os.path.join(source_path, values['database_filename'])
+      database_filename = values['database_filename']
+      message_file_path = os.path.join(source_path, database_filename)
 
       if not os.path.exists(message_file_path):
-        logging.warning(u'Missing message file database: {0:s}.'.format(
-            values['database_filename']))
+        logging.warning(
+            u'Missing message file database: {0:s}.'.format(database_filename))
         continue
 
+      logging.info('Processing: {0:s}'.format(database_filename))
       message_file_database = Sqlite3DatabaseFile()
       message_file_database.Open(message_file_path)
 
-      self._ExportMessageStrings(message_file_database, output_writer)
-      self._ExportStrings(message_file_database, output_writer)
+      self._ExportMessageStrings(
+          database_filename, message_file_database, output_writer)
+      self._ExportStrings(
+          database_filename, message_file_database, output_writer)
 
       message_file_database.Close()
 
-  def _ExportMessageStrings(self, message_file_database, output_writer):
+  def _ExportMessageStrings(
+      self, database_filename, message_file_database, output_writer):
     """Exports the message strings in a message file database.
 
     Args:
+      database_filename: the database filename.
       message_file_database: the message file database (instance of
                              Sqlite3DatabaseFile).
       output_writer: the output writer (instance of OutputWriter).
@@ -77,44 +149,54 @@ class Exporter(object):
         'message_files.message_file_key = '
         'languague_per_message_file.message_file_key')
 
-    message_strings_tables = []
-    for values in event_provider_database.GetValues(
-        table_names, column_names, condition):
-       table_name = 'message_table_{0:s}_{1:s}'.format(
-           values['lcid'], values['file_version'])
+    message_file = MessageFile()
 
-       message_strings_tables.append(table_name)
+    for values in message_file_database.GetValues(
+        table_names, column_names, condition):
+      lcid = values['lcid']
+      file_version = re.sub('\.', '_', values['file_version'])
+      table_name = 'message_table_{0:s}_{1:s}'.format(lcid, file_version)
+
+      message_file.AppendTable(lcid, table_name)
 
     column_names = ['message_identifier', 'message_string']
     condition = ''
 
     # TODO: create objects to track message strings and versions.
-    message_strings = {}
+    for lcid in message_file.message_tables.iterkeys():
+      message_strings = {}
 
-    for table_name in message_strings_tables:
-      for values in event_provider_database.GetValues(
-          [table_name], column_names, condition):
-        message_identifier = values['message_identifier']
-        message_string = values['message_string']
+      for table_name in message_file.GetTables(lcid):
+        for values in message_file_database.GetValues(
+            [table_name], column_names, condition):
+          message_identifier = values['message_identifier']
+          message_string = values['message_string']
 
-        if message_identifier not in message_strings:
-          message_strings[message_identifier] = message_string
+          if message_identifier not in message_strings:
+            message_strings[message_identifier] = message_string
 
-        elif message_strings[message_identifier] != message_string:
-          logging.warning((
-              u'Found duplicate alternating message string: {0:s} '
-              u'in {1:s}.\nPrevious: {1:s}\nNew:{2:s}\n').format(
-                  message_identifier, table_name,
-                  message_strings[message_identifier], message_string)
+          elif message_strings[message_identifier] != message_string:
+            logging.warning((
+                u'Found duplicate alternating message string: {0:s} '
+                u'in {1:s}.\nPrevious: {2:s}\nNew:{3:s}\n').format(
+                    message_identifier, table_name,
+                    message_strings[message_identifier], message_string))
 
-        # TODO: determine which string to use.
+          # TODO: determine which string to use.
+
+          message_tables[lcid].messages.append(
+              Message(message_identifier, message_string))
+
+        output_writer.WriteMessageTable(message_tables[lcid])
 
     # TODO: write message_strings to output.
 
-  def _ExportStrings(self, message_file_database, output_writer):
+  def _ExportStrings(
+      self, database_filename, message_file_database, output_writer):
     """Exports the strings in a message file database.
 
     Args:
+      database_filename: the database filename.
       message_file_database: the message file database (instance of
                              Sqlite3DatabaseFile).
       output_writer: the output writer (instance of OutputWriter).
@@ -136,13 +218,13 @@ class Exporter(object):
     # TODO: read the table with event providers
     # messages and categories.
 
-    table_names = []
-    column_names = []
+    table_names = ['event_log_providers']
+    column_names = ['log_source', 'log_type']
     condition = ''
 
+    # TODO: create a look up if the messages per event provider
     for values in event_provider_database.GetValues(
         table_names, column_names, condition):
-      # TODO: create a look up if the messages per event provider
       pass
 
     self._ExportMessageFiles(
@@ -322,10 +404,21 @@ class Sqlite3OutputWriter(object):
 class StdoutOutputWriter(object):
   """Class that defines a stdout output writer."""
 
+  def Open(self):
+    """Opens the file.
 
-class WikiMessageFileWriter(object):
-  """Class to represent a Google Code wiki message file writer."""
-  # TODO: aparantly the filename should only contain 1 dot and end with .wiki
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    return True
+
+  def Close(self):
+    """Closes the file."""
+
+
+class AsciidocMessageFileWriter(object):
+  """Class to represent an asciidoc message file writer."""
+  # TODO: aparantly the filename should only contain 1 dot and end with .asciidoc
 
   def Open(self, filename):
     """Opens the file.
@@ -350,49 +443,17 @@ class WikiMessageFileWriter(object):
       self.WriteLine(line)
 
 
-class WikiOutputWriter(object):
-  """Class that defines a Google Code wiki output writer."""
+class AsciidocOutputWriter(object):
+  """Class that defines an asciidoc output writer."""
 
-  def __init__(self, wiki_path):
-    """Initializes the Windows volume collector object.
-
-    Args:
-      wiki_path: the path to the directory containing the wiki files.
-    """
-    super(WikiOutputWriter, self).__init__()
-    self._wiki_path = wiki_path
-
-  def _WriteMessageTable(self, message_table):
-    """Writes the Windows Message Resource file message table.
+  def __init__(self, path):
+    """Initializes the asciidoc output writer object.
 
     Args:
-      message_table: the message table (instance of pywrc.message_table).
+      path: the path to the directory containing the asciidoc files.
     """
-    if message_table.number_of_languages > 0:
-      for language_identifier in message_table.language_identifiers:
-        number_of_messages = message_table.get_number_of_messages(
-            language_identifier)
-
-        if number_of_messages > 0:
-          print '== LCID: 0x{0:08x} =='.format(language_identifier)
-          print '|| *Message identifier* || *Message string* ||'
-
-          for message_index in range(0, number_of_messages):
-            message_identifier = message_table.get_message_identifier(
-                language_identifier, message_index)
-            message_string = message_table.get_string(
-                language_identifier, message_index)
-
-            message_string = re.sub(r'\n', '\\\\n', message_string)
-            message_string = re.sub(r'\r', '\\\\r', message_string)
-            message_string = re.sub(r'\t', '\\\\t', message_string)
-
-            ouput_string = u'|| 0x{0:08x} || {{{{{{ {1:s} }}}}}} ||'.format(
-                message_identifier, message_string)
-
-            print ouput_string.encode('utf8')
-
-          print ''
+    super(AsciidocOutputWriter, self).__init__()
+    self._path = path
 
   def Close(self):
     """Closes the output writer object."""
@@ -404,7 +465,7 @@ class WikiOutputWriter(object):
     Returns:
       A boolean containing True if successful or False if not.
     """
-    if not os.path.isdir(self._wiki_path):
+    if not os.path.isdir(self._path):
       return False
     return True
 
@@ -416,6 +477,15 @@ class WikiOutputWriter(object):
     """
     # TODO: implement.
     return
+
+  def WriteLine(self, line):
+    """Writes a line."""
+    print '{0:s}'.format(line)
+
+  def WriteLines(self, lines):
+    """Writes lines."""
+    for line in lines:
+      self.WriteLine(line)
 
   def WriteMessageFile(
       self, event_log_provider, message_file, message_filename):
@@ -431,14 +501,42 @@ class WikiOutputWriter(object):
     file_version = getattr(message_file, 'file_version', '')
     product_version = getattr(message_file, 'product_version', '')
 
-    print u'= Message file ='
-    print u'|| *Path:* || {0:s} ||'.format(message_file.windows_path)
-    print u'|| *File version:* || {0:s} ||'.format(file_version)
-    print u'|| *Product version:* || {0:s} ||'.format(product_version)
-    print ''
+    print u'== Message file'
+    print u'|==='
+    print u'| Path: | {0:s}'.format(message_file.windows_path)
+    print u'| File version: | {0:s}'.format(file_version)
+    print u'| Product version: | {0:s}'.format(product_version)
+    print u'|==='
+    print u''
 
     message_table = message_file.GetMessageTableResource()
-    self.WriteMessageTable(message_table)
+
+  def WriteMessageTable(self, message_table):
+    """Writes the message table.
+
+    Args:
+      message_table: the message table (instance of MessageTable).
+    """
+    self.WriteLines([
+        '=== LCID: {0:s}'.format(message_table.lcid),
+        '',
+        '[cols="1,5",options="header"]',
+        '|===',
+        '| Message identifier | Message string'])
+
+    for message in message_table.messages:
+      message_string = re.sub(r'\n', '\\\\n', message.string)
+      message_string = re.sub(r'\r', '\\\\r', message_string)
+      message_string = re.sub(r'\t', '\\\\t', message_string)
+
+      ouput_string = u'| {0:s} | {1:s}'.format(
+          message.identifier, message_string)
+
+      self.WriteLine(ouput_string.encode('utf8'))
+
+    self.WriteLines([
+        '|===',
+        ''])
 
 
 def Main():
@@ -485,7 +583,7 @@ def Main():
   if options.database:
     output_writer = Sqlite3OutputWriter(options.database)
   elif options.wiki:
-    output_writer = WikiOutputWriter(options.wiki)
+    output_writer = AsciidocOutputWriter(options.wiki)
   else:
     output_writer = StdoutOutputWriter()
 
