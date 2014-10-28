@@ -26,67 +26,71 @@ import sys
 import sqlite3
 
 
-class Message(object):
-  """Class that contains a message."""
-
-  def __init__(self, identifier, string):
-    """Initializes the message object.
-
-    Args:
-      identifier: the message identifier.
-      string: the message string.
-    """
-    super(Message, self).__init__()
-    self.identifier = identifier
-    self.string = string
-
-
 class MessageFile(object):
   """Class that contains the messages per file."""
 
-  def __init__(self):
-    """Initializes the message file object."""
-    super(MessageFile, self).__init__()
-    self.tables_per_language = {}
+  def __init__(self, name):
+    """Initializes the message file object.
 
-  def AppendTable(self, lcid, table_name):
-    """Appens a table for a specific language.
+    Args:
+      name: the name.
+    """
+    super(MessageFile, self).__init__()
+    self.name = name
+    self.file_version = None
+    self.product_version = None
+    self.tables_per_language = {}
+    self.windows_path = None
+
+  def AppendTable(self, lcid, language, table_name):
+    """Appends a table for a specific language.
 
     Args:
       lcid: the language identifier.
+      language: the language.
       table_name: the table name.
     """
     if lcid not in self.tables_per_language:
-      self.tables_per_language[lcid] = MessageTable(lcid)
+      self.tables_per_language[lcid] = MessageTable(lcid, language)
 
     self.tables_per_language[lcid].tables.append(table_name)
 
-  def GetTables(self, lcid):
-    """Retrieves the tables for a specific language.
+  def GetMessageTable(self, lcid):
+    """Retrieves the message table for a specific language.
 
     Args:
       lcid: the language identifier.
 
     Returns:
-      The table name.
+      The message table (instance of MessageTable).
     """
-    for table_name in self.tables_per_language[lcid]:
-      yield table_name
+    return self.tables_per_language.get(lcid, None)
+
+  def GetMessageTables(self):
+    """Retrieves the message tables.
+
+    Yields:
+      Message tables (instances of MessageTable).
+    """
+    for message_table in self.tables_per_language.itervalues():
+      yield message_table
 
 
 class MessageTable(object):
   """Class that contains the messages per language."""
 
-  def __init__(self, lcid):
+  def __init__(self, lcid, language):
     """Initializes the message table object.
 
     Args:
       lcid: the language identifier.
+      language: the language.
     """
     super(MessageTable, self).__init__()
+    self.language = language
     self.lcid = lcid
+    self.message_strings = {}
     self.tables = []
-    self.messages = []
 
 
 class Exporter(object):
@@ -126,30 +130,28 @@ class Exporter(object):
       message_file_database = Sqlite3DatabaseFile()
       message_file_database.Open(message_file_path)
 
-      self._ExportMessageStrings(
-          database_filename, message_file_database, output_writer)
-      self._ExportStrings(
-          database_filename, message_file_database, output_writer)
+      message_file = MessageFile(database_filename[:-3])
+
+      self._ExportMessageStrings(message_file, message_file_database)
+      self._ExportStrings(message_file, message_file_database)
 
       message_file_database.Close()
 
-  def _ExportMessageStrings(
-      self, database_filename, message_file_database, output_writer):
+      output_writer.WriteMessageFile(message_file)
+
+  def _ExportMessageStrings(self, message_file, message_file_database):
     """Exports the message strings in a message file database.
 
     Args:
-      database_filename: the database filename.
+      message_file: the message file (instance of MessageFile).
       message_file_database: the message file database (instance of
                              Sqlite3DatabaseFile).
-      output_writer: the output writer (instance of OutputWriter).
     """
     table_names = ['message_files', 'languague_per_message_file']
-    column_names = ['file_version', 'lcid']
+    column_names = ['file_version', 'lcid', 'identifier']
     condition = (
         'message_files.message_file_key = '
         'languague_per_message_file.message_file_key')
-
-    message_file = MessageFile()
 
     for values in message_file_database.GetValues(
         table_names, column_names, condition):
@@ -157,49 +159,41 @@ class Exporter(object):
       file_version = re.sub('\.', '_', values['file_version'])
       table_name = 'message_table_{0:s}_{1:s}'.format(lcid, file_version)
 
-      message_file.AppendTable(lcid, table_name)
+      message_file.AppendTable(lcid, values['identifier'], table_name)
 
     column_names = ['message_identifier', 'message_string']
     condition = ''
 
-    # TODO: create objects to track message strings and versions.
-    for lcid in message_file.message_tables.iterkeys():
-      message_strings = {}
-
-      for table_name in message_file.GetTables(lcid):
+    for message_table in message_file.GetMessageTables():
+      for table_name in message_table.tables:
         for values in message_file_database.GetValues(
             [table_name], column_names, condition):
           message_identifier = values['message_identifier']
           message_string = values['message_string']
 
-          if message_identifier not in message_strings:
-            message_strings[message_identifier] = message_string
+          stored_message_string = message_table.message_strings.get(
+              message_identifier, None)
 
-          elif message_strings[message_identifier] != message_string:
+          if not stored_message_string:
+            message_table.message_strings[message_identifier] = message_string
+
+          elif message_string != stored_message_string:
             logging.warning((
                 u'Found duplicate alternating message string: {0:s} '
                 u'in {1:s}.\nPrevious: {2:s}\nNew:{3:s}\n').format(
-                    message_identifier, table_name,
-                    message_strings[message_identifier], message_string))
+                    message_identifier, table_name, stored_message_string,
+                    message_string))
 
-          # TODO: determine which string to use.
+            # TODO: is there a better way to determine which string to use.
+            # E.g. latest build version?
 
-          message_tables[lcid].messages.append(
-              Message(message_identifier, message_string))
-
-        output_writer.WriteMessageTable(message_tables[lcid])
-
-    # TODO: write message_strings to output.
-
-  def _ExportStrings(
-      self, database_filename, message_file_database, output_writer):
+  def _ExportStrings(self, message_file, message_file_database):
     """Exports the strings in a message file database.
 
     Args:
-      database_filename: the database filename.
+      message_file: the message file (instance of MessageFile).
       message_file_database: the message file database (instance of
                              Sqlite3DatabaseFile).
-      output_writer: the output writer (instance of OutputWriter).
     """
     # TODO: iterate and merge the strings tables.
     pass
@@ -416,8 +410,8 @@ class StdoutOutputWriter(object):
     """Closes the file."""
 
 
-class AsciidocMessageFileWriter(object):
-  """Class to represent an asciidoc message file writer."""
+class AsciidocFileWriter(object):
+  """Class to represent an asciidoc file writer."""
   # TODO: aparantly the filename should only contain 1 dot and end with .asciidoc
 
   def Open(self, filename):
@@ -425,9 +419,13 @@ class AsciidocMessageFileWriter(object):
 
     Args:
       filename: the filename.
+
+    Returns:
+      A boolean containing True if successful or False if not.
     """
     # Using binary mode to make sure to write Unix end of lines.
     self._file = open(filename, 'wb')
+    return True
 
   def Close(self):
     """Closes the file."""
@@ -435,7 +433,7 @@ class AsciidocMessageFileWriter(object):
 
   def WriteLine(self, line):
     """Writes a line."""
-    self._file.write('{0:s}\r\n'.format(line))
+    self._file.write('{0:s}\n'.format(line))
 
   def WriteLines(self, lines):
     """Writes lines."""
@@ -454,6 +452,33 @@ class AsciidocOutputWriter(object):
     """
     super(AsciidocOutputWriter, self).__init__()
     self._path = path
+
+  def _WriteMessageTable(self, message_table, file_writer):
+    """Writes the message table.
+
+    Args:
+      message_table: the message table (instance of MessageTable).
+      file_writer: the file writer (instance of AsciidocFileWriter).
+    """
+    file_writer.WriteLines([
+        u'=== {0:s} (LCID: {1:s})'.format(message_table.language, message_table.lcid),
+        u'',
+        u'[cols="1,5",options="header"]',
+        u'|===',
+        u'| Message identifier | Message string'])
+
+    for identifier, string in message_table.message_strings.iteritems():
+      string = re.sub(r'\n', '\\\\n', string)
+      string = re.sub(r'\r', '\\\\r', string)
+      string = re.sub(r'\t', '\\\\t', string)
+
+      ouput_string = u'| {0:s} | {1:s}'.format(identifier, string)
+
+      file_writer.WriteLine(ouput_string.encode('utf8'))
+
+    file_writer.WriteLines([
+        u'|===',
+        u''])
 
   def Close(self):
     """Closes the output writer object."""
@@ -478,65 +503,34 @@ class AsciidocOutputWriter(object):
     # TODO: implement.
     return
 
-  def WriteLine(self, line):
-    """Writes a line."""
-    print '{0:s}'.format(line)
-
-  def WriteLines(self, lines):
-    """Writes lines."""
-    for line in lines:
-      self.WriteLine(line)
-
-  def WriteMessageFile(
-      self, event_log_provider, message_file, message_filename):
+  def WriteMessageFile(self, message_file):
     """Writes the Windows Message Resource file.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageResourceFile).
-      message_filename: the message filename.
+      message_file: the message file (instance of MessageFile).
     """
-    # TODO: create file.
+    file_writer = AsciidocFileWriter()
+    path = os.path.join(
+        self._path, u'{0:s}.asciidoc'.format(message_file.name))
 
-    file_version = getattr(message_file, 'file_version', '')
-    product_version = getattr(message_file, 'product_version', '')
+    if file_writer.Open(path):
 
-    print u'== Message file'
-    print u'|==='
-    print u'| Path: | {0:s}'.format(message_file.windows_path)
-    print u'| File version: | {0:s}'.format(file_version)
-    print u'| Product version: | {0:s}'.format(product_version)
-    print u'|==='
-    print u''
+      # file_version = getattr(message_file, 'file_version', '')
+      # product_version = getattr(message_file, 'product_version', '')
 
-    message_table = message_file.GetMessageTableResource()
+      file_writer.WriteLines([
+          u'== {0:s}'.format(message_file.name),
+          u'|===',
+          u'| Path: | {0:s}'.format(message_file.windows_path),
+          u'| File version: | {0:s}'.format(message_file.file_version),
+          u'| Product version: | {0:s}'.format(message_file.product_version),
+          u'|===',
+          u''])
 
-  def WriteMessageTable(self, message_table):
-    """Writes the message table.
+      for message_table in message_file.GetMessageTables():
+        self._WriteMessageTable(message_table, file_writer)
 
-    Args:
-      message_table: the message table (instance of MessageTable).
-    """
-    self.WriteLines([
-        '=== LCID: {0:s}'.format(message_table.lcid),
-        '',
-        '[cols="1,5",options="header"]',
-        '|===',
-        '| Message identifier | Message string'])
-
-    for message in message_table.messages:
-      message_string = re.sub(r'\n', '\\\\n', message.string)
-      message_string = re.sub(r'\r', '\\\\r', message_string)
-      message_string = re.sub(r'\t', '\\\\t', message_string)
-
-      ouput_string = u'| {0:s} | {1:s}'.format(
-          message.identifier, message_string)
-
-      self.WriteLine(ouput_string.encode('utf8'))
-
-    self.WriteLines([
-        '|===',
-        ''])
+      file_writer.Close()
 
 
 def Main():
