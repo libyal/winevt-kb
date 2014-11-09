@@ -102,9 +102,20 @@ class Exporter(object):
     """Initializes the exporter object."""
     super(Exporter, self).__init__()
 
+  def _ExportEventLogProviders(self, event_provider_database, output_writer):
+    """Exports the event log provides from an event provider database.
+
+    Args:
+      event_provider_database: the event provider database (instance of
+                               Sqlite3DatabaseFile).
+      output_writer: the output writer (instance of OutputWriter).
+    """
+    # TODO
+    return
+
   def _ExportMessageFiles(
       self, source_path, event_provider_database, output_writer):
-    """Exports the message files an event provider database.
+    """Exports the message files from an event provider database.
 
     Args:
       source_path: the source path.
@@ -140,7 +151,7 @@ class Exporter(object):
       output_writer.WriteMessageFile(message_file)
 
   def _ExportMessageStrings(self, message_file, message_file_database):
-    """Exports the message strings in a message file database.
+    """Exports the message strings from a message file database.
 
     Args:
       message_file: the message file (instance of MessageFile).
@@ -514,9 +525,6 @@ class AsciidocOutputWriter(object):
         self._path, u'{0:s}.asciidoc'.format(message_file.name))
 
     if file_writer.Open(path):
-
-      # file_version = getattr(message_file, 'file_version', '')
-      # product_version = getattr(message_file, 'product_version', '')
 
       file_writer.WriteLines([
           u'== {0:s}'.format(message_file.name),
