@@ -32,7 +32,8 @@ import pyregf
 import pywrc
 import sqlite3
 
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.helpers import source_scanner
 from dfvfs.helpers import windows_path_resolver
 from dfvfs.resolver import resolver
@@ -524,7 +525,11 @@ class WindowsVolumeCollector(object):
           volume_location)
       volume_path_spec = getattr(volume_scan_node, 'path_spec', None)
 
+      # The leaf scan node contains the actual file system.
       file_system_scan_node = volume_scan_node.GetSubNodeByLocation(u'/')
+      while file_system_scan_node.sub_nodes:
+        file_system_scan_node = file_system_scan_node.GetSubNodeByLocation(u'/')
+
       file_system_path_spec = getattr(file_system_scan_node, 'path_spec', None)
       file_system = resolver.Resolver.OpenFileSystem(file_system_path_spec)
 
@@ -557,8 +562,11 @@ class WindowsVolumeCollector(object):
                       is not a file or directory, or if the format of or within
                       the source file is not supported.
     """
-    if not os.path.exists(source_path):
-      raise CollectorError(u'No such source: {0:s}.'.format(source_path))
+    # Note that os.path.exists() does not support Windows device paths.
+    if (not source_path.startswith('\\\\.\\') and
+        not os.path.exists(source_path)):
+      raise CollectorError(
+          u'No such device, file or directory: {0:s}.'.format(source_path))
 
     scan_context = source_scanner.SourceScannerContext()
     scan_path_spec = None
@@ -566,28 +574,34 @@ class WindowsVolumeCollector(object):
     scan_context.OpenSourcePath(source_path)
 
     while True:
-      scan_context = self._scanner.Scan(
-          scan_context, scan_path_spec=scan_path_spec)
+      last_scan_node = scan_context.last_scan_node
+      try:
+        scan_context = self._scanner.Scan(
+            scan_context, scan_path_spec=scan_path_spec)
+      except dfvfs_errors.BackEndError as exception:
+        raise CollectorError(
+            u'Unable to scan source, with error: {0:s}'.format(exception))
 
       # The source is a directory or file.
       if scan_context.source_type in [
           scan_context.SOURCE_TYPE_DIRECTORY, scan_context.SOURCE_TYPE_FILE]:
         break
 
-      if not scan_context.last_scan_node:
+      if (not scan_context.last_scan_node or
+          scan_context.last_scan_node == last_scan_node):
         raise CollectorError(
             u'No supported file system found in source: {0:s}.'.format(
-                source_path))
+                self._source_path))
 
       # The source scanner found a file system.
       if scan_context.last_scan_node.type_indicator in [
-          definitions.TYPE_INDICATOR_TSK]:
+          dfvfs_definitions.TYPE_INDICATOR_TSK]:
         break
 
       # The source scanner found a BitLocker encrypted volume and we need
       # a credential to unlock the volume.
       if scan_context.last_scan_node.type_indicator in [
-          definitions.TYPE_INDICATOR_BDE]:
+          dfvfs_definitions.TYPE_INDICATOR_BDE]:
         # TODO: ask for password.
         raise CollectorError(
             u'BitLocker encrypted volume not yet supported.')
@@ -595,7 +609,7 @@ class WindowsVolumeCollector(object):
       # The source scanner found a partition table and we need to determine
       # which partition contains the Windows directory.
       elif scan_context.last_scan_node.type_indicator in [
-          definitions.TYPE_INDICATOR_TSK_PARTITION]:
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
         scan_node = self._ScanTSKPartionVolumeSystemPathSpec(scan_context)
         if not scan_node:
           return False
@@ -603,7 +617,8 @@ class WindowsVolumeCollector(object):
 
       # The source scanner found Volume Shadow Snapshot which is ignored.
       elif scan_context.last_scan_node.type_indicator in [
-          definitions.TYPE_INDICATOR_VSHADOW]:
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
+        # Get the scan node of the current volume.
         scan_node = scan_context.last_scan_node.GetSubNodeByLocation(u'/')
         scan_context.last_scan_node = scan_node
         break
@@ -611,7 +626,7 @@ class WindowsVolumeCollector(object):
       else:
         raise CollectorError(
             u'Unsupported volume system found in source: {0:s}.'.format(
-                source_path))
+                self._source_path))
 
     # TODO: add single file support.
     if scan_context.source_type == scan_context.SOURCE_TYPE_FILE:
@@ -620,7 +635,7 @@ class WindowsVolumeCollector(object):
 
     if scan_context.source_type != scan_context.SOURCE_TYPE_DIRECTORY:
       if not scan_context.last_scan_node.type_indicator in [
-          definitions.TYPE_INDICATOR_TSK]:
+          dfvfs_definitions.TYPE_INDICATOR_TSK]:
         raise CollectorError(
             u'Unsupported source: {0:s} found unsupported file system.'.format(
                 source_path))
@@ -630,7 +645,7 @@ class WindowsVolumeCollector(object):
     self._file_system = resolver.Resolver.OpenFileSystem(
         file_system_path_spec)
 
-    if file_system_path_spec.type_indicator == definitions.TYPE_INDICATOR_OS:
+    if file_system_path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       mount_point = file_system_path_spec
     else:
       mount_point = file_system_path_spec.parent
@@ -1612,7 +1627,7 @@ class Sqlite3MessageFileWriter(object):
 
     raise RuntimeError(u'More than one value found in database.')
 
-  def _WriteLanguage(self, message_file, language_identifier):
+  def _WriteLanguage(self, message_file, message_file_key, language_identifier):
     """Writes a language.
 
     Args:
@@ -1801,7 +1816,15 @@ class Sqlite3MessageFileWriter(object):
     self._WriteMessageFile(self._message_file)
 
     message_table = self._message_file.GetMessageTableResource()
-    if message_table.number_of_languages > 0:
+    try:
+      number_of_languages = message_table.get_number_of_languages()
+    except IOError as exception:
+      number_of_languages = 0
+      logging.warning(
+          u'Unable to retrieve number of languages from: {0:s} '
+          u'with error: {1:s}.'.format(self._message_file, exception))
+
+    if number_of_languages > 0:
       for language_identifier in message_table.language_identifiers:
         # TODO track the languages in a table.
         self._WriteMessageTable(
@@ -1888,7 +1911,15 @@ class StdoutOutputWriter(object):
     Args:
       message_table: the message table (instance of pywrc.message_table).
     """
-    if message_table.number_of_languages > 0:
+    try:
+      number_of_languages = message_table.get_number_of_languages()
+    except IOError as exception:
+      number_of_languages = 0
+      logging.warning(
+          u'Unable to retrieve number of languages with error: {0:s}.'.format(
+              exception))
+
+    if number_of_languages > 0:
       for language_identifier in message_table.language_identifiers:
         number_of_messages = message_table.get_number_of_messages(
             language_identifier)
