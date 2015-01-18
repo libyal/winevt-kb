@@ -4,7 +4,7 @@
 # Script to extract the strings from message resouce files for
 # Event Log sources.
 #
-# Copyright (c) 2013-2014, Joachim Metz <joachim.metz@gmail.com>
+# Copyright (c) 2013-2015, Joachim Metz <joachim.metz@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -513,7 +513,7 @@ class WindowsVolumeCollector(object):
 
     volume_identifiers = self._scanner.GetVolumeIdentifiers(volume_system)
     if not volume_identifiers:
-      return False
+      return
 
     volume_scan_node = None
     result = False
@@ -538,8 +538,10 @@ class WindowsVolumeCollector(object):
       if result:
         break
 
-    if result:
-      return volume_scan_node
+    if not result:
+      return
+
+    return volume_scan_node
 
   def GetWindowsVolumePathSpec(self, source_path):
     """Determines the file system path specification of the Windows volume.
@@ -660,46 +662,6 @@ class WindowsVolumeCollector(object):
       return None
 
     return resolver.Resolver.OpenFileObject(path_spec)
-
-
-class EventLogProvider(object):
-  """Class that defines a Windows Event Log provider."""
-
-  def __init__(
-      self, log_type, log_source, category_message_filenames,
-      event_message_filenames, parameter_message_filenames):
-    """Initializes the Windows Event Log provider.
-
-    Args:
-      log_type: the Event Log type.
-      log_source: the Event Log source.
-      category_message_filenames: the message filenames that contain
-                                  the category strings.
-      event_message_filenames: the message filenames that contain
-                               the event messages.
-      parameter_message_filenames: the message filenames that contain
-                                   the parameter strings.
-    """
-    super(EventLogProvider, self).__init__()
-    self.log_type = log_type
-    self.log_source = log_source
-
-    # It not empty the messages filenames can contain a list
-    # of message file paths separated by ;
-    if category_message_filenames:
-      self.category_message_files = category_message_filenames.split(';')
-    else:
-      self.category_message_files = category_message_filenames
-
-    if event_message_filenames:
-      self.event_message_files = event_message_filenames.split(';')
-    else:
-      self.event_message_files = event_message_filenames
-
-    if parameter_message_filenames:
-      self.parameter_message_files = parameter_message_filenames.split(';')
-    else:
-      self.parameter_message_files = parameter_message_filenames
 
 
 class EventMessageStringExtractor(WindowsVolumeCollector):
@@ -954,6 +916,46 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
             processed_message_filenames.append(message_filename)
 
             message_file.Close()
+
+
+class EventLogProvider(object):
+  """Class that defines a Windows Event Log provider."""
+
+  def __init__(
+      self, log_type, log_source, category_message_filenames,
+      event_message_filenames, parameter_message_filenames):
+    """Initializes the Windows Event Log provider.
+
+    Args:
+      log_type: the Event Log type.
+      log_source: the Event Log source.
+      category_message_filenames: the message filenames that contain
+                                  the category strings.
+      event_message_filenames: the message filenames that contain
+                               the event messages.
+      parameter_message_filenames: the message filenames that contain
+                                   the parameter strings.
+    """
+    super(EventLogProvider, self).__init__()
+    self.log_type = log_type
+    self.log_source = log_source
+
+    # It not empty the messages filenames can contain a list
+    # of message file paths separated by ;
+    if category_message_filenames:
+      self.category_message_files = category_message_filenames.split(';')
+    else:
+      self.category_message_files = category_message_filenames
+
+    if event_message_filenames:
+      self.event_message_files = event_message_filenames.split(';')
+    else:
+      self.event_message_files = event_message_filenames
+
+    if parameter_message_filenames:
+      self.parameter_message_files = parameter_message_filenames.split(';')
+    else:
+      self.parameter_message_files = parameter_message_filenames
 
 
 class MessageResourceFile(object):
@@ -1337,7 +1339,7 @@ class Sqlite3DatabaseFile(object):
       elif isinstance(value, float):
         value = u'{0:f}'.format(value)
       else:
-        raise RuntimeError(u'Unsupported value type.')
+        raise RuntimeError(u'Unsupported value type: {0:s}.'.format(type(value)))
       sql_values.append(value)
 
     sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
@@ -1373,10 +1375,6 @@ class Sqlite3EventProvidersWriter(object):
     """Initializes the Event Log providers writer object."""
     super(Sqlite3EventProvidersWriter, self).__init__()
     self._database_file = Sqlite3DatabaseFile()
-
-  def Close(self):
-    """Closes the Event Log providers writer object."""
-    self._database_file.Close()
 
   def _GetEventLogProviderKey(self, event_log_provider):
     """Retrieves the key of an Event Log provider.
@@ -1447,6 +1445,10 @@ class Sqlite3EventProvidersWriter(object):
     """
     self._database_file.Open(filename)
 
+  def Close(self):
+    """Closes the Event Log providers writer object."""
+    self._database_file.Close()
+
   def WriteMessageFilePerEventLogProvider(
       self, event_log_provider, message_file, message_filename):
     """Writes the message files used by an Event Log provider.
@@ -1505,8 +1507,6 @@ class Sqlite3EventProvidersWriter(object):
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      # TODO: write message files in a separate table and use the key
-      # instead of writing the list.
       column_definitions = [
           'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
           'log_source TEXT', 'log_type TEXT']
@@ -1617,11 +1617,10 @@ class Sqlite3MessageFileWriter(object):
 
     Args:
       message_file: the message file (instance of MessageResourceFile).
+      message_file_key: the message file key.
+      language_identifier: the language identifier (LCID).
     """
-    message_file_key = self._GetMessageFileKey(message_file)
-    # TODO: check if None.
-
-    table_name = 'languague_per_message_file'
+    table_name = 'language_per_message_file'
     column_names = ['lcid', 'message_file_key', 'identifier']
 
     has_table = self._database_file.HasTable(table_name)
@@ -1761,7 +1760,12 @@ class Sqlite3MessageFileWriter(object):
         language_identifier)
 
     if number_of_messages > 0:
-      self._WriteLanguage(message_file, language_identifier)
+      message_file_key = self._GetMessageFileKey(message_file)
+      if message_file_key is None:
+        logging.warning(u'Missing message file key for: {0:s}'.format(
+            message_filename))
+
+      self._WriteLanguage(message_file, message_file_key, language_identifier)
 
       table_name = u'message_table_0x{0:08x}_{1:s}'.format(
           language_identifier, message_file.file_version)
@@ -1890,8 +1894,8 @@ class StdoutOutputWriter(object):
             language_identifier)
 
         if number_of_messages > 0:
-          print u'Message table:'
-          print u'LCID\t\t: 0x{0:08x}'.format(language_identifier)
+          print(u'Message table:')
+          print(u'LCID\t\t: 0x{0:08x}'.format(language_identifier))
           for message_index in range(0, number_of_messages):
             message_identifier = message_table.get_message_identifier(
                 language_identifier, message_index)
@@ -1901,9 +1905,9 @@ class StdoutOutputWriter(object):
             ouput_string = u'0x{0:08x}\t: {1:s}'.format(
                 message_identifier, message_string)
 
-            print ouput_string.encode('utf8')
+            print(ouput_string.encode('utf8'))
 
-          print ''
+          print(u'')
 
   def Close(self):
     """Closes the output writer object."""
@@ -1923,22 +1927,22 @@ class StdoutOutputWriter(object):
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
-    print u'Source\t\t: {0:s}'.format(
-        event_log_provider.log_source)
+    print(u'Source\t\t: {0:s}'.format(
+        event_log_provider.log_source))
 
-    print u'Event Log type\t: {0:s}'.format(
-        event_log_provider.log_type)
+    print(u'Event Log type\t: {0:s}'.format(
+        event_log_provider.log_type))
 
-    print u'Categories\t: {0:s}'.format(
-        event_log_provider.category_message_files)
+    print(u'Categories\t: {0:s}'.format(
+        event_log_provider.category_message_files))
 
-    print u'Messages\t: {0:s}'.format(
-        event_log_provider.event_message_files)
+    print(u'Messages\t: {0:s}'.format(
+        event_log_provider.event_message_files))
 
-    print u'Parameters\t: {0:s}'.format(
-        event_log_provider.parameter_message_files)
+    print(u'Parameters\t: {0:s}'.format(
+        event_log_provider.parameter_message_files))
 
-    print ''
+    print(u'')
 
   def WriteMessageFile(
       self, event_log_provider, message_file, message_filename):
@@ -1952,10 +1956,10 @@ class StdoutOutputWriter(object):
     file_version = getattr(message_file, 'file_version', '')
     product_version = getattr(message_file, 'product_version', '')
 
-    print u'Message file:'
-    print u'Path\t\t: {0:s}'.format(message_file.windows_path)
-    print u'File version\t: {0:s}'.format(file_version)
-    print u'Product version\t: {0:s}'.format(product_version)
+    print(u'Message file:')
+    print(u'Path\t\t: {0:s}'.format(message_file.windows_path))
+    print(u'File version\t: {0:s}'.format(file_version))
+    print(u'Product version\t: {0:s}'.format(product_version))
 
     message_table = message_file.GetMessageTableResource()
     self._WriteMessageTable(message_table)
@@ -1988,10 +1992,10 @@ def Main():
   options = args_parser.parse_args()
 
   if not options.source:
-    print u'Source value is missing.'
-    print u''
+    print(u'Source value is missing.')
+    print(u'')
     args_parser.print_help()
-    print u''
+    print(u'')
     return False
 
   logging.basicConfig(
@@ -1999,8 +2003,8 @@ def Main():
 
   if options.database:
     if not os.path.isdir(options.database):
-      print u'No such directory: {0:s}'.format(options.database)
-      print u''
+      print(u'No such directory: {0:s}'.format(options.database))
+      print(u'')
       return False
 
     output_writer = Sqlite3OutputWriter(options.database)
@@ -2008,48 +2012,47 @@ def Main():
     output_writer = StdoutOutputWriter()
 
   if not output_writer.Open():
-    print u'Unable to open output writer.'
-    print u''
+    print(u'Unable to open output writer.')
+    print(u'')
     return False
 
   extractor = EventMessageStringExtractor()
 
   if not extractor.GetWindowsVolumePathSpec(options.source):
-    print (
-        u'Unable to retrieve the volume with the Windows directory from: '
-        u'{0:s}.').format(options.source)
-    print ''
+    print((u'Unable to retrieve the volume with the Windows directory from: '
+           u'{0:s}.').format(options.source))
+    print(u'')
     return False
 
   if not extractor.windows_version:
     if not options.windows_version:
-      print u'Unable to determine Windows version.'
+      print(u'Unable to determine Windows version.')
 
       if options.database:
-        print (u'Database output requires a Windows version, specify one with '
-               u'--winver.')
-        print u''
+        print(u'Database output requires a Windows version, specify one with '
+              u'--winver.')
+        print(u'')
         return False
 
     extractor.windows_version = options.windows_version
 
-  print u'Windows version: {0:s}.'.format(extractor.windows_version)
-  print u''
+  print(u'Windows version: {0:s}.'.format(extractor.windows_version))
+  print(u'')
 
   extractor.ExtractEventLogMessageStrings(output_writer)
   output_writer.Close()
 
   if extractor.invalid_message_filenames:
-    print u'Message resource files not found or without resource section:'
+    print(u'Message resource files not found or without resource section:')
     for message_filename in extractor.invalid_message_filenames:
-      print u'{0:s}'.format(message_filename)
-    print u''
+      print(u'{0:s}'.format(message_filename))
+    print(u'')
 
   if extractor.missing_table_message_filenames:
-    print u'Message resource files without a message table resource:'
+    print(u'Message resource files without a message table resource:')
     for message_filename in extractor.missing_table_message_filenames:
-      print u'{0:s}'.format(message_filename)
-    print u''
+      print(u'{0:s}'.format(message_filename))
+    print(u'')
 
   return True
 

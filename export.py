@@ -3,7 +3,7 @@
 #
 # Script to export strings extracted from message files.
 #
-# Copyright (c) 2013-2014, Joachim Metz <joachim.metz@gmail.com>
+# Copyright (c) 2013-2015, Joachim Metz <joachim.metz@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,46 @@ import re
 import sys
 
 import sqlite3
+
+
+class EventLogProvider(object):
+  """Class that defines a Windows Event Log provider."""
+
+  def __init__(
+      self, log_type, log_source, category_message_filenames,
+      event_message_filenames, parameter_message_filenames):
+    """Initializes the Windows Event Log provider.
+
+    Args:
+      log_type: the Event Log type.
+      log_source: the Event Log source.
+      category_message_filenames: the message filenames that contain
+                                  the category strings.
+      event_message_filenames: the message filenames that contain
+                               the event messages.
+      parameter_message_filenames: the message filenames that contain
+                                   the parameter strings.
+    """
+    super(EventLogProvider, self).__init__()
+    self.log_type = log_type
+    self.log_source = log_source
+
+    # It not empty the messages filenames can contain a list
+    # of message file paths separated by ;
+    if category_message_filenames:
+      self.category_message_files = category_message_filenames.split(';')
+    else:
+      self.category_message_files = category_message_filenames
+
+    if event_message_filenames:
+      self.event_message_files = event_message_filenames.split(';')
+    else:
+      self.event_message_files = event_message_filenames
+
+    if parameter_message_filenames:
+      self.parameter_message_files = parameter_message_filenames.split(';')
+    else:
+      self.parameter_message_files = parameter_message_filenames
 
 
 class MessageFile(object):
@@ -124,7 +164,7 @@ class Exporter(object):
       output_writer: the output writer (instance of OutputWriter).
     """
     table_names = ['message_files']
-    column_names = ['database_filename']
+    column_names = ['message_filename', 'database_filename']
     condition = ''
 
     for values in event_provider_database.GetValues(
@@ -143,6 +183,9 @@ class Exporter(object):
 
       message_file = MessageFile(database_filename[:-3])
 
+      # TODO: fill file version and product version
+      message_file.windows_path = values['message_filename']
+
       self._ExportMessageStrings(message_file, message_file_database)
       self._ExportStrings(message_file, message_file_database)
 
@@ -158,11 +201,11 @@ class Exporter(object):
       message_file_database: the message file database (instance of
                              Sqlite3DatabaseFile).
     """
-    table_names = ['message_files', 'languague_per_message_file']
+    table_names = ['message_files', 'language_per_message_file']
     column_names = ['file_version', 'lcid', 'identifier']
     condition = (
         'message_files.message_file_key = '
-        'languague_per_message_file.message_file_key')
+        'language_per_message_file.message_file_key')
 
     for values in message_file_database.GetValues(
         table_names, column_names, condition):
@@ -342,7 +385,7 @@ class Sqlite3DatabaseFile(object):
       elif isinstance(value, float):
         value = u'{0:f}'.format(value)
       else:
-        raise RuntimeError(u'Unsupported value type.')
+        raise RuntimeError(u'Unsupported value type: {0:s}.'.format(type(value)))
       sql_values.append(value)
 
     sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
@@ -371,24 +414,273 @@ class Sqlite3DatabaseFile(object):
     return True
 
 
-# TODO: refactor
+class Sqlite3EventResourcesWriter(object):
+  """Class to represent a sqlite3 Event Log resources writer."""
+
+  def __init__(self):
+    """Initializes the Event Log resources writer object."""
+    super(Sqlite3EventResourcesWriter, self).__init__()
+    self._database_file = Sqlite3DatabaseFile()
+
+  def _GetMessageFileKey(self, message_file, message_filename):
+    """Retrieves the key of a message file.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_filename: the message filename.
+
+    Returns:
+      An integer containing the message file key or None if no such value.
+
+    Raises:
+      RuntimeError: if more than one value is found in the database.
+    """
+    table_names = ['message_files']
+    column_names = ['message_file_key']
+    condition = 'path = "{0:s}"'.format(message_filename)
+    values_list = list(self._database_file.GetValues(
+        table_names, column_names, condition))
+
+    number_of_values = len(values_list)
+    if number_of_values == 0:
+      return
+
+    if number_of_values == 1:
+      values = values_list[0]
+      return values['message_file_key']
+
+    raise RuntimeError(u'More than one value found in database.')
+
+  def _WriteLanguage(self, message_file, message_file_key, language_identifier):
+    """Writes a language.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_file_key: the message file key.
+      language_identifier: the language identifier (LCID).
+    """
+    table_name = 'language_per_message_file'
+    column_names = ['lcid', 'message_file_key', 'identifier']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'lcid TEXT', 'message_file_key INT', 'identifier TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+
+    if not has_table:
+      insert_values = True
+
+    else:
+      condition = 'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
+          language_identifier, message_file_key)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        insert_values = False
+
+    if insert_values:
+      values = [
+          '0x{0:08x}'.format(language_identifier), message_file_key,
+          LANGUAGES.get(language_identifier, ['', ''])[0]]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def _WriteMessage(
+      self, message_file, message_table, language_identifier,
+      message_identifier, message_string, table_name, has_table):
+    """Writes a message to a specific message table.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_table: the message table (instance of pywrc.message_table).
+      language_identifier: the language identifier (LCID).
+      message_identifier: the message identifier.
+      message_string: the message string.
+      table_name: the name of the table.
+      has_table: boolean value to indicate the table previously existed in
+                 the database.
+    """
+    column_names = ['message_identifier', 'message_string']
+
+    if not has_table:
+      insert_values = True
+
+    else:
+      condition = 'message_identifier = "{0:s}"'.format(message_identifier)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 1:
+        values = values_list[0]
+        if message_string != values['message_string']:
+          logging.warning((
+              u'Message string mismatch for LCID: {0:s}, '
+              u'file version: {1:s}, message identifier: {2:s}.\n'
+              u'Found: {2:s}\nStored: {3:s}\n').format(
+                  language_identifier, message_file.file_version,
+                  message_identifier, message_string,
+                  values['message_string']))
+
+      elif number_of_values != 0:
+        logging.warning((
+             u'More than one message string found for LCID: {0:s}, '
+             u'file version: {1:s}, message identifier: {2:s}.').format(
+                 language_identifier, message_file.file_version,
+                 message_identifier))
+
+      # TODO: warn if new message has been found.
+      insert_values = False
+
+    if insert_values:
+      values = [message_identifier, message_string]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def _WriteMessageFile(self, message_file):
+    """Writes a message file.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+    """
+    table_name = 'message_files'
+    column_names = ['path']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT', 'path TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+
+    if not has_table:
+      insert_values = True
+
+    else:
+      condition = 'path = "{0:s}"'.format(message_file.windows_path)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        insert_values = False
+
+    if insert_values:
+      values = [message_file.windows_path]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def _WriteMessageTable(self, message_file, message_table):
+    """Writes a message table for a specific language identifier.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+      message_table: the message table (instance of MessageTable).
+    """
+    if message_table.message_strings:
+      message_file_key = self._GetMessageFileKey(
+          message_file, message_file.windows_path)
+      if message_file_key is None:
+        logging.warning(u'Missing message file key for: {0:s}'.format(
+            message_file.windows_path))
+
+      self._WriteLanguage(message_file, message_file_key, message_file.lcid)
+
+      table_name = u'message_table_{0:d}_{1:s}'.format(
+          message_file_key, message_table.lcid)
+
+      has_table = self._database_file.HasTable(table_name)
+      if not has_table:
+        column_definitions = ['message_identifier TEXT', 'message_string TEXT']
+        self._database_file.CreateTable(table_name, column_definitions)
+
+      for message_identifier, message_string in message_table.message_strings.iteritems():
+        self._WriteMessage(
+            message_file, message_table, message_table.lcid, message_identifier,
+            message_string, table_name, has_table)
+
+  def Close(self):
+    """Closes the Event Log providers writer object."""
+    self._database_file.Close()
+
+  def Open(self, filename):
+    """Opens the Event Log providers writer object.
+
+    Args:
+      filename: the filename of the database.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    self._database_file.Open(filename)
+
+  def WriteEventLogProvider(self, event_log_provider):
+    """Writes the Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+    """
+    table_name = 'event_log_providers'
+    column_names = ['log_source', 'log_type']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'log_source TEXT', 'log_type TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+          event_log_provider.log_source, event_log_provider.log_type)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        # TODO: check if more than 1 result.
+        insert_values = False
+
+    if insert_values:
+      values = [event_log_provider.log_source, event_log_provider.log_type]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def WriteMessageFile(self, message_file):
+    """Writes the Windows Message Resource file.
+
+    Args:
+      message_file: the message file (instance of MessageResourceFile).
+    """
+    self._WriteMessageFile(message_file)
+
+    for message_table in message_file.GetMessageTables():
+      # TODO track the languages in a table.
+      self._WriteMessageTable(message_file, message_table)
+
+
 class Sqlite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
 
-  def __init__(self, databases_path):
+  def __init__(self, database_path):
     """Initializes the output writer object.
 
     Args:
-      databases_path: the path to the database files.
+      database_path: the path to the database file.
     """
     super(Sqlite3OutputWriter, self).__init__()
-    self._databases_path = databases_path
-    self._event_providers_writer = None
+    self._database_path = database_path
+    self._event_resources_writer = None
 
   def Close(self):
     """Closes the output writer object."""
-    self._event_providers_writer.Close()
-    self._event_providers_writer = None
+    self._event_resources_writer.Close()
+    self._event_resources_writer = None
 
   def Open(self):
     """Opens the output writer object.
@@ -396,18 +688,55 @@ class Sqlite3OutputWriter(object):
     Returns:
       A boolean containing True if successful or False if not.
     """
-    if not os.path.isdir(self._databases_path):
+    if os.path.isdir(self._database_path):
       return False
 
-    self._event_providers_writer = Sqlite3EventProvidersWriter()
-    self._event_providers_writer.Open(
-        os.path.join(self._databases_path, 'winevt-kb.db'))
+    self._event_resources_writer = Sqlite3EventResourcesWriter()
+    self._event_resources_writer.Open(self._database_path)
 
     return True
+
+  def WriteEventLogProvider(self, event_log_provider):
+    """Writes the Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+    """
+    self._event_resources_writer.WriteEventLogProvider(event_log_provider)
+
+  def WriteMessageFile(self, message_file):
+    """Writes the Windows Message Resource file.
+
+    Args:
+      message_file: the message file (instance of MessageFile).
+    """
+    self._event_resources_writer.WriteMessageFile(message_file)
 
 
 class StdoutOutputWriter(object):
   """Class that defines a stdout output writer."""
+
+  def _WriteMessageTable(self, message_table):
+    """Writes the message table.
+
+    Args:
+      message_table: the message table (instance of MessageTable).
+    """
+    print('{0:s} (LCID: {1:s})'.format(
+        message_table.language, message_table.lcid))
+    print(u'')
+    print(u'Message identifier\tMessage string')
+
+    for identifier, string in message_table.message_strings.iteritems():
+      string = re.sub(r'\n', '\\\\n', string)
+      string = re.sub(r'\r', '\\\\r', string)
+      string = re.sub(r'\t', '\\\\t', string)
+
+      ouput_string = u'{0:s}\t{1:s}'.format(identifier, string)
+
+      print(ouput_string.encode('utf8'))
+
+    print(u'')
 
   def Open(self):
     """Opens the file.
@@ -419,6 +748,31 @@ class StdoutOutputWriter(object):
 
   def Close(self):
     """Closes the file."""
+
+  def WriteEventLogProvider(self, event_log_provider):
+    """Writes the Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+    """
+    print(u'Log type:\t{0:s}'.format(event_log_provider.log_type))
+    print(u'Log source:\t{0:s}'.format(event_log_provider.log_source))
+
+    # TODO: print more details.
+
+  def WriteMessageFile(self, message_file):
+    """Writes the Windows Message Resource file.
+
+    Args:
+      message_file: the message file (instance of MessageFile).
+    """
+    print(u'{0:s}'.format(message_file.name))
+    print(u'Path:\t{0:s}'.format(message_file.windows_path))
+    print(u'File version:\t{0:s}'.format(message_file.file_version))
+    print(u'Product version:\t{0:s}'.format(message_file.product_version))
+
+    for message_table in message_file.GetMessageTables():
+      self._WriteMessageTable(message_table)
 
 
 class AsciidocFileWriter(object):
@@ -556,7 +910,7 @@ def Main():
                           'with the extracted strings.'))
 
   args_parser.add_argument(
-      '--db', dest='database', action='store', metavar='winevt.db',
+      '--db', dest='database', action='store', metavar='winevt-rc.db',
       default=None, help='filename to write the sqlite3 database to.')
 
   args_parser.add_argument(
@@ -568,15 +922,15 @@ def Main():
   options = args_parser.parse_args()
 
   if not options.source:
-    print u'Source value is missing.'
-    print u''
+    print(u'Source value is missing.')
+    print(u'')
     args_parser.print_help()
-    print u''
+    print(u'')
     return False
 
   if not os.path.isdir(options.source):
-    print u'Invalid source.'
-    print u''
+    print(u'Invalid source.')
+    print(u'')
     return False
 
   logging.basicConfig(
@@ -590,8 +944,8 @@ def Main():
     output_writer = StdoutOutputWriter()
 
   if not output_writer.Open():
-    print u'Unable to open output writer.'
-    print u''
+    print(u'Unable to open output writer.')
+    print(u'')
     return False
 
   exporter = Exporter()
