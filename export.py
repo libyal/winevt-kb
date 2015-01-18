@@ -460,19 +460,18 @@ class Sqlite3EventResourcesWriter(object):
       language_identifier: the language identifier (LCID).
     """
     table_name = 'language_per_message_file'
-    column_names = ['lcid', 'message_file_key', 'identifier']
+    column_names = ['lcid', 'message_file_key']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      column_definitions = [
-          'lcid TEXT', 'message_file_key INT', 'identifier TEXT']
+      column_definitions = ['lcid TEXT', 'message_file_key INT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = 'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
+      condition = 'lcid = "{0:s}" AND message_file_key = "{1:d}"'.format(
           language_identifier, message_file_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -484,9 +483,7 @@ class Sqlite3EventResourcesWriter(object):
         insert_values = False
 
     if insert_values:
-      values = [
-          '0x{0:08x}'.format(language_identifier), message_file_key,
-          LANGUAGES.get(language_identifier, ['', ''])[0]]
+      values = [language_identifier, message_file_key]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteMessage(
@@ -587,8 +584,6 @@ class Sqlite3EventResourcesWriter(object):
         logging.warning(u'Missing message file key for: {0:s}'.format(
             message_file.windows_path))
 
-      self._WriteLanguage(message_file, message_file_key, message_file.lcid)
-
       table_name = u'message_table_{0:d}_{1:s}'.format(
           message_file_key, message_table.lcid)
 
@@ -601,6 +596,8 @@ class Sqlite3EventResourcesWriter(object):
         self._WriteMessage(
             message_file, message_table, message_table.lcid, message_identifier,
             message_string, table_name, has_table)
+
+      self._WriteLanguage(message_file, message_file_key, message_table.lcid)
 
   def Close(self):
     """Closes the Event Log providers writer object."""

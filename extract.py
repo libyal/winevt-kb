@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Script to extract the strings from message resouce files for
+# Script to extract the strings from message resource files for
 # Event Log sources.
 #
 # Copyright (c) 2013-2015, Joachim Metz <joachim.metz@gmail.com>
@@ -2003,7 +2003,7 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
-      'Extract strings from message resouces files for Event Log sources.'))
+      'Extract strings from message resource files for Event Log sources.'))
 
   args_parser.add_argument(
       'source', nargs='?', action='store', metavar='/mnt/c/',
