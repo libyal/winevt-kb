@@ -462,21 +462,34 @@ class MessageFile(object):
       name: the name.
     """
     super(MessageFile, self).__init__()
+    self._message_tables_per_language = {}
+    self._string_tables_per_language = {}
     self.name = name
-    self.tables_per_language = {}
     self.windows_path = None
 
-  def AppendTable(self, lcid, file_version):
-    """Appends a table for a specific language identifier and file version.
+  def AppendMessageTable(self, lcid, file_version):
+    """Appends a message table.
 
     Args:
       lcid: the language identifier.
       file_version: the message file version.
     """
-    if lcid not in self.tables_per_language:
-      self.tables_per_language[lcid] = MessageTable(lcid)
+    if lcid not in self._message_tables_per_language:
+      self._message_tables_per_language[lcid] = MessageTable(lcid)
 
-    self.tables_per_language[lcid].file_versions.append(file_version)
+    self._message_tables_per_language[lcid].file_versions.append(file_version)
+
+  def AppendStringTable(self, lcid, file_version):
+    """Appends a string table.
+
+    Args:
+      lcid: the language identifier.
+      file_version: the string file version.
+    """
+    if lcid not in self._string_tables_per_language:
+      self._string_tables_per_language[lcid] = StringTable(lcid)
+
+    self._string_tables_per_language[lcid].file_versions.append(file_version)
 
   def GetMessageTable(self, lcid):
     """Retrieves the message table for a specific language.
@@ -487,16 +500,36 @@ class MessageFile(object):
     Returns:
       The message table (instance of MessageTable).
     """
-    return self.tables_per_language.get(lcid, None)
+    return self._message_tables_per_language.get(lcid, None)
+
+  def GetStringTable(self, lcid):
+    """Retrieves the string table for a specific language.
+
+    Args:
+      lcid: the language identifier.
+
+    Returns:
+      The string table (instance of StringTable).
+    """
+    return self._string_tables_per_language.get(lcid, None)
 
   def GetMessageTables(self):
     """Retrieves the message tables.
 
     Yields:
-      Message tables (instances of MessageTable).
+      A message table (instance of MessageTable).
     """
-    for message_table in self.tables_per_language.itervalues():
+    for message_table in self._message_tables_per_language.itervalues():
       yield message_table
+
+  def GetStringTables(self):
+    """Retrieves the string tables.
+
+    Yields:
+      A string table (instance of StringTable).
+    """
+    for string_table in self._string_tables_per_language.itervalues():
+      yield string_table
 
 
 class MessageTable(object):
@@ -512,3 +545,18 @@ class MessageTable(object):
     self.file_versions = []
     self.lcid = lcid
     self.message_strings = {}
+
+
+class StringTable(object):
+  """Class that contains the strings per language."""
+
+  def __init__(self, lcid):
+    """Initializes the string table object.
+
+    Args:
+      lcid: the language identifier.
+    """
+    super(StringTable, self).__init__()
+    self.file_versions = []
+    self.lcid = lcid
+    self.strings = {}

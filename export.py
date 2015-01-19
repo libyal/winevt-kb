@@ -48,6 +48,22 @@ class Exporter(object):
     # TODO
     return
 
+  def _ExportMessageFile(self, message_file, message_file_database_path):
+    """Exports a message file.
+
+    Args:
+      message_file: the message file (instance of MessageFile).
+      message_file_database_path: the path of the message file database.
+    """
+    database_reader = database.Sqlite3MessageFileDatabaseReader()
+    database_reader.Open(message_file_database_path)
+
+    self._ExportMessageStrings(message_file, database_reader)
+    # TODO: implement has table check.
+    # self._ExportStrings(message_file, database_reader)
+
+    database_reader.Close()
+
   def _ExportMessageFiles(
       self, source_path, database_reader, output_writer):
     """Exports the message files from an event provider database.
@@ -67,16 +83,10 @@ class Exporter(object):
 
       logging.info('Processing: {0:s}'.format(database_filename))
 
-      message_file_database_reader = database.Sqlite3MessageFileDatabaseReader()
-      message_file_database_reader.Open(message_file_database_path)
-
       message_file = resources.MessageFile(database_filename[:-3])
       message_file.windows_path = windows_path
 
-      self._ExportMessageStrings(message_file, message_file_database_reader)
-      self._ExportStrings(message_file, message_file_database_reader)
-
-      message_file_database_reader.Close()
+      self._ExportMessageFile(message_file, message_file_database_path)
 
       output_writer.WriteMessageFile(message_file)
 
@@ -89,7 +99,7 @@ class Exporter(object):
                        Sqlite3MessageFileDatabaseReader).
     """
     for lcid, file_version in database_reader.GetMessageTables():
-      message_file.AppendTable(lcid, file_version)
+      message_file.AppendMessageTable(lcid, file_version)
 
     for message_table in message_file.GetMessageTables():
       for file_version in message_table.file_versions:
@@ -112,16 +122,35 @@ class Exporter(object):
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
 
-  def _ExportStrings(self, message_file, message_file_database):
+  def _ExportStrings(self, message_file, database_reader):
     """Exports the strings in a message file database.
 
     Args:
       message_file: the message file (instance of MessageFile).
-      message_file_database: the message file database (instance of
-                             Sqlite3DatabaseFile).
+      database_reader: the message file database reader (instance of
+                       Sqlite3MessageFileDatabaseReader).
     """
-    # TODO: iterate and merge the strings tables.
-    pass
+    for lcid, file_version in database_reader.GetStringTables():
+      message_file.AppendStringTable(lcid, file_version)
+
+    for string_table in message_file.GetStringTables():
+      for file_version in string_table.file_versions:
+        for string_identifier, string in database_reader.GetStrings(
+            string_table.lcid, file_version):
+          stored_string = string_table.strings.get(string_identifier, None)
+
+          if not stored_string:
+            string_table.strings[string_identifier] = string
+
+          elif string != stored_string:
+            logging.warning((
+                u'Found duplicate alternating string: {0:s} in LCID: {1:s} '
+                u'and version: {2:s}.\nPrevious: {3:s}\nNew:{4:s}\n').format(
+                    string_identifier, string_table.lcid, file_version,
+                    stored_string, string))
+
+            # TODO: is there a better way to determine which string to use.
+            # E.g. latest build version?
 
   def Export(self, source_path, output_writer):
     """Exports the strings extracted from message files.

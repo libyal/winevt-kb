@@ -530,8 +530,11 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
 
               logging.info('Processing: {0:s}'.format(
                   normalized_message_filename))
+
+              message_file.windows_path = normalized_message_filename
+
               output_writer.WriteMessageFile(
-                  event_log_provider, normalized_message_filename)
+                  event_log_provider, message_file, normalized_message_filename)
 
             if message_filename != message_file.windows_path:
               processed_message_filenames.append(message_file.windows_path)
@@ -863,22 +866,24 @@ class Sqlite3OutputWriter(object):
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
   def WriteMessageFile(
-      self, event_log_provider, message_file, message_filename):
+      self, event_log_provider, message_resource_file, message_filename):
     """Writes the Windows Message Resource file.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageResourceFile).
+      message_resource_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
     """
-    _, _, database_filename = message_file.windows_path.rpartition(u'\\')
+    database_filename = message_resource_file.windows_path
+    _, _, database_filename = database_filename.rpartition(u'\\')
     database_filename = u'{0:s}.db'.format(database_filename.lower())
     database_filename = re.sub(r'\.mui', '', database_filename)
 
-    database_writer = database.Sqlite3MessageFileDatabaseWriter(message_file)
+    database_writer = database.Sqlite3MessageFileDatabaseWriter(
+        message_resource_file)
     database_writer.Open(
         os.path.join(self._databases_path, database_filename))
-    database_writer.WriteMessageTables()
+    database_writer.WriteResources()
     database_writer.Close()
 
     self._database_writer.WriteMessageFile(
