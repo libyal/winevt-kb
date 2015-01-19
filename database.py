@@ -36,9 +36,17 @@ class Sqlite3DatabaseFile(object):
     self._connection = None
     self._cursor = None
     self.filename = None
+    self.read_only = None
 
   def Close(self):
-    """Closes the database file."""
+    """Closes the database file.
+
+    Raises:
+      RuntimeError: if the database is not opened.
+    """
+    if not self._connection:
+      raise RuntimeError(u'Cannot close database not opened.')
+
     # We need to run commit or not all data is stored in the database.
     self._connection.commit()
     self._connection.close()
@@ -46,6 +54,7 @@ class Sqlite3DatabaseFile(object):
     self._connection = None
     self._cursor = None
     self.filename = None
+    self.read_only = None
 
   def CreateTable(self, table_name, column_definitions):
     """Creates a table.
@@ -53,7 +62,17 @@ class Sqlite3DatabaseFile(object):
     Args:
       table_name: the table name.
       column_definitions: list of strings containing column definitions.
+
+    Raises:
+      RuntimeError: if the database is not opened or
+                    if the database is in read-only mode.
     """
+    if not self._connection:
+      raise RuntimeError(u'Cannot create table database not opened.')
+
+    if self.read_only:
+      raise RuntimeError(u'Cannot create table database in read-only mode.')
+
     sql_query = u'CREATE TABLE {0:s} ( {1:s} )'.format(
         table_name, u', '.join(column_definitions))
 
@@ -67,7 +86,14 @@ class Sqlite3DatabaseFile(object):
 
     Returns:
       True if the table exists, false otheriwse.
+
+    Raises:
+      RuntimeError: if the database is not opened.
     """
+    if not self._connection:
+      raise RuntimeError(
+          u'Cannot determine if table exists database not opened.')
+
     sql_query = self._HAS_TABLE_QUERY.format(table_name)
 
     self._cursor.execute(sql_query)
@@ -87,7 +113,13 @@ class Sqlite3DatabaseFile(object):
 
     Yields:
       A row object (instance of sqlite3.row).
+
+    Raises:
+      RuntimeError: if the database is not opened.
     """
+    if not self._connection:
+      raise RuntimeError(u'Cannot retrieve values database not opened.')
+
     if condition:
       condition = u' WHERE {0:s}'.format(condition)
 
@@ -112,8 +144,16 @@ class Sqlite3DatabaseFile(object):
       values: list of values formatted as a string.
 
     Raises:
-      RuntimeError: if an unsupported value type is encountered.
+      RuntimeError: if the database is not opened or
+                    if the database is in read-only mode or
+                    if an unsupported value type is encountered.
     """
+    if not self._connection:
+      raise RuntimeError(u'Cannot insert values database not opened.')
+
+    if self.read_only:
+      raise RuntimeError(u'Cannot insert values database in read-only mode.')
+
     if not values:
       return
 
@@ -136,16 +176,28 @@ class Sqlite3DatabaseFile(object):
 
     self._cursor.execute(sql_query)
 
-  def Open(self, filename):
+  def Open(self, filename, read_only=False):
     """Opens the database file.
 
     Args:
       filename: the filename of the database.
+      read_only: optional boolean value to indicate the database should be
+                 opened in read-only mode. The default is false. Since sqlite3
+                 does not support a real read-only mode we fake it by only
+                 permitting SELECT queries.
 
     Returns:
       A boolean containing True if successful or False if not.
+
+    Raises:
+      RuntimeError: if the database is already opened.
     """
+    if self._connection:
+      raise RuntimeError(u'Cannot open database already opened.')
+
     self.filename = filename
+    self.read_only = read_only
+
     self._connection = sqlite3.connect(filename)
     if not self._connection:
       return False
@@ -157,7 +209,302 @@ class Sqlite3DatabaseFile(object):
     return True
 
 
-class Sqlite3MessageFileDatabaseWriter(object):
+class Sqlite3DatabaseReader(object):
+  """Class to represent a sqlite3 database reader."""
+
+  def __init__(self):
+    """Initializes the database reader object."""
+    super(Sqlite3DatabaseReader, self).__init__()
+    self._database_file = Sqlite3DatabaseFile()
+
+  def Close(self):
+    """Closes the database reader object."""
+    self._database_file.Close()
+
+  def Open(self, filename):
+    """Opens the database reader object.
+
+    Args:
+      filename: the filename of the database.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    self._database_file.Open(filename, read_only=True)
+
+
+class Sqlite3DatabaseWriter(object):
+  """Class to represent a sqlite3 database writer."""
+
+  def __init__(self):
+    """Initializes the database writer object."""
+    super(Sqlite3DatabaseWriter, self).__init__()
+    self._database_file = Sqlite3DatabaseFile()
+
+  def Close(self):
+    """Closes the database writer object."""
+    self._database_file.Close()
+
+  def Open(self, filename):
+    """Opens the database writer object.
+
+    Args:
+      filename: the filename of the database.
+
+    Returns:
+      A boolean containing True if successful or False if not.
+    """
+    self._database_file.Open(filename)
+
+
+class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
+  """Class to represent a sqlite3 Event Log providers database reader."""
+
+  def GetEventLogProviders(self):
+    """Retrieves the Event Log providers.
+
+    Yields:
+      A tuple of an Event Log source and type.
+    """
+    table_names = ['event_log_providers']
+    column_names = ['log_source', 'log_type']
+    condition = ''
+
+    for values in self._database_file.GetValues(
+        table_names, column_names, condition):
+      yield values['log_source'], values['log_type']
+
+  def GetMessageFiles(self):
+    """Retrieves the message filenames.
+
+    Yields:
+      A tuple of a message filename and the corresponding database filename.
+    """
+    table_names = ['message_files']
+    column_names = ['message_filename', 'database_filename']
+    condition = ''
+
+    for values in self._database_file.GetValues(
+        table_names, column_names, condition):
+      yield values['message_filename'], values['database_filename']
+
+
+class Sqlite3EventProvidersDatabaseWriter(Sqlite3DatabaseWriter):
+  """Class to represent a sqlite3 Event Log providers database writer."""
+
+  def _GetEventLogProviderKey(self, event_log_provider):
+    """Retrieves the key of an Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+
+    Returns:
+      An integer containing the Event Log provider key or None if no such value.
+
+    Raises:
+      RuntimeError: if more than one value is found in the database.
+    """
+    table_names = ['event_log_providers']
+    column_names = ['event_log_provider_key']
+    condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+        event_log_provider.log_source, event_log_provider.log_type)
+    values_list = list(self._database_file.GetValues(
+        table_names, column_names, condition))
+
+    number_of_values = len(values_list)
+    if number_of_values == 0:
+      return
+
+    if number_of_values == 1:
+      values = values_list[0]
+      return values['event_log_provider_key']
+
+    raise RuntimeError(u'More than one value found in database.')
+
+  def _GetMessageFileKey(self, message_filename):
+    """Retrieves the key of a message file.
+
+    Args:
+      message_filename: the message filename.
+
+    Returns:
+      An integer containing the message file key or None if no such value.
+
+    Raises:
+      RuntimeError: if more than one value is found in the database.
+    """
+    table_names = ['message_files']
+    column_names = ['message_file_key']
+    condition = 'message_filename = "{0:s}"'.format(message_filename)
+    values_list = list(self._database_file.GetValues(
+        table_names, column_names, condition))
+
+    number_of_values = len(values_list)
+    if number_of_values == 0:
+      return
+
+    if number_of_values == 1:
+      values = values_list[0]
+      return values['message_file_key']
+
+    raise RuntimeError(u'More than one value found in database.')
+
+  def WriteMessageFilePerEventLogProvider(
+      self, event_log_provider, message_filename):
+    """Writes the message files used by an Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      message_filename: the message filename.
+    """
+    table_name = 'message_file_per_event_log_provider'
+    column_names = ['message_file_key', 'event_log_provider_key']
+
+    event_log_provider_key = self._GetEventLogProviderKey(event_log_provider)
+    if event_log_provider_key is None:
+      logging.warning(u'Missing event log provider key for: {0:s}'.format(
+          event_log_provider.log_source))
+
+    message_file_key = self._GetMessageFileKey(message_filename)
+    if message_file_key is None:
+      logging.warning(u'Missing message file key for: {0:s}'.format(
+          message_filename))
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'message_file_key INTEGER', 'event_log_provider_key INTEGER']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      condition = (
+          'message_file_key = {0:d} AND event_log_provider_key = {1:d}').format(
+              message_file_key, event_log_provider_key)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        # TODO: check if more than 1 result.
+        insert_values = False
+
+    if insert_values:
+      values = [message_file_key, event_log_provider_key]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def WriteEventLogProvider(self, event_log_provider):
+    """Writes the Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+    """
+    table_name = 'event_log_providers'
+    column_names = ['log_source', 'log_type']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'log_source TEXT', 'log_type TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+          event_log_provider.log_source, event_log_provider.log_type)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        # TODO: check if more than 1 result.
+        insert_values = False
+
+    if insert_values:
+      values = [event_log_provider.log_source, event_log_provider.log_type]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+  def WriteMessageFile(self, message_filename, database_filename):
+    """Writes the Windows Message Resource file.
+
+    Args:
+      message_filename: the message filename.
+      database_filename: the database filename.
+    """
+    table_name = 'message_files'
+    column_names = ['message_filename', 'database_filename']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'message_filename TEXT', 'database_filename TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      condition = 'message_filename = "{0:s}"'.format(message_filename)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        # TODO: check if more than 1 result.
+        insert_values = False
+
+    if insert_values:
+      values = [message_filename, database_filename]
+      self._database_file.InsertValues(table_name, column_names, values)
+
+
+class Sqlite3MessageFileDatabaseReader(Sqlite3DatabaseReader):
+  """Class to represent a sqlite3 message file database reader."""
+
+  def GetMessageTables(self):
+    """Retrieves the message tables.
+
+    Yields:
+      A tuple of a language code identifier (LCID) and the message file
+      file version.
+    """
+    table_names = ['message_files', 'language_per_message_file']
+    column_names = ['file_version', 'lcid', 'identifier']
+    condition = (
+        'message_files.message_file_key = '
+        'language_per_message_file.message_file_key')
+
+    for values in self._database_file.GetValues(
+        table_names, column_names, condition):
+      yield values['lcid'], values['file_version']
+
+  def GetMessages(self, lcid, file_version):
+    """Retrieves the messages of a specific message table.
+
+    Args:
+      lcid: the language code identifier (LCID).
+      file_version: the message file file version.
+
+    Yields:
+      A tuple of a message identifier and string.
+    """
+    table_name = 'message_table_{0:s}_{1:s}'.format(
+        lcid, re.sub(r'\.', '_', file_version))
+    column_names = ['message_identifier', 'message_string']
+    condition = ''
+
+    for values in self._database_file.GetValues(
+        [table_name], column_names, condition):
+      yield values['message_identifier'], values['message_string']
+
+
+class Sqlite3MessageFileDatabaseWriter(Sqlite3DatabaseWriter):
   """Class to represent a sqlite3 message file database writer."""
 
   def __init__(self, message_file):
@@ -167,7 +514,6 @@ class Sqlite3MessageFileDatabaseWriter(object):
       message_file: the message file (instance of MessageResourceFile).
     """
     super(Sqlite3MessageFileDatabaseWriter, self).__init__()
-    self._database_file = Sqlite3DatabaseFile()
     self._message_file = message_file
 
   def _GetMessageFileKey(self, message_file):
@@ -370,21 +716,6 @@ class Sqlite3MessageFileDatabaseWriter(object):
             message_file, message_table, language_identifier, message_index,
             table_name, has_table)
 
-  def Close(self):
-    """Closes the message file writer object."""
-    self._database_file.Close()
-
-  def Open(self, filename):
-    """Opens the message file writer object.
-
-    Args:
-      filename: the filename of the database.
-
-    Returns:
-      A boolean containing True if successful or False if not.
-    """
-    self._database_file.Open(filename)
-
   def WriteMessageTables(self):
     """Writes the message tables."""
     self._WriteMessageFile(self._message_file)
@@ -405,13 +736,8 @@ class Sqlite3MessageFileDatabaseWriter(object):
             self._message_file, message_table, language_identifier)
 
 
-class Sqlite3ResourcesDatabaseWriter(object):
+class Sqlite3ResourcesDatabaseWriter(Sqlite3DatabaseWriter):
   """Class to represent a sqlite3 Event Log resources database writer."""
-
-  def __init__(self):
-    """Initializes the Event Log resources database writer object."""
-    super(Sqlite3ResourcesDatabaseWriter, self).__init__()
-    self._database_file = Sqlite3DatabaseFile()
 
   def _GetMessageFileKey(self, message_file):
     """Retrieves the key of a message file.
@@ -586,21 +912,6 @@ class Sqlite3ResourcesDatabaseWriter(object):
             message_string, table_name, has_table)
 
       self._WriteLanguage(message_file_key, message_table.lcid)
-
-  def Close(self):
-    """Closes the Event Log providers writer object."""
-    self._database_file.Close()
-
-  def Open(self, filename):
-    """Opens the Event Log providers writer object.
-
-    Args:
-      filename: the filename of the database.
-
-    Returns:
-      A boolean containing True if successful or False if not.
-    """
-    self._database_file.Open(filename)
 
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.

@@ -463,23 +463,20 @@ class MessageFile(object):
     """
     super(MessageFile, self).__init__()
     self.name = name
-    self.file_version = None
-    self.product_version = None
     self.tables_per_language = {}
     self.windows_path = None
 
-  def AppendTable(self, lcid, language, table_name):
-    """Appends a table for a specific language.
+  def AppendTable(self, lcid, file_version):
+    """Appends a table for a specific language identifier and file version.
 
     Args:
       lcid: the language identifier.
-      language: the language.
-      table_name: the table name.
+      file_version: the message file version.
     """
     if lcid not in self.tables_per_language:
-      self.tables_per_language[lcid] = MessageTable(lcid, language)
+      self.tables_per_language[lcid] = MessageTable(lcid)
 
-    self.tables_per_language[lcid].tables.append(table_name)
+    self.tables_per_language[lcid].file_versions.append(file_version)
 
   def GetMessageTable(self, lcid):
     """Retrieves the message table for a specific language.
@@ -505,15 +502,13 @@ class MessageFile(object):
 class MessageTable(object):
   """Class that contains the messages per language."""
 
-  def __init__(self, lcid, language):
+  def __init__(self, lcid):
     """Initializes the message table object.
 
     Args:
       lcid: the language identifier.
-      language: the language.
     """
     super(MessageTable, self).__init__()
-    self.language = language
+    self.file_versions = []
     self.lcid = lcid
     self.message_strings = {}
-    self.tables = []

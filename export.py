@@ -37,89 +37,64 @@ class Exporter(object):
     super(Exporter, self).__init__()
 
   def _ExportEventLogProviders(
-      self, unused_event_provider_database, unused_output_writer):
+      self, unused_database_reader, unused_output_writer):
     """Exports the event log provides from an event provider database.
 
     Args:
-      event_provider_database: the event provider database (instance of
-                               Sqlite3DatabaseFile).
+      database_reader: the event provider database reader (instance of
+                       Sqlite3EventProvidersDatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
     # TODO
     return
 
   def _ExportMessageFiles(
-      self, source_path, event_provider_database, output_writer):
+      self, source_path, database_reader, output_writer):
     """Exports the message files from an event provider database.
 
     Args:
       source_path: the source path.
-      event_provider_database: the event provider database (instance of
-                               Sqlite3DatabaseFile).
+      database_reader: the event provider database reader (instance of
+                       Sqlite3EventProvidersDatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
-    table_names = ['message_files']
-    column_names = ['message_filename', 'database_filename']
-    condition = ''
-
-    for values in event_provider_database.GetValues(
-        table_names, column_names, condition):
-      database_filename = values['database_filename']
-      message_file_path = os.path.join(source_path, database_filename)
-
-      if not os.path.exists(message_file_path):
+    for windows_path, database_filename in database_reader.GetMessageFiles():
+      message_file_database_path = os.path.join(source_path, database_filename)
+      if not os.path.exists(message_file_database_path):
         logging.warning(
             u'Missing message file database: {0:s}.'.format(database_filename))
         continue
 
       logging.info('Processing: {0:s}'.format(database_filename))
-      message_file_database = database.Sqlite3DatabaseFile()
-      message_file_database.Open(message_file_path)
+
+      message_file_database_reader = database.Sqlite3MessageFileDatabaseReader()
+      message_file_database_reader.Open(message_file_database_path)
 
       message_file = resources.MessageFile(database_filename[:-3])
+      message_file.windows_path = windows_path
 
-      # TODO: fill file version and product version
-      message_file.windows_path = values['message_filename']
+      self._ExportMessageStrings(message_file, message_file_database_reader)
+      self._ExportStrings(message_file, message_file_database_reader)
 
-      self._ExportMessageStrings(message_file, message_file_database)
-      self._ExportStrings(message_file, message_file_database)
-
-      message_file_database.Close()
+      message_file_database_reader.Close()
 
       output_writer.WriteMessageFile(message_file)
 
-  def _ExportMessageStrings(self, message_file, message_file_database):
+  def _ExportMessageStrings(self, message_file, database_reader):
     """Exports the message strings from a message file database.
 
     Args:
       message_file: the message file (instance of MessageFile).
-      message_file_database: the message file database (instance of
-                             Sqlite3DatabaseFile).
+      database_reader: the message file database reader (instance of
+                       Sqlite3MessageFileDatabaseReader).
     """
-    table_names = ['message_files', 'language_per_message_file']
-    column_names = ['file_version', 'lcid', 'identifier']
-    condition = (
-        'message_files.message_file_key = '
-        'language_per_message_file.message_file_key')
-
-    for values in message_file_database.GetValues(
-        table_names, column_names, condition):
-      lcid = values['lcid']
-      file_version = re.sub(r'\.', '_', values['file_version'])
-      table_name = 'message_table_{0:s}_{1:s}'.format(lcid, file_version)
-
-      message_file.AppendTable(lcid, values['identifier'], table_name)
-
-    column_names = ['message_identifier', 'message_string']
-    condition = ''
+    for lcid, file_version in database_reader.GetMessageTables():
+      message_file.AppendTable(lcid, file_version)
 
     for message_table in message_file.GetMessageTables():
-      for table_name in message_table.tables:
-        for values in message_file_database.GetValues(
-            [table_name], column_names, condition):
-          message_identifier = values['message_identifier']
-          message_string = values['message_string']
-
+      for file_version in message_table.file_versions:
+        for message_identifier, message_string in database_reader.GetMessages(
+            message_table.lcid, file_version):
           stored_message_string = message_table.message_strings.get(
               message_identifier, None)
 
@@ -129,9 +104,10 @@ class Exporter(object):
           elif message_string != stored_message_string:
             logging.warning((
                 u'Found duplicate alternating message string: {0:s} '
-                u'in {1:s}.\nPrevious: {2:s}\nNew:{3:s}\n').format(
-                    message_identifier, table_name, stored_message_string,
-                    message_string))
+                u'in LCID: {1:s} and version: {2:s}.\nPrevious: {3:s}\n'
+                u'New:{4:s}\n').format(
+                    message_identifier, message_table.lcid, file_version,
+                    stored_message_string, message_string))
 
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
@@ -154,26 +130,19 @@ class Exporter(object):
       source_path: the source path.
       output_writer: the output writer (instance of OutputWriter).
     """
-    event_provider_database = database.Sqlite3DatabaseFile()
-    event_provider_database.Open(os.path.join(
+    database_reader = database.Sqlite3EventProvidersDatabaseReader()
+    database_reader.Open(os.path.join(
         source_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
     # TODO: read the table with event providers
     # messages and categories.
 
-    table_names = ['event_log_providers']
-    column_names = ['log_source', 'log_type']
-    condition = ''
-
-    # TODO: create a look up if the messages per event provider
-    for _ in event_provider_database.GetValues(
-        table_names, column_names, condition):
-      pass
+    # TODO: database_reader.GetEventLogProviders()
 
     self._ExportMessageFiles(
-        source_path, event_provider_database, output_writer)
+        source_path, database_reader, output_writer)
 
-    event_provider_database.Close()
+    database_reader.Close()
 
 
 class Sqlite3OutputWriter(object):
@@ -280,8 +249,6 @@ class StdoutOutputWriter(object):
     """
     print(u'{0:s}'.format(message_file.name))
     print(u'Path:\t{0:s}'.format(message_file.windows_path))
-    print(u'File version:\t{0:s}'.format(message_file.file_version))
-    print(u'Product version:\t{0:s}'.format(message_file.product_version))
 
     for message_table in message_file.GetMessageTables():
       self._WriteMessageTable(message_table)
@@ -403,8 +370,6 @@ class AsciidocOutputWriter(object):
           u'== {0:s}'.format(message_file.name),
           u'|===',
           u'| Path: | {0:s}'.format(message_file.windows_path),
-          u'| File version: | {0:s}'.format(message_file.file_version),
-          u'| Product version: | {0:s}'.format(message_file.product_version),
           u'|===',
           u''])
 
