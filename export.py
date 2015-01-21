@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=superfluous-parens
+
 import argparse
 import logging
 import os
@@ -36,8 +38,7 @@ class Exporter(object):
     """Initializes the exporter object."""
     super(Exporter, self).__init__()
 
-  def _ExportEventLogProviders(
-      self, unused_database_reader, unused_output_writer):
+  def _ExportEventLogProviders(self, database_reader, output_writer):
     """Exports the event log provides from an event provider database.
 
     Args:
@@ -45,8 +46,8 @@ class Exporter(object):
                        Sqlite3EventProvidersDatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
-    # TODO
-    return
+    for event_log_provider in database_reader.GetEventLogProviders():
+      output_writer.WriteEventLogProvider(event_log_provider)
 
   def _ExportMessageFile(self, message_file, message_file_database_path):
     """Exports a message file.
@@ -163,10 +164,7 @@ class Exporter(object):
     database_reader.Open(os.path.join(
         source_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
-    # TODO: read the table with event providers
-    # messages and categories.
-
-    # TODO: database_reader.GetEventLogProviders()
+    self._ExportEventLogProviders(database_reader, output_writer)
 
     self._ExportMessageFiles(
         source_path, database_reader, output_writer)
@@ -380,7 +378,7 @@ class AsciidocOutputWriter(object):
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
-    # TODO: implement.
+    # TODO: print details.
     return
 
   def WriteMessageFile(self, message_file):

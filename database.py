@@ -264,7 +264,7 @@ class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the Event Log providers.
 
     Yields:
-      A tuple of an Event Log source and type.
+      An Event Log provider (instance of EventLogProvider).
     """
     table_names = ['event_log_providers']
     column_names = ['log_source', 'log_type']
@@ -272,7 +272,8 @@ class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      yield values['log_source'], values['log_type']
+      yield resources.EventLogProvider(
+          values['log_type'], values['log_source'], None, None, None)
 
   def GetMessageFiles(self):
     """Retrieves the message filenames.
@@ -922,6 +923,122 @@ class Sqlite3MessageFileDatabaseWriter(Sqlite3DatabaseWriter):
     self._WriteMessageTables()
     # TODO: only write the string resources of Event Log parameter files.
     # self._WriteStringTables()
+
+
+class Sqlite3ResourcesDatabaseReader(Sqlite3DatabaseReader):
+  """Class to represent a sqlite3 Event Log resources database reader."""
+
+  def _GetEventLogProviderKey(self, log_source):
+    """Retrieves the Event Log provider key.
+
+    Args:
+      log_source: the Event Log source.
+
+    Returns:
+      An Event Log provider key or None if not available.
+
+    Raises:
+      RuntimeError: if more than one value is found in the database.
+    """
+    table_names = ['event_log_providers']
+    column_names = ['event_log_provider_key']
+    condition = 'log_source == "{0:s}"'.format(log_source)
+
+    values = list(self._database_file.GetValues(
+        table_names, column_names, condition))
+
+    number_of_values = len(values)
+    if number_of_values == 0:
+      return
+
+    elif number_of_values == 1:
+      return values[0]['message_string']
+
+    raise RuntimeError(u'More than one value found in database.')
+
+  def _GetMessage(self, message_file_key, lcid, message_identifier):
+    """Retrieves a specific message from a specific message table.
+
+    Args:
+      message_file_key: the message file key.
+      lcid: the language code identifier (LCID).
+      message_identifier: the message identifier.
+
+    Returns:
+      The message string or None if not available.
+
+    Raises:
+      RuntimeError: if more than one value is found in the database.
+    """
+    table_name = u'message_table_{0:d}_{1:s}'.format(message_file_key, lcid)
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      return
+
+    column_names = ['message_string']
+    condition = 'message_identifier == "0x{0:08x}"'.format(message_identifier)
+
+    values = list(self._database_file.GetValues(
+        [table_name], column_names, condition))
+
+    number_of_values = len(values)
+    if number_of_values == 0:
+      return
+
+    elif number_of_values == 1:
+      return values[0]['message_string']
+
+    raise RuntimeError(u'More than one value found in database.')
+
+  def _GetMessageFileKeys(self, event_log_provider_key):
+    """Retrieves the message file keys.
+
+    Args:
+      event_log_provider_key: the Event Log provider key.
+
+    Yields:
+      A message file key.
+    """
+    table_names = ['message_file_per_event_log_provider']
+    column_names = ['message_file_key']
+    condition = 'event_log_provider_key == {0:d}'.format(event_log_provider_key)
+
+    generator = self._database_file.GetValues(
+        table_names, column_names, condition)
+
+    if generator:
+      for values in generator:
+        yield values['message_file_key']
+
+  def GetMessage(self, log_source, lcid, message_identifier):
+    """Retrieves a specific message from a specific message table.
+
+    Args:
+      log_source: the Event Log source.
+      lcid: the language code identifier (LCID).
+      message_identifier: the message identifier.
+
+    Returns:
+      The message string or None if not available.
+    """
+    event_log_provider_key = self._GetEventLogProviderKey(log_source)
+    if not event_log_provider_key:
+      return
+
+    generator = self._GetMessageFileKeys(event_log_provider_key)
+    if not generator:
+      return
+
+    message_string = None
+    for message_file_key in generator:
+      message_string = self._GetMessage(
+          message_file_key, lcid, message_identifier)
+
+      if message_string:
+        break
+
+    return message_string
 
 
 class Sqlite3ResourcesDatabaseWriter(Sqlite3DatabaseWriter):
