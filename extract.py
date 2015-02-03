@@ -40,17 +40,17 @@ import database
 import resources
 
 
-if dfvfs.__version__ < '20140727':
-  raise ImportWarning('extract.py requires dfvfs 20140727 or later.')
+if dfvfs.__version__ < u'20140727':
+  raise ImportWarning(u'extract.py requires dfvfs 20140727 or later.')
 
-if pyexe.get_version() < '20131229':
-  raise ImportWarning('extract.py requires pyexe 20131229 or later.')
+if pyexe.get_version() < u'20131229':
+  raise ImportWarning(u'extract.py requires pyexe 20131229 or later.')
 
-if pyregf.get_version() < '20130716':
-  raise ImportWarning('extract.py requires pyregf 20130716 or later.')
+if pyregf.get_version() < u'20130716':
+  raise ImportWarning(u'extract.py requires pyregf 20130716 or later.')
 
-if pywrc.get_version() < '20140128':
-  raise ImportWarning('extract.py requires pywrc 20140128 or later.')
+if pywrc.get_version() < u'20140128':
+  raise ImportWarning(u'extract.py requires pywrc 20140128 or later.')
 
 
 class CollectorError(Exception):
@@ -128,14 +128,14 @@ class WindowsVolumeCollector(object):
       volume_location = u'/{0:s}'.format(volume_identifier)
       volume_scan_node = scan_context.last_scan_node.GetSubNodeByLocation(
           volume_location)
-      volume_path_spec = getattr(volume_scan_node, 'path_spec', None)
+      volume_path_spec = getattr(volume_scan_node, u'path_spec', None)
 
       # The leaf scan node contains the actual file system.
       file_system_scan_node = volume_scan_node.GetSubNodeByLocation(u'/')
       while file_system_scan_node.sub_nodes:
         file_system_scan_node = file_system_scan_node.GetSubNodeByLocation(u'/')
 
-      file_system_path_spec = getattr(file_system_scan_node, 'path_spec', None)
+      file_system_path_spec = getattr(file_system_scan_node, u'path_spec', None)
       file_system = resolver.Resolver.OpenFileSystem(file_system_path_spec)
 
       if file_system is None:
@@ -168,7 +168,7 @@ class WindowsVolumeCollector(object):
                       the source file is not supported.
     """
     # Note that os.path.exists() does not support Windows device paths.
-    if (not source_path.startswith('\\\\.\\') and
+    if (not source_path.startswith(u'\\\\.\\') and
         not os.path.exists(source_path)):
       raise CollectorError(
           u'No such device, file or directory: {0:s}.'.format(source_path))
@@ -246,7 +246,7 @@ class WindowsVolumeCollector(object):
                 source_path))
 
     file_system_path_spec = getattr(
-        scan_context.last_scan_node, 'path_spec', None)
+        scan_context.last_scan_node, u'path_spec', None)
     self._file_system = resolver.Resolver.OpenFileSystem(
         file_system_path_spec)
 
@@ -264,7 +264,7 @@ class WindowsVolumeCollector(object):
         return False
 
     self._path_resolver.SetEnvironmentVariable(
-        'WinDir', self._windows_directory)
+        u'WinDir', self._windows_directory)
 
     return True
 
@@ -293,7 +293,7 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
     super(EventMessageStringExtractor, self).__init__()
     self._system_root = None
     self._windows_version = None
-    self.ascii_codepage = 'cp1252'
+    self.ascii_codepage = u'cp1252'
     self.invalid_message_filenames = None
     self.missing_table_message_filenames = None
     self.preferred_language_identifier = 0x0409
@@ -339,7 +339,7 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
 
     if self._system_root:
       self._path_resolver.SetEnvironmentVariable(
-          'SystemRoot', self._system_root)
+          u'SystemRoot', self._system_root)
 
     return self._system_root
 
@@ -406,7 +406,13 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
     if windows_path is None:
       logging.warning(u'Unable to retrieve Windows path.')
 
-    file_object = resolver.Resolver.OpenFileObject(path_spec)
+    try:
+      file_object = resolver.Resolver.OpenFileObject(path_spec)
+    except IOError as exception:
+      logging.warning(u'Unable to open: {0:s} with error: {1:s}'.format(
+          path_spec.comparable, exception))
+      file_object = None
+
     if file_object is None:
       return None
 
@@ -528,7 +534,7 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
               else:
                 normalized_message_filename = message_filename
 
-              logging.info('Processing: {0:s}'.format(
+              logging.info(u'Processing: {0:s}'.format(
                   normalized_message_filename))
 
               message_file.windows_path = normalized_message_filename
@@ -551,7 +557,7 @@ class MessageResourceFile(object):
   _RESOURCE_IDENTIFIER_VERSION = 0x10
 
   def __init__(
-      self, windows_path, ascii_codepage='cp1252',
+      self, windows_path, ascii_codepage=u'cp1252',
       preferred_language_identifier=0x0409):
     """Initializes the Windows Message Resource file.
 
@@ -634,7 +640,7 @@ class MessageResourceFile(object):
 
   def GetMuiLanguage(self):
     """Retrieves the MUI language or None if not available."""
-    mui_resource = self._wrc_stream.get_resource_by_name('MUI')
+    mui_resource = self._wrc_stream.get_resource_by_name(u'MUI')
     if not mui_resource:
       return None
 
@@ -673,7 +679,7 @@ class MessageResourceFile(object):
 
     self._file_object = file_object
     self._exe_file.open_file_object(self._file_object)
-    exe_section = self._exe_file.get_section_by_name('.rsrc')
+    exe_section = self._exe_file.get_section_by_name(u'.rsrc')
 
     if not exe_section:
       self._exe_file.close()
@@ -702,7 +708,7 @@ class MessageResourceFile(object):
 class RegistryFile(object):
   """Class that defines a Windows Registry file."""
 
-  def __init__(self, ascii_codepage='cp1252'):
+  def __init__(self, ascii_codepage=u'cp1252'):
     """Initializes the Windows Registry file.
 
     Args:
@@ -743,10 +749,10 @@ class RegistryFile(object):
     system_root = None
 
     current_version_key = self._regf_file.get_key_by_path(
-        'Microsoft\\Windows NT\\CurrentVersion')
+        u'Microsoft\\Windows NT\\CurrentVersion')
 
     if current_version_key:
-      system_root_value = current_version_key.get_value_by_name('SystemRoot')
+      system_root_value = current_version_key.get_value_by_name(u'SystemRoot')
       if system_root_value:
         system_root = system_root_value.data_as_string
 
@@ -761,10 +767,10 @@ class RegistryFile(object):
     """
     control_set = 0
   
-    select_key = self._regf_file.get_key_by_path('Select')
+    select_key = self._regf_file.get_key_by_path(u'Select')
   
     if select_key:
-      current_value = select_key.get_value_by_name('Current')
+      current_value = select_key.get_value_by_name(u'Current')
       if current_value: 
         control_set = current_value.data_as_integer
   
@@ -779,7 +785,7 @@ class RegistryFile(object):
     control_set = self.GetCurrentControlSet()
   
     if control_set > 0 and control_set <= 999:
-      eventlog_key_path = 'ControlSet{0:03d}\\Services\\EventLog'.format(
+      eventlog_key_path = u'ControlSet{0:03d}\\Services\\EventLog'.format(
           control_set)
   
       eventlog_key = self._regf_file.get_key_by_path(eventlog_key_path)
@@ -791,8 +797,16 @@ class RegistryFile(object):
           for log_source_key in log_type_key.sub_keys:
             log_source = log_source_key.name
 
+            provider_guid_value = log_source_key.get_value_by_name(
+                u'ProviderGuid')
+
+            if provider_guid_value:
+              provider_guid = provider_guid_value.data_as_string
+            else:
+              provider_guid = None
+  
             category_message_file_value = log_source_key.get_value_by_name(
-                'CategoryMessageFile')
+                u'CategoryMessageFile')
   
             if category_message_file_value:
               category_message_files = (
@@ -801,7 +815,7 @@ class RegistryFile(object):
               category_message_files = None
   
             event_message_file_value = log_source_key.get_value_by_name(
-                'EventMessageFile')
+                u'EventMessageFile')
   
             if event_message_file_value:
               event_message_files = event_message_file_value.data_as_string
@@ -809,7 +823,7 @@ class RegistryFile(object):
               event_message_files = None
 
             parameter_message_file_value = log_source_key.get_value_by_name(
-                'ParameterMessageFile')
+                u'ParameterMessageFile')
   
             if parameter_message_file_value:
               parameter_message_files = (
@@ -818,7 +832,7 @@ class RegistryFile(object):
               parameter_message_files = None
 
             yield resources.EventLogProvider(
-                log_type, log_source, category_message_files,
+                log_type, log_source, provider_guid, category_message_files,
                 event_message_files, parameter_message_files)
 
 
@@ -929,7 +943,7 @@ class StdoutOutputWriter(object):
             ouput_string = u'0x{0:08x}\t: {1:s}'.format(
                 message_identifier, message_string)
 
-            print(ouput_string.encode('utf8'))
+            print(ouput_string.encode(u'utf8'))
 
           print(u'')
 
@@ -977,8 +991,8 @@ class StdoutOutputWriter(object):
       message_file: the message file (instance of MessageResourceFile).
       message_filename: the message filename.
     """
-    file_version = getattr(message_file, 'file_version', '')
-    product_version = getattr(message_file, 'product_version', '')
+    file_version = getattr(message_file, u'file_version', u'')
+    product_version = getattr(message_file, u'product_version', u'')
 
     print(u'Message file:')
     print(u'Path\t\t: {0:s}'.format(message_file.windows_path))
@@ -996,22 +1010,22 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
-      'Extract strings from message resource files for Event Log sources.'))
+      u'Extract strings from message resource files for Event Log sources.'))
 
   args_parser.add_argument(
-      'source', nargs='?', action='store', metavar='/mnt/c/',
-      default=None, help=('path of the volume containing C:\\Windows or the '
-                          'filename of a storage media image containing the '
-                          'C:\\Windows directory.'))
+      u'source', nargs=u'?', action=u'store', metavar=u'/mnt/c/',
+      default=None, help=(u'path of the volume containing C:\\Windows or the '
+                          u'filename of a storage media image containing the '
+                          u'C:\\Windows directory.'))
 
   args_parser.add_argument(
-      '--db', dest='database', action='store', metavar='./winevt-db/',
-      default=None, help='path to write the sqlite3 databases to.')
+      u'--db', dest=u'database', action=u'store', metavar=u'./winevt-db/',
+      default=None, help=u'path to write the sqlite3 databases to.')
 
   args_parser.add_argument(
-      '--winver', dest='windows_version', action='store', metavar='xp',
-      default=None, help=('string that identifies the Windows version '
-                          'in the database.'))
+      u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',
+      default=None, help=(u'string that identifies the Windows version '
+                          u'in the database.'))
 
   options = args_parser.parse_args()
 
@@ -1081,7 +1095,7 @@ def Main():
   return True
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
   if not Main():
     sys.exit(1)
   else:

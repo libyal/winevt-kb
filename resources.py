@@ -416,13 +416,14 @@ class EventLogProvider(object):
   """Class that defines a Windows Event Log provider."""
 
   def __init__(
-      self, log_type, log_source, category_message_filenames,
+      self, log_type, log_source, provider_guid, category_message_filenames,
       event_message_filenames, parameter_message_filenames):
     """Initializes the Windows Event Log provider.
 
     Args:
       log_type: the Event Log type.
       log_source: the Event Log source.
+      provider_guid: the Event Log provider GUID.
       category_message_filenames: the message filenames that contain
                                   the category strings.
       event_message_filenames: the message filenames that contain
@@ -433,21 +434,22 @@ class EventLogProvider(object):
     super(EventLogProvider, self).__init__()
     self.log_type = log_type
     self.log_source = log_source
+    self.provider_guid = provider_guid
 
     # It not empty the messages filenames can contain a list
     # of message file paths separated by ;
     if category_message_filenames:
-      self.category_message_files = category_message_filenames.split(';')
+      self.category_message_files = category_message_filenames.split(u';')
     else:
       self.category_message_files = category_message_filenames
 
     if event_message_filenames:
-      self.event_message_files = event_message_filenames.split(';')
+      self.event_message_files = event_message_filenames.split(u';')
     else:
       self.event_message_files = event_message_filenames
 
     if parameter_message_filenames:
-      self.parameter_message_files = parameter_message_filenames.split(';')
+      self.parameter_message_files = parameter_message_filenames.split(u';')
     else:
       self.parameter_message_files = parameter_message_filenames
 
