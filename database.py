@@ -166,6 +166,8 @@ class Sqlite3DatabaseFile(object):
         value = u'{0:d}'.format(value)
       elif isinstance(value, float):
         value = u'{0:f}'.format(value)
+      elif value is None:
+        value = u'NULL'
       else:
         raise RuntimeError(u'Unsupported value type: {0:s}.'.format(
             type(value)))
@@ -404,13 +406,13 @@ class Sqlite3EventProvidersDatabaseWriter(Sqlite3DatabaseWriter):
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
     table_name = u'event_log_providers'
-    column_names = [u'log_source', u'log_type']
+    column_names = [u'log_source', u'log_type', u'provider_guid']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
           u'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'log_source TEXT', u'log_type TEXT']
+          u'log_source TEXT', u'log_type TEXT', u'provider_guid TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
@@ -428,7 +430,9 @@ class Sqlite3EventProvidersDatabaseWriter(Sqlite3DatabaseWriter):
         insert_values = False
 
     if insert_values:
-      values = [event_log_provider.log_source, event_log_provider.log_type]
+      values = [
+          event_log_provider.log_source, event_log_provider.log_type,
+          event_log_provider.provider_guid]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_filename, database_filename):
@@ -1229,13 +1233,13 @@ class Sqlite3ResourcesDatabaseWriter(Sqlite3DatabaseWriter):
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
     table_name = u'event_log_providers'
-    column_names = [u'log_source', u'log_type']
+    column_names = [u'log_source', u'log_type', u'provider_guid']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
           u'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'log_source TEXT', u'log_type TEXT']
+          u'log_source TEXT', u'log_type TEXT', u'provider_guid TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
@@ -1253,7 +1257,9 @@ class Sqlite3ResourcesDatabaseWriter(Sqlite3DatabaseWriter):
         insert_values = False
 
     if insert_values:
-      values = [event_log_provider.log_source, event_log_provider.log_type]
+      values = [
+          event_log_provider.log_source, event_log_provider.log_type,
+          event_log_provider.provider_guid]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_file):
