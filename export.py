@@ -67,7 +67,7 @@ class Exporter(object):
             u'Missing message file database: {0:s}.'.format(database_filename))
         continue
 
-      logging.info('Processing: {0:s}'.format(database_filename))
+      logging.info(u'Processing: {0:s}'.format(database_filename))
 
       message_file = resources.MessageFile(database_filename[:-3])
       message_file.windows_path = windows_path
@@ -215,19 +215,19 @@ class StdoutOutputWriter(object):
     Args:
       message_table: the message table (instance of MessageTable).
     """
-    print('{0:s} (LCID: {1:s})'.format(
+    print(u'{0:s} (LCID: {1:s})'.format(
         message_table.language, message_table.lcid))
     print(u'')
     print(u'Message identifier\tMessage string')
 
     for identifier, string in message_table.message_strings.iteritems():
-      string = re.sub(r'\n', '\\\\n', string)
-      string = re.sub(r'\r', '\\\\r', string)
-      string = re.sub(r'\t', '\\\\t', string)
+      string = re.sub(r'\n', u'\\\\n', string)
+      string = re.sub(r'\r', u'\\\\r', string)
+      string = re.sub(r'\t', u'\\\\t', string)
 
       ouput_string = u'{0:s}\t{1:s}'.format(identifier, string)
 
-      print(ouput_string.encode('utf8'))
+      print(ouput_string.encode(u'utf8'))
 
     print(u'')
 
@@ -295,7 +295,7 @@ class AsciidocFileWriter(object):
 
   def WriteLine(self, line):
     """Writes a line."""
-    self._file.write('{0:s}\n'.format(line))
+    self._file.write(u'{0:s}\n'.format(line).encode(u'utf8'))
 
   def WriteLines(self, lines):
     """Writes lines."""
@@ -331,13 +331,13 @@ class AsciidocOutputWriter(object):
         u'| Message identifier | Message string'])
 
     for identifier, string in message_table.message_strings.iteritems():
-      string = re.sub(r'\n', '\\\\n', string)
-      string = re.sub(r'\r', '\\\\r', string)
-      string = re.sub(r'\t', '\\\\t', string)
+      string = re.sub(r'\n', u'\\\\n', string)
+      string = re.sub(r'\r', u'\\\\r', string)
+      string = re.sub(r'\t', u'\\\\t', string)
 
       ouput_string = u'| {0:s} | {1:s}'.format(identifier, string)
 
-      file_writer.WriteLine(ouput_string.encode('utf8'))
+      file_writer.WriteLine(ouput_string.encode(u'utf8'))
 
     file_writer.WriteLines([
         u'|===',
@@ -398,20 +398,20 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
-      'Export strings extracted from message files.'))
+      u'Export strings extracted from message files.'))
 
   args_parser.add_argument(
-      'source', nargs='?', action='store', metavar='./winevt-db/',
-      default=None, help=('path of the directory that contains the sqlite3 '
-                          'with the extracted strings.'))
+      u'source', nargs=u'?', action=u'store', metavar=u'./winevt-db/',
+      default=None, help=(
+          u'directory that contains the sqlite3 with the extracted strings.'))
 
   args_parser.add_argument(
-      '--db', dest='database', action='store', metavar='winevt-rc.db',
-      default=None, help='filename to write the sqlite3 database to.')
+      u'--db', dest=u'database', action=u'store', metavar=u'winevt-rc.db',
+      default=None, help=u'filename of the sqlite3 database to write to.')
 
   args_parser.add_argument(
-      '--wiki', dest='wiki', action='store', metavar='./winevt-kb.wiki/',
-      default=None, help='path to write the wiki pages to.')
+      u'--wiki', dest=u'wiki', action=u'store', metavar=u'./winevt-kb.wiki/',
+      default=None, help=u'path to write the wiki pages to.')
 
   # TODO: allow to set preferred language.
 

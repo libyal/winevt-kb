@@ -248,6 +248,34 @@ class Sqlite3DatabaseWriter(object):
 class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
   """Class to represent a sqlite3 Event Log providers database reader."""
 
+  def _GetEventMessageFilenames(self, log_source):
+    """Retrieves the message filenames of a specific Event Log provider.
+
+    Args:
+      log_source: the log source of the Event Log provider.
+
+    Returns:
+      A list of message filenames.
+    """
+    table_names = [
+        u'event_log_providers', u'message_file_per_event_log_provider',
+        u'message_files']
+    column_names = [u'message_files.message_filename']
+    condition = (
+        u'{0:s}.log_source == "{3:s}" AND '
+        u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
+        u'{1:s}.message_file_key == {2:s}.message_file_key').format(
+            u'event_log_providers', u'message_file_per_event_log_provider',
+            u'message_files', log_source)
+
+    message_filenames = []
+    for values in self._database_file.GetValues(
+        table_names, column_names, condition):
+      message_filename = values[u'message_files.message_filename']
+      message_filenames.append(message_filename)
+
+    return message_filenames
+
   def GetEventLogProviders(self):
     """Retrieves the Event Log providers.
 
@@ -260,9 +288,12 @@ class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
+      message_filenames = self._GetEventMessageFilenames(
+          values[u'log_source'])
+
       yield resources.EventLogProvider(
           values[u'log_type'], values[u'log_source'],
-          values[u'provider_guid'], None, None, None)
+          values[u'provider_guid'], None, message_filenames, None)
 
   def GetMessageFiles(self):
     """Retrieves the message filenames.

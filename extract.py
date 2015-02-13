@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Script to extract the strings from Event Log message resource files."""
 
+# pylint: disable=superfluous-parens
+
 import argparse
 import logging
 import os
@@ -287,7 +289,7 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
 
     Returns:
       A dictionary containing a dictionary of Event Log providers per event
-      log type. E.g. { 'Application': { 'EventSystem': instance of 
+      log type. E.g. { 'Application': { 'EventSystem': instance of
                                         EventLogProvider, ... }, ... }
     """
     registry_filename = u'\\'.join([
@@ -750,14 +752,14 @@ class RegistryFile(object):
       or 0 if no current control set could be retrieved.
     """
     control_set = 0
-  
+
     select_key = self._regf_file.get_key_by_path(u'Select')
-  
+
     if select_key:
       current_value = select_key.get_value_by_name(u'Current')
-      if current_value: 
+      if current_value:
         control_set = current_value.data_as_integer
-  
+
     return control_set
 
   def GetEventLogProviders(self):
@@ -767,17 +769,17 @@ class RegistryFile(object):
       An Event Log provider object (EventLogProvider).
     """
     control_set = self.GetCurrentControlSet()
-  
+
     if control_set > 0 and control_set <= 999:
       eventlog_key_path = u'ControlSet{0:03d}\\Services\\EventLog'.format(
           control_set)
-  
+
       eventlog_key = self._regf_file.get_key_by_path(eventlog_key_path)
-  
+
       if eventlog_key:
         for log_type_key in eventlog_key.sub_keys:
           log_type = log_type_key.name
-  
+
           for log_source_key in log_type_key.sub_keys:
             log_source = log_source_key.name
 
@@ -788,19 +790,19 @@ class RegistryFile(object):
               provider_guid = provider_guid_value.data_as_string
             else:
               provider_guid = None
-  
+
             category_message_file_value = log_source_key.get_value_by_name(
                 u'CategoryMessageFile')
-  
+
             if category_message_file_value:
               category_message_files = (
                   category_message_file_value.data_as_string)
             else:
               category_message_files = None
-  
+
             event_message_file_value = log_source_key.get_value_by_name(
                 u'EventMessageFile')
-  
+
             if event_message_file_value:
               event_message_files = event_message_file_value.data_as_string
             else:
@@ -808,7 +810,7 @@ class RegistryFile(object):
 
             parameter_message_file_value = log_source_key.get_value_by_name(
                 u'ParameterMessageFile')
-  
+
             if parameter_message_file_value:
               parameter_message_files = (
                   parameter_message_file_value.data_as_string)
@@ -1004,7 +1006,7 @@ def Main():
 
   args_parser.add_argument(
       u'--db', dest=u'database', action=u'store', metavar=u'./winevt-db/',
-      default=None, help=u'path to write the sqlite3 databases to.')
+      default=None, help=u'directory to write the sqlite3 databases to.')
 
   args_parser.add_argument(
       u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',

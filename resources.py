@@ -424,17 +424,23 @@ class EventLogProvider(object):
 
     # It not empty the messages filenames can contain a list
     # of message file paths separated by ;
-    if category_message_filenames:
+    if not category_message_filenames:
+      self.category_message_files = None
+    elif isinstance(category_message_filenames, basestring):
       self.category_message_files = category_message_filenames.split(u';')
     else:
       self.category_message_files = category_message_filenames
 
-    if event_message_filenames:
+    if not event_message_filenames:
+      self.event_message_files = None
+    elif isinstance(event_message_filenames, basestring):
       self.event_message_files = event_message_filenames.split(u';')
     else:
       self.event_message_files = event_message_filenames
 
-    if parameter_message_filenames:
+    if not parameter_message_filenames:
+      self.parameter_message_files = None
+    elif isinstance(parameter_message_filenames, basestring):
       self.parameter_message_files = parameter_message_filenames.split(u';')
     else:
       self.parameter_message_files = parameter_message_filenames
