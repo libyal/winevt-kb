@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to export strings extracted from message files."""
 
-# pylint: disable=superfluous-parens
-
 import argparse
 import logging
 import os
@@ -75,6 +73,20 @@ class Exporter(object):
       self._ExportMessageFile(message_file, message_file_database_path)
 
       output_writer.WriteMessageFile(message_file)
+
+  def _ExportMessageFilesPerEventLogProvider(
+      self, database_reader, output_writer):
+    """Exports the message files used by an Event Log provider.
+
+    Args:
+      database_reader: the event provider database reader (instance of
+                       Sqlite3EventProvidersDatabaseReader).
+      output_writer: the output writer (instance of OutputWriter).
+    """
+    for event_log_provider in database_reader.GetEventLogProviders():
+      for message_filename in event_log_provider.event_message_files:
+        output_writer.WriteMessageFilesPerEventLogProvider(
+            event_log_provider, message_filename)
 
   def _ExportMessageStrings(self, message_file, database_reader):
     """Exports the message strings from a message file database.
@@ -154,6 +166,10 @@ class Exporter(object):
     self._ExportMessageFiles(
         source_path, database_reader, output_writer)
 
+    # TODO: export parameter and category files.
+
+    self._ExportMessageFilesPerEventLogProvider(database_reader, output_writer)
+
     database_reader.Close()
 
 
@@ -204,6 +220,17 @@ class Sqlite3OutputWriter(object):
       message_file: the message file (instance of MessageFile).
     """
     self._database_writer.WriteMessageFile(message_file)
+
+  def WriteMessageFilesPerEventLogProvider(
+      self, event_log_provider, message_file):
+    """Writes the Windows Message Resource file per Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      message_file: the message file (instance of MessageFile).
+    """
+    self._database_writer.WriteMessageFilesPerEventLogProvider(
+        event_log_provider, message_file)
 
 
 class StdoutOutputWriter(object):
@@ -264,6 +291,16 @@ class StdoutOutputWriter(object):
 
     for message_table in message_file.GetMessageTables():
       self._WriteMessageTable(message_table)
+
+  def WriteMessageFilesPerEventLogProvider(
+      self, event_log_provider, message_file):
+    """Writes the Windows Message Resource file per Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      message_file: the message file (instance of MessageFile).
+    """
+    pass
 
 
 class AsciidocFileWriter(object):
@@ -389,6 +426,16 @@ class AsciidocOutputWriter(object):
         self._WriteMessageTable(message_table, file_writer)
 
       file_writer.Close()
+
+  def WriteMessageFilesPerEventLogProvider(
+      self, event_log_provider, message_file):
+    """Writes the Windows Message Resource file per Event Log provider.
+
+    Args:
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      message_file: the message file (instance of MessageFile).
+    """
+    pass
 
 
 def Main():

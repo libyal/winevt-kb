@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to extract the strings from Event Log message resource files."""
 
-# pylint: disable=superfluous-parens
-
 import argparse
 import logging
 import os
@@ -791,35 +789,31 @@ class RegistryFile(object):
             else:
               provider_guid = None
 
+            event_log_provider = resources.EventLogProvider(
+                log_type, log_source, provider_guid)
+
             category_message_file_value = log_source_key.get_value_by_name(
                 u'CategoryMessageFile')
 
             if category_message_file_value:
-              category_message_files = (
+              event_log_provider.SetCategoryMessageFilenames(
                   category_message_file_value.data_as_string)
-            else:
-              category_message_files = None
 
             event_message_file_value = log_source_key.get_value_by_name(
                 u'EventMessageFile')
 
             if event_message_file_value:
-              event_message_files = event_message_file_value.data_as_string
-            else:
-              event_message_files = None
+              event_log_provider.SetEventMessageFilenames(
+                  event_message_file_value.data_as_string)
 
             parameter_message_file_value = log_source_key.get_value_by_name(
                 u'ParameterMessageFile')
 
             if parameter_message_file_value:
-              parameter_message_files = (
+              event_log_provider.SetParameterMessageFilenames(
                   parameter_message_file_value.data_as_string)
-            else:
-              parameter_message_files = None
 
-            yield resources.EventLogProvider(
-                log_type, log_source, provider_guid, category_message_files,
-                event_message_files, parameter_message_files)
+            yield event_log_provider
 
 
 class Sqlite3OutputWriter(object):
@@ -891,7 +885,7 @@ class Sqlite3OutputWriter(object):
 
     # TODO: write the relationship between the event log provider and
     # the message file and the Windows version?
-    self._database_writer.WriteMessageFilePerEventLogProvider(
+    self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_filename)
 
 

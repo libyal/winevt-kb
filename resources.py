@@ -401,49 +401,57 @@ LANGUAGES = {
 class EventLogProvider(object):
   """Class that defines a Windows Event Log provider."""
 
-  def __init__(
-      self, log_type, log_source, provider_guid, category_message_filenames,
-      event_message_filenames, parameter_message_filenames):
+  def __init__(self, log_type, log_source, provider_guid):
     """Initializes the Windows Event Log provider.
 
     Args:
       log_type: the Event Log type.
       log_source: the Event Log source.
       provider_guid: the Event Log provider GUID.
-      category_message_filenames: the message filenames that contain
-                                  the category strings.
-      event_message_filenames: the message filenames that contain
-                               the event messages.
-      parameter_message_filenames: the message filenames that contain
-                                   the parameter strings.
     """
     super(EventLogProvider, self).__init__()
+    self.category_message_files = None
+    self.event_message_files = None
     self.log_type = log_type
     self.log_source = log_source
+    self.paramater_message_files = None
     self.provider_guid = provider_guid
 
-    # It not empty the messages filenames can contain a list
-    # of message file paths separated by ;
-    if not category_message_filenames:
-      self.category_message_files = None
-    elif isinstance(category_message_filenames, basestring):
+  def SetCategoryMessageFilenames(self, category_message_filenames):
+    """Sets the category message filenames.
+
+    Args:
+      category_message_filenames: a string containing ; separated filenames,
+                                  or a list of filenames.
+    """
+    if isinstance(category_message_filenames, basestring):
       self.category_message_files = category_message_filenames.split(u';')
     else:
       self.category_message_files = category_message_filenames
 
-    if not event_message_filenames:
-      self.event_message_files = None
-    elif isinstance(event_message_filenames, basestring):
+  def SetEventMessageFilenames(self, event_message_filenames):
+    """Sets the event message filenames.
+
+    Args:
+      event_message_filenames: a string containing ; separated filenames,
+                               or a list of filenames.
+    """
+    if isinstance(event_message_filenames, basestring):
       self.event_message_files = event_message_filenames.split(u';')
     else:
       self.event_message_files = event_message_filenames
 
-    if not parameter_message_filenames:
-      self.parameter_message_files = None
-    elif isinstance(parameter_message_filenames, basestring):
-      self.parameter_message_files = parameter_message_filenames.split(u';')
+  def SetParameterMessageFilenames(self, paramater_message_filenames):
+    """Sets the paramater message filenames.
+
+    Args:
+      paramater_message_filenames: a string containing ; separated filenames,
+                                   or a list of filenames.
+    """
+    if isinstance(paramater_message_filenames, basestring):
+      self.paramater_message_files = paramater_message_filenames.split(u';')
     else:
-      self.parameter_message_files = parameter_message_filenames
+      self.paramater_message_files = paramater_message_filenames
 
 
 class MessageFile(object):

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to query a winevt-kb SQLite database."""
 
-# pylint: disable=superfluous-parens
-
 import argparse
 import logging
 import sys
