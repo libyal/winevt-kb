@@ -19,25 +19,26 @@ def Main():
       'Export strings extracted from message files.'))
 
   args_parser.add_argument(
+      'database', nargs='?', action='store', metavar='DATABASE',
+      default=None, help='filename of the sqlite3 database to read from.')
+
+  args_parser.add_argument(
       'event_provider', nargs='?', action='store', metavar='EVENT_PROVIDER',
-      default=None, help='The event provider.')
+      default=None, help='specific event provider to query.')
 
   args_parser.add_argument(
       'message_identifier', nargs='?', action='store',
       metavar='MESSAGE_IDENTIFIER', default=None,
-      help='The message identifier.')
+      help='specific message identifier to query.')
 
   args_parser.add_argument(
-      '--db', dest='database', action='store', metavar='winevt-rc.db',
-      default=None, help='filename of the sqlite3 database to read from.')
-
-  # TODO: allow to set preferred language.
-  lcid = 0x00000409
+      '--lcid', dest='lcid', action='store', metavar='LCID',
+      default=0x00000409, help='the preferred LCID.')
 
   options = args_parser.parse_args()
 
-  if not options.event_provider or not options.message_identifier:
-    print(u'Event provider or message identifier value is missing.')
+  if not options.database:
+    print(u'Database value is missing.')
     print(u'')
     args_parser.print_help()
     print(u'')
@@ -49,14 +50,44 @@ def Main():
   database_reader = database.Sqlite3ResourcesDatabaseReader()
   database_reader.Open(options.database)
 
-  message_string = database_reader.GetMessage(
-      options.event_provider, lcid, options.message_identifier)
+  message_identifier = None
+  if getattr(options, u'message_identifier', None):
+    try:
+      message_identifier = int(options.message_identifier, 10)
+    except ValueError:
+      pass
+
+    if message_identifier is None:
+      try:
+        message_identifier = int(options.message_identifier, 16)
+      except ValueError:
+        pass
+
+    if message_identifier is None:
+      print(u'Unsupported message identifier: {0:s}'.format(
+          options.message_identifier))
+      return False
+
+  if not getattr(options, u'event_provider', None):
+    print(u'Event Log providers:')
+    for event_log_provider in database_reader.GetEventLogProviders():
+      print(event_log_provider.log_source)
+
+  elif message_identifier is None:
+    print(u'Message strings:')
+    for message_identifier, message_string in database_reader.GetMessages(
+        options.event_provider, options.lcid):
+      print(u'{0:s}:\t{1:s}'.format(message_identifier, message_string))
+
+  else:
+    message_string = database_reader.GetMessage(
+        options.event_provider, options.lcid, message_identifier)
+
+    print(u'Message string:')
+    if message_string:
+      print(u'0x{0:08x}:\t{1:s}'.format(message_identifier, message_string))
 
   database_reader.Close()
-
-  if message_string:
-    print(u'Message string:')
-    print(message_string)
 
   return True
 
