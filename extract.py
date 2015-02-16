@@ -243,9 +243,13 @@ class WindowsVolumeCollector(object):
     self._path_resolver = windows_path_resolver.WindowsPathResolver(
         self._file_system, mount_point)
 
-    if scan_context.source_type == scan_context.SOURCE_TYPE_DIRECTORY:
+    # The source is a directory or single volume storage media image.
+    if not self._windows_directory:
       if not self._ScanFileSystem(self._path_resolver):
         return False
+
+    if not self._windows_directory:
+      return False
 
     self._path_resolver.SetEnvironmentVariable(
         u'WinDir', self._windows_directory)
@@ -845,7 +849,7 @@ class Sqlite3OutputWriter(object):
     if not os.path.isdir(self._databases_path):
       return False
 
-    self._database_writer = database.Sqlite3EventProvidersDatabaseWriter()
+    self._database_writer = database.EventProvidersSqlite3DatabaseWriter()
     self._database_writer.Open(os.path.join(
         self._databases_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
@@ -873,7 +877,7 @@ class Sqlite3OutputWriter(object):
     database_filename = u'{0:s}.db'.format(database_filename.lower())
     database_filename = re.sub(r'\.mui', '', database_filename)
 
-    database_writer = database.Sqlite3MessageFileDatabaseWriter(
+    database_writer = database.MessageFileSqlite3DatabaseWriter(
         message_resource_file)
     database_writer.Open(
         os.path.join(self._databases_path, database_filename))

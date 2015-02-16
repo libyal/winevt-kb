@@ -26,7 +26,7 @@ class Exporter(object):
 
     Args:
       database_reader: the event provider database reader (instance of
-                       Sqlite3EventProvidersDatabaseReader).
+                       EventProvidersSqlite3DatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
     for event_log_provider in database_reader.GetEventLogProviders():
@@ -39,7 +39,7 @@ class Exporter(object):
       message_file: the message file (instance of MessageFile).
       message_file_database_path: the path of the message file database.
     """
-    database_reader = database.Sqlite3MessageFileDatabaseReader()
+    database_reader = database.MessageFileSqlite3DatabaseReader()
     database_reader.Open(message_file_database_path)
 
     self._ExportMessageStrings(message_file, database_reader)
@@ -55,7 +55,7 @@ class Exporter(object):
     Args:
       source_path: the source path.
       database_reader: the event provider database reader (instance of
-                       Sqlite3EventProvidersDatabaseReader).
+                       EventProvidersSqlite3DatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
     for windows_path, database_filename in database_reader.GetMessageFiles():
@@ -80,7 +80,7 @@ class Exporter(object):
 
     Args:
       database_reader: the event provider database reader (instance of
-                       Sqlite3EventProvidersDatabaseReader).
+                       EventProvidersSqlite3DatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
     for event_log_provider in database_reader.GetEventLogProviders():
@@ -94,7 +94,7 @@ class Exporter(object):
     Args:
       message_file: the message file (instance of MessageFile).
       database_reader: the message file database reader (instance of
-                       Sqlite3MessageFileDatabaseReader).
+                       MessageFileSqlite3DatabaseReader).
     """
     for lcid, file_version in database_reader.GetMessageTables():
       message_file.AppendMessageTable(lcid, file_version)
@@ -126,7 +126,7 @@ class Exporter(object):
     Args:
       message_file: the message file (instance of MessageFile).
       database_reader: the message file database reader (instance of
-                       Sqlite3MessageFileDatabaseReader).
+                       MessageFileSqlite3DatabaseReader).
     """
     for lcid, file_version in database_reader.GetStringTables():
       message_file.AppendStringTable(lcid, file_version)
@@ -157,7 +157,7 @@ class Exporter(object):
       source_path: the source path.
       output_writer: the output writer (instance of OutputWriter).
     """
-    database_reader = database.Sqlite3EventProvidersDatabaseReader()
+    database_reader = database.EventProvidersSqlite3DatabaseReader()
     database_reader.Open(os.path.join(
         source_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
@@ -200,7 +200,7 @@ class Sqlite3OutputWriter(object):
     if os.path.isdir(self._database_path):
       return False
 
-    self._database_writer = database.Sqlite3ResourcesDatabaseWriter()
+    self._database_writer = database.ResourcesSqlite3DatabaseWriter()
     self._database_writer.Open(self._database_path)
 
     return True

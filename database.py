@@ -245,8 +245,8 @@ class Sqlite3DatabaseWriter(object):
     self._database_file.Open(filename)
 
 
-class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent a sqlite3 Event Log providers database reader."""
+class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
+  """Class to represent an Event Log providers sqlite3 database reader."""
 
   def _GetEventMessageFilenames(self, log_source):
     """Retrieves the message filenames of a specific Event Log provider.
@@ -314,8 +314,8 @@ class Sqlite3EventProvidersDatabaseReader(Sqlite3DatabaseReader):
       yield values[u'message_filename'], values[u'database_filename']
 
 
-class Sqlite3EventProvidersDatabaseWriter(Sqlite3DatabaseWriter):
-  """Class to represent a sqlite3 Event Log providers database writer."""
+class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
+  """Class to represent an Event Log providers sqlite3 database writer."""
 
   def _GetEventLogProviderKey(self, event_log_provider):
     """Retrieves the key of an Event Log provider.
@@ -491,8 +491,8 @@ class Sqlite3EventProvidersDatabaseWriter(Sqlite3DatabaseWriter):
       self._database_file.InsertValues(table_name, column_names, values)
 
 
-class Sqlite3MessageFileDatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent a sqlite3 message file database reader."""
+class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
+  """Class to represent a message file sqlite3 database reader."""
 
   def GetMessageTables(self):
     """Retrieves the message tables.
@@ -567,8 +567,8 @@ class Sqlite3MessageFileDatabaseReader(Sqlite3DatabaseReader):
       yield values[u'string_identifier'], values[u'string']
 
 
-class Sqlite3MessageFileDatabaseWriter(Sqlite3DatabaseWriter):
-  """Class to represent a sqlite3 message file database writer."""
+class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
+  """Class to represent a message file sqlite3 database writer."""
 
   def __init__(self, message_resource_file):
     """Initializes the message file database writer object.
@@ -576,7 +576,7 @@ class Sqlite3MessageFileDatabaseWriter(Sqlite3DatabaseWriter):
     Args:
       message_resource_file: the message file (instance of MessageResourceFile).
     """
-    super(Sqlite3MessageFileDatabaseWriter, self).__init__()
+    super(MessageFileSqlite3DatabaseWriter, self).__init__()
     self._message_resource_file = message_resource_file
 
   def _GetMessageFileKey(self, message_resource_file):
@@ -952,8 +952,8 @@ class Sqlite3MessageFileDatabaseWriter(Sqlite3DatabaseWriter):
     # self._WriteStringTables()
 
 
-class Sqlite3ResourcesDatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent a sqlite3 Event Log resources database reader."""
+class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
+  """Class to represent an Event Log resources sqlite3 database reader."""
 
   def _GetEventLogProviderKey(self, log_source):
     """Retrieves the Event Log provider key.
@@ -1109,7 +1109,8 @@ class Sqlite3ResourcesDatabaseReader(Sqlite3DatabaseReader):
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:
-      message_filenames = self._GetEventMessageFilenames(values[u'log_source'])
+      message_filenames = self._GetEventMessageFilenames(
+          event_log_provider.log_source)
       event_log_provider.SetEventMessageFilenames(message_filenames)
       yield event_log_provider
 
@@ -1166,7 +1167,7 @@ class Sqlite3ResourcesDatabaseReader(Sqlite3DatabaseReader):
         yield message_identifier, message_string
 
 
-class Sqlite3ResourcesDatabaseWriter(Sqlite3DatabaseWriter):
+class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
   """Class to represent a sqlite3 Event Log resources database writer."""
 
   def _GetEventLogProviderKey(self, event_log_provider):
