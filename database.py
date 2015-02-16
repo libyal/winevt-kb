@@ -728,8 +728,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       if message_file_key is None:
         logging.warning(u'Missing message file key for: {0:s}'.format(
             message_resource_file.windows_path))
-
-      self._WriteMessageTableLanguage(message_file_key, language_identifier)
+      else:
+        self._WriteMessageTableLanguage(message_file_key, language_identifier)
 
       table_name = u'message_table_0x{0:08x}_{1:s}'.format(
           language_identifier, message_resource_file.file_version)
