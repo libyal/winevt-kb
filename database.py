@@ -360,7 +360,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
-    condition = u'message_filename = "{0:s}"'.format(message_filename)
+    condition = u'LOWER(message_filename) = LOWER("{0:s}")'.format(
+        message_filename)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -475,7 +476,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = True
 
     else:
-      condition = u'message_filename = "{0:s}"'.format(message_filename)
+      condition = u'LOWER(message_filename) = LOWER("{0:s}")'.format(
+          message_filename)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -593,12 +595,17 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
-    condition = (
-        u'path = "{0:s}" AND file_version = "{1:s}" AND '
-        u'product_version = "{2:s}"').format(
-            message_resource_file.windows_path,
-            message_resource_file.file_version,
-            message_resource_file.product_version)
+    condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+        message_resource_file.windows_path)
+
+    if message_resource_file.file_version:
+      condition = u'{0:s} AND file_version = "{1:s}"'.format(
+          condition, message_resource_file.file_version)
+
+    if message_resource_file.product_version:
+      condition = u'{0:s} AND product_version = "{1:s}"'.format(
+          condition, message_resource_file.product_version)
+
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -689,12 +696,17 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = True
 
     else:
-      condition = (
-          u'path = "{0:s}" AND file_version = "{1:s}" AND '
-          u'product_version = "{2:s}"').format(
-              message_resource_file.windows_path,
-              message_resource_file.file_version,
-              message_resource_file.product_version)
+      condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+          message_resource_file.windows_path)
+
+      if message_resource_file.file_version:
+        condition = u'{0:s} AND file_version = "{1:s}"'.format(
+            condition, message_resource_file.file_version)
+
+      if message_resource_file.product_version:
+        condition = u'{0:s} AND product_version = "{1:s}"'.format(
+            condition, message_resource_file.product_version)
+
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -731,9 +743,11 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       else:
         self._WriteMessageTableLanguage(message_file_key, language_identifier)
 
-      table_name = u'message_table_0x{0:08x}_{1:s}'.format(
-          language_identifier, message_resource_file.file_version)
-      table_name = re.sub(r'\.', '_', table_name)
+      table_name = u'message_table_0x{0:08x}'.format(language_identifier)
+      if message_resource_file.file_version:
+        table_name = u'{0:s}_{1:s}'.format(
+            table_name, message_resource_file.file_version)
+        table_name = re.sub(r'\.', r'_', table_name)
 
       has_table = self._database_file.HasTable(table_name)
       if not has_table:
@@ -874,9 +888,11 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
       self._WriteStringTableLanguage(message_file_key, language_identifier)
 
-      table_name = u'string_table_0x{0:08x}_{1:s}'.format(
-          language_identifier, message_resource_file.file_version)
-      table_name = re.sub(r'\.', '_', table_name)
+      table_name = u'message_table_0x{0:08x}'.format(language_identifier)
+      if message_resource_file.file_version:
+        table_name = u'{0:s}_{1:s}'.format(
+            table_name, message_resource_file.file_version)
+        table_name = re.sub(r'\.', r'_', table_name)
 
       has_table = self._database_file.HasTable(table_name)
       if not has_table:
@@ -1213,7 +1229,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
-    condition = u'path = "{0:s}"'.format(message_file.windows_path)
+    condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+        message_file.windows_path)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -1241,7 +1258,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
-    condition = u'path = "{0:s}"'.format(message_filename)
+    condition = u'LOWER(path) = LOWER("{0:s}")'.format(message_filename)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -1324,7 +1341,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = True
 
     else:
-      condition = u'path = "{0:s}"'.format(message_file.windows_path)
+      condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+          message_file.windows_path)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
