@@ -3,6 +3,7 @@
 """Script to export strings extracted from message files."""
 
 import argparse
+import difflib
 import logging
 import os
 import re
@@ -110,12 +111,14 @@ class Exporter(object):
             message_table.message_strings[message_identifier] = message_string
 
           elif message_string != stored_message_string:
+            differ = difflib.Differ()
+            diff_list = list(differ.compare(
+                [stored_message_string], [message_string]))
             logging.warning((
                 u'Found duplicate alternating message string: {0:s} '
-                u'in LCID: {1:s} and version: {2:s}.\nPrevious: {3:s}\n'
-                u'New:{4:s}\n').format(
+                u'in LCID: {1:s} and version: {2:s}.\n{3:s}\n').format(
                     message_identifier, message_table.lcid, file_version,
-                    stored_message_string, message_string))
+                    u'\n'.join(diff_list)))
 
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
