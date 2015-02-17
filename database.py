@@ -523,8 +523,11 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       A tuple of a message identifier and string.
     """
-    table_name = u'message_table_{0:s}_{1:s}'.format(
-        lcid, re.sub(r'\.', '_', file_version))
+    table_name = u'message_table_{0:s}'.format(lcid)
+    if file_version:
+      table_name = u'{0:s}_{1:s}'.format(table_name, file_version)
+      table_name = re.sub(r'\.', r'_', table_name)
+
     column_names = [u'message_identifier', u'message_string']
     condition = u''
 
