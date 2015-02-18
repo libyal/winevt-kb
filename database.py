@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Classes to read from and write to SQLite databases."""
 
+import difflib
 import logging
 import re
 
@@ -657,13 +658,15 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       if number_of_values == 1:
         values = values_list[0]
         if message_string != values[u'message_string']:
+          differ = difflib.Differ()
+          diff_list = list(differ.compare(
+              [values[u'message_string']], [message_string]))
           logging.warning((
               u'Message string mismatch for LCID: 0x{0:08x}, '
               u'file version: {1:s}, message identifier: {2:s}.\n'
-              u'Found: {2:s}\nStored: {3:s}\n').format(
+              u'{3:s}\n').format(
                   language_identifier, message_resource_file.file_version,
-                  message_identifier, message_string,
-                  values[u'message_string']))
+                  message_identifier, u'\n'.join(diff_list)))
 
       elif number_of_values != 0:
         logging.warning((
