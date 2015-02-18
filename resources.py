@@ -414,7 +414,7 @@ class EventLogProvider(object):
     self.event_message_files = None
     self.log_type = log_type
     self.log_source = log_source
-    self.paramater_message_files = None
+    self.parameter_message_files = None
     self.provider_guid = provider_guid
 
   def SetCategoryMessageFilenames(self, category_message_filenames):
@@ -441,17 +441,17 @@ class EventLogProvider(object):
     else:
       self.event_message_files = event_message_filenames
 
-  def SetParameterMessageFilenames(self, paramater_message_filenames):
-    """Sets the paramater message filenames.
+  def SetParameterMessageFilenames(self, parameter_message_filenames):
+    """Sets the parameter message filenames.
 
     Args:
-      paramater_message_filenames: a string containing ; separated filenames,
+      parameter_message_filenames: a string containing ; separated filenames,
                                    or a list of filenames.
     """
-    if isinstance(paramater_message_filenames, basestring):
-      self.paramater_message_files = paramater_message_filenames.split(u';')
+    if isinstance(parameter_message_filenames, basestring):
+      self.parameter_message_files = parameter_message_filenames.split(u';')
     else:
-      self.paramater_message_files = paramater_message_filenames
+      self.parameter_message_files = parameter_message_filenames
 
 
 class MessageFile(object):
