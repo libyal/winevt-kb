@@ -114,8 +114,11 @@ class WindowsVolumeCollector(object):
           volume_location)
       volume_path_spec = getattr(volume_scan_node, u'path_spec', None)
 
-      # The leaf scan node contains the actual file system.
+      # The leaf scan node shoudl contain the actual file system.
       file_system_scan_node = volume_scan_node.GetSubNodeByLocation(u'/')
+      if not file_system_scan_node:
+        continue
+
       while file_system_scan_node.sub_nodes:
         file_system_scan_node = file_system_scan_node.GetSubNodeByLocation(u'/')
 
