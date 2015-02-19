@@ -233,7 +233,7 @@ class Sqlite3OutputWriter(object):
       message_file: the message file (instance of MessageFile).
     """
     self._database_writer.WriteMessageFilesPerEventLogProvider(
-        event_log_provider, message_file)
+        event_log_provider, message_file, database.MESSAGE_FILE_TYPE_EVENT)
 
 
 class StdoutOutputWriter(object):

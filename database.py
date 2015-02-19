@@ -10,6 +10,11 @@ import sqlite3
 import resources
 
 
+MESSAGE_FILE_TYPE_CATEGORY = u'category'
+MESSAGE_FILE_TYPE_EVENT = u'event'
+MESSAGE_FILE_TYPE_PARAMETER = u'parameter'
+
+
 class Sqlite3DatabaseFile(object):
   """Class that defines a sqlite3 database file."""
 
@@ -249,11 +254,12 @@ class Sqlite3DatabaseWriter(object):
 class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
   """Class to represent an Event Log providers sqlite3 database reader."""
 
-  def _GetEventMessageFilenames(self, log_source):
+  def _GetEventMessageFilenames(self, log_source, message_file_type):
     """Retrieves the message filenames of a specific Event Log provider.
 
     Args:
       log_source: the log source of the Event Log provider.
+      message_file_type: string containing the message file type.
 
     Returns:
       A list of message filenames.
@@ -264,10 +270,11 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
     column_names = [u'message_files.message_filename']
     condition = (
         u'{0:s}.log_source == "{3:s}" AND '
+        u'{1:s}.message_file_type == "{4:s}" AND '
         u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
         u'{1:s}.message_file_key == {2:s}.message_file_key').format(
             u'event_log_providers', u'message_file_per_event_log_provider',
-            u'message_files', log_source)
+            u'message_files', log_source, message_file_type)
 
     message_filenames = []
     for values in self._database_file.GetValues(
@@ -296,8 +303,11 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     for event_log_provider in event_log_providers:
       message_filenames = self._GetEventMessageFilenames(
-          event_log_provider.log_source)
+          event_log_provider.log_source, MESSAGE_FILE_TYPE_EVENT)
       event_log_provider.SetEventMessageFilenames(message_filenames)
+
+      # TODO: set category and parameter message filenames.
+
       yield event_log_provider
 
   def GetMessageFiles(self):
@@ -377,15 +387,17 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     raise RuntimeError(u'More than one value found in database.')
 
   def WriteMessageFilesPerEventLogProvider(
-      self, event_log_provider, message_filename):
+      self, event_log_provider, message_filename, message_file_type):
     """Writes the message files used by an Event Log provider.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_filename: the message filename.
+      message_filename: string containing the message filename.
+      message_file_type: string containing the message file type.
     """
     table_name = u'message_file_per_event_log_provider'
-    column_names = [u'message_file_key', u'event_log_provider_key']
+    column_names = [
+        u'message_file_key', u'message_file_type', u'event_log_provider_key']
 
     event_log_provider_key = self._GetEventLogProviderKey(event_log_provider)
     if event_log_provider_key is None:
@@ -400,14 +412,16 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER', u'event_log_provider_key INTEGER']
+          u'message_file_key INTEGER', u'message_file_type TEXT',
+          u'event_log_provider_key INTEGER']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
       condition = (
-          u'message_file_key = {0:d} AND event_log_provider_key = '
-          u'{1:d}').format(message_file_key, event_log_provider_key)
+          u'message_file_key = {0:d} AND message_file_type = "{1:s}" AND '
+          u'event_log_provider_key = {2:d}').format(
+              message_file_key, message_file_type, event_log_provider_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -419,7 +433,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
         insert_values = False
 
     if insert_values:
-      values = [message_file_key, event_log_provider_key]
+      values = [message_file_key, message_file_type, event_log_provider_key]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteEventLogProvider(self, event_log_provider):
@@ -1006,11 +1020,12 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     raise RuntimeError(u'More than one value found in database.')
 
-  def _GetEventMessageFilenames(self, log_source):
+  def _GetEventMessageFilenames(self, log_source, message_file_type):
     """Retrieves the message filenames of a specific Event Log provider.
 
     Args:
       log_source: the log source of the Event Log provider.
+      message_file_type: string containing the message file type.
 
     Returns:
       A list of message filenames.
@@ -1021,10 +1036,11 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     column_names = [u'message_files.path']
     condition = (
         u'{0:s}.log_source == "{3:s}" AND '
+        u'{1:s}.message_file_type == "{4:s}" AND '
         u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
         u'{1:s}.message_file_key == {2:s}.message_file_key').format(
             u'event_log_providers', u'message_file_per_event_log_provider',
-            u'message_files', log_source)
+            u'message_files', log_source, message_file_type)
 
     message_filenames = []
     for values in self._database_file.GetValues(
@@ -1132,8 +1148,11 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     for event_log_provider in event_log_providers:
       message_filenames = self._GetEventMessageFilenames(
-          event_log_provider.log_source)
+          event_log_provider.log_source, MESSAGE_FILE_TYPE_EVENT)
       event_log_provider.SetEventMessageFilenames(message_filenames)
+
+      # TODO: set category and parameter message filenames.
+
       yield event_log_provider
 
   def GetMessage(self, log_source, lcid, message_identifier):
@@ -1475,7 +1494,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       self._WriteMessageTable(message_file, message_table)
 
   def WriteMessageFilesPerEventLogProvider(
-      self, event_log_provider, message_filename):
+      self, event_log_provider, message_filename, message_file_type):
     """Writes the message files used by an Event Log provider.
 
     Args:
@@ -1483,7 +1502,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_filename: the message filename.
     """
     table_name = u'message_file_per_event_log_provider'
-    column_names = [u'message_file_key', u'event_log_provider_key']
+    column_names = [
+        u'message_file_key', u'message_file_type', u'event_log_provider_key']
 
     event_log_provider_key = self._GetEventLogProviderKey(event_log_provider)
     if event_log_provider_key is None:
@@ -1498,14 +1518,16 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER', u'event_log_provider_key INTEGER']
+          u'message_file_key INTEGER', u'message_file_type TEXT',
+          u'event_log_provider_key INTEGER']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
       condition = (
-          u'message_file_key = {0:d} AND event_log_provider_key = '
-          u'{1:d}').format(message_file_key, event_log_provider_key)
+          u'message_file_key = {0:d} AND message_file_type = "{1:s}" AND '
+          u'event_log_provider_key = {2:d}').format(
+              message_file_key, message_file_type, event_log_provider_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -1517,6 +1539,6 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
         insert_values = False
 
     if insert_values:
-      values = [message_file_key, event_log_provider_key]
+      values = [message_file_key, message_file_type, event_log_provider_key]
       self._database_file.InsertValues(table_name, column_names, values)
 

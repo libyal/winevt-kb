@@ -444,6 +444,96 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
     """The Windows version."""
     self._windows_version = value
 
+  def _ExtractMessageFile(
+      self, output_writer, processed_message_filenames, event_log_provider,
+      message_filename, message_file_type):
+    """Extracts the Event Log message strings from a message file.
+
+    Args:
+      output_writer: the output writer (instance of OutputWriter).
+      processed_message_filenames: a list of the processed message filenames.
+      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      message_filename: string containing the message filename.
+      message_file_type: string containing the message file type.
+    """
+    if message_filename in processed_message_filenames:
+      return
+
+    message_file = self._OpenMessageResourceFile(message_filename)
+    mui_message_filename = None
+
+    if not message_file:
+      if message_filename in self.invalid_message_filenames:
+        self.invalid_message_filenames.append(message_filename)
+      return
+
+    if message_file.windows_path in processed_message_filenames:
+      message_file.Close()
+      return
+
+    message_table = message_file.GetMessageTableResource()
+    if not message_table:
+      # Windows Vista and later use a MUI resource to redirect to
+      # a language specific message file.
+      mui_language = message_file.GetMuiLanguage()
+
+      if mui_language:
+        message_filename_path, _, message_filename_name = (
+            message_filename.rpartition(u'\\'))
+
+        mui_message_filename = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+            message_filename_path, mui_language, message_filename_name)
+
+        mui_message_file = self._OpenMessageResourceFile(
+            mui_message_filename)
+
+        if not mui_message_file:
+          mui_message_filename = u'{0:s}\\{1:s}.mui'.format(
+            message_filename_path, message_filename_name)
+
+          mui_message_file = self._OpenMessageResourceFile(
+              mui_message_filename)
+
+        if mui_message_file:
+          message_file.Close()
+          message_file = mui_message_file
+
+          message_table = message_file.GetMessageTableResource()
+
+    if not message_table:
+      if message_filename not in self.missing_table_message_filenames:
+        self.missing_table_message_filenames.append(message_filename)
+
+    else:
+      normalized_message_filename = message_filename.lower()
+
+      if normalized_message_filename.startswith(
+          self._windows_directory.lower()):
+        normalized_message_filename = u'%SystemRoot%{0:s}'.format(
+            message_filename[len(self._windows_directory):])
+
+      elif normalized_message_filename.startswith(
+          u'%SystemRoot%'.lower()):
+        normalized_message_filename = u'%SystemRoot%{0:s}'.format(
+            message_filename[len(u'%SystemRoot%'):])
+
+      else:
+        normalized_message_filename = message_filename
+
+      logging.info(u'Processing: {0:s}'.format(normalized_message_filename))
+
+      message_file.windows_path = normalized_message_filename
+
+      output_writer.WriteMessageFile(
+          event_log_provider, message_file, normalized_message_filename,
+          message_file_type)
+
+    if message_filename != message_file.windows_path:
+      processed_message_filenames.append(message_file.windows_path)
+    processed_message_filenames.append(message_filename)
+
+    message_file.Close()
+
   def ExtractEventLogMessageStrings(self, output_writer):
     """Extracts the Event Log message strings from the message files.
 
@@ -459,85 +549,23 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
       for _, event_log_provider in event_log_sources.iteritems():
         output_writer.WriteEventLogProvider(event_log_provider)
 
-        # TODO: parse category and parameter messages files.
         if event_log_provider.event_message_files:
           for message_filename in event_log_provider.event_message_files:
-            if message_filename in processed_message_filenames:
-              continue
+            self._ExtractMessageFile(
+                output_writer, processed_message_filenames, event_log_provider,
+                message_filename, database.MESSAGE_FILE_TYPE_EVENT)
 
-            message_file = self._OpenMessageResourceFile(message_filename)
-            mui_message_filename = None
+        if event_log_provider.category_message_files:
+          for message_filename in event_log_provider.category_message_files:
+            self._ExtractMessageFile(
+                output_writer, processed_message_filenames, event_log_provider,
+                message_filename, database.MESSAGE_FILE_TYPE_CATEGORY)
 
-            if not message_file:
-              if message_filename in self.invalid_message_filenames:
-                self.invalid_message_filenames.append(message_filename)
-              continue
-
-            if message_file.windows_path in processed_message_filenames:
-              message_file.Close()
-              continue
-
-            message_table = message_file.GetMessageTableResource()
-            if not message_table:
-              # Windows Vista and later use a MUI resource to redirect to
-              # a language specific message file.
-              mui_language = message_file.GetMuiLanguage()
-
-              if mui_language:
-                message_filename_path, _, message_filename_name = (
-                    message_filename.rpartition(u'\\'))
-
-                mui_message_filename = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
-                    message_filename_path, mui_language, message_filename_name)
-
-                mui_message_file = self._OpenMessageResourceFile(
-                    mui_message_filename)
-
-                if not mui_message_file:
-                  mui_message_filename = u'{0:s}\\{1:s}.mui'.format(
-                    message_filename_path, message_filename_name)
-
-                  mui_message_file = self._OpenMessageResourceFile(
-                      mui_message_filename)
-
-                if mui_message_file:
-                  message_file.Close()
-                  message_file = mui_message_file
-
-                  message_table = message_file.GetMessageTableResource()
-
-            if not message_table:
-              if message_filename not in self.missing_table_message_filenames:
-                self.missing_table_message_filenames.append(message_filename)
-            else:
-              normalized_message_filename = message_filename.lower()
-
-              if normalized_message_filename.startswith(
-                  self._windows_directory.lower()):
-                normalized_message_filename = u'%SystemRoot%{0:s}'.format(
-                    message_filename[len(self._windows_directory):])
-
-              elif normalized_message_filename.startswith(
-                  u'%SystemRoot%'.lower()):
-                normalized_message_filename = u'%SystemRoot%{0:s}'.format(
-                    message_filename[len(u'%SystemRoot%'):])
-
-              else:
-                normalized_message_filename = message_filename
-
-              logging.info(u'Processing: {0:s}'.format(
-                  normalized_message_filename))
-
-              message_file.windows_path = normalized_message_filename
-
-              output_writer.WriteMessageFile(
-                  event_log_provider, message_file, normalized_message_filename)
-
-            if message_filename != message_file.windows_path:
-              processed_message_filenames.append(message_file.windows_path)
-            processed_message_filenames.append(message_filename)
-
-            message_file.Close()
+        if event_log_provider.parameter_message_files:
+          for message_filename in event_log_provider.parameter_message_files:
+            self._ExtractMessageFile(
+                output_writer, processed_message_filenames, event_log_provider,
+                message_filename, database.MESSAGE_FILE_TYPE_PARAMETER)
 
 
 class MessageResourceFile(object):
@@ -867,13 +895,15 @@ class Sqlite3OutputWriter(object):
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
   def WriteMessageFile(
-      self, event_log_provider, message_resource_file, message_filename):
+      self, event_log_provider, message_resource_file, message_filename,
+      message_file_type):
     """Writes the Windows Message Resource file.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
       message_resource_file: the message file (instance of MessageResourceFile).
-      message_filename: the message filename.
+      message_filename: string containing the message filename.
+      message_file_type: string containing the message file type.
     """
     database_filename = message_resource_file.windows_path
     _, _, database_filename = database_filename.rpartition(u'\\')
@@ -887,13 +917,12 @@ class Sqlite3OutputWriter(object):
     database_writer.WriteResources()
     database_writer.Close()
 
-    self._database_writer.WriteMessageFile(
-        message_filename, database_filename)
+    self._database_writer.WriteMessageFile(message_filename, database_filename)
 
     # TODO: write the relationship between the event log provider and
     # the message file and the Windows version?
     self._database_writer.WriteMessageFilesPerEventLogProvider(
-        event_log_provider, message_filename)
+        event_log_provider, message_filename, message_file_type)
 
 
 class StdoutOutputWriter(object):
@@ -970,13 +999,15 @@ class StdoutOutputWriter(object):
     print(u'')
 
   def WriteMessageFile(
-      self, unused_event_log_provider, message_file, unused_message_filename):
+      self, unused_event_log_provider, message_file, unused_message_filename,
+      unused_message_type):
     """Writes the Windows Message Resource file.
 
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
       message_file: the message file (instance of MessageResourceFile).
-      message_filename: the message filename.
+      message_filename: string containing the message filename.
+      message_file_type: string containing the message file type.
     """
     file_version = getattr(message_file, u'file_version', u'')
     product_version = getattr(message_file, u'product_version', u'')
@@ -1001,9 +1032,9 @@ def Main():
 
   args_parser.add_argument(
       u'source', nargs=u'?', action=u'store', metavar=u'/mnt/c/',
-      default=None, help=(u'path of the volume containing C:\\Windows or the '
-                          u'filename of a storage media image containing the '
-                          u'C:\\Windows directory.'))
+      default=None, help=(
+          u'path of the volume containing C:\\Windows or the filename of '
+          u'a storage media image containing the C:\\Windows directory.'))
 
   args_parser.add_argument(
       u'--db', dest=u'database', action=u'store', metavar=u'./winevt-db/',
@@ -1011,8 +1042,8 @@ def Main():
 
   args_parser.add_argument(
       u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',
-      default=None, help=(u'string that identifies the Windows version '
-                          u'in the database.'))
+      default=None, help=(
+          u'string that identifies the Windows version in the database.'))
 
   options = args_parser.parse_args()
 
@@ -1027,8 +1058,11 @@ def Main():
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
   if options.database:
+    if not os.path.exists(options.database):
+      os.mkdir(options.database)
+
     if not os.path.isdir(options.database):
-      print(u'No such directory: {0:s}'.format(options.database))
+      print(u'{0:s} must be a directory'.format(options.database))
       print(u'')
       return False
 
