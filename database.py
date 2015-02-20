@@ -254,7 +254,7 @@ class Sqlite3DatabaseWriter(object):
 class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
   """Class to represent an Event Log providers sqlite3 database reader."""
 
-  def _GetEventMessageFilenames(self, log_source, message_file_type):
+  def _GetMessageFilenames(self, log_source, message_file_type):
     """Retrieves the message filenames of a specific Event Log provider.
 
     Args:
@@ -302,11 +302,17 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:
-      message_filenames = self._GetEventMessageFilenames(
+      message_filenames = self._GetMessageFilenames(
+          event_log_provider.log_source, MESSAGE_FILE_TYPE_CATEGORY)
+      event_log_provider.SetCategoryMessageFilenames(message_filenames)
+
+      message_filenames = self._GetMessageFilenames(
           event_log_provider.log_source, MESSAGE_FILE_TYPE_EVENT)
       event_log_provider.SetEventMessageFilenames(message_filenames)
 
-      # TODO: set category and parameter message filenames.
+      message_filenames = self._GetMessageFilenames(
+          event_log_provider.log_source, MESSAGE_FILE_TYPE_PARAMETER)
+      event_log_provider.SetParameterMessageFilenames(message_filenames)
 
       yield event_log_provider
 
@@ -1020,36 +1026,6 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     raise RuntimeError(u'More than one value found in database.')
 
-  def _GetEventMessageFilenames(self, log_source, message_file_type):
-    """Retrieves the message filenames of a specific Event Log provider.
-
-    Args:
-      log_source: the log source of the Event Log provider.
-      message_file_type: string containing the message file type.
-
-    Returns:
-      A list of message filenames.
-    """
-    table_names = [
-        u'event_log_providers', u'message_file_per_event_log_provider',
-        u'message_files']
-    column_names = [u'message_files.path']
-    condition = (
-        u'{0:s}.log_source == "{3:s}" AND '
-        u'{1:s}.message_file_type == "{4:s}" AND '
-        u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
-        u'{1:s}.message_file_key == {2:s}.message_file_key').format(
-            u'event_log_providers', u'message_file_per_event_log_provider',
-            u'message_files', log_source, message_file_type)
-
-    message_filenames = []
-    for values in self._database_file.GetValues(
-        table_names, column_names, condition):
-      message_filename = values[u'message_files.path']
-      message_filenames.append(message_filename)
-
-    return message_filenames
-
   def _GetMessage(self, message_file_key, lcid, message_identifier):
     """Retrieves a specific message from a specific message table.
 
@@ -1085,6 +1061,57 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     raise RuntimeError(u'More than one value found in database.')
 
+  def _GetMessageFileKeys(self, event_log_provider_key):
+    """Retrieves the message file keys.
+
+    Args:
+      event_log_provider_key: the Event Log provider key.
+
+    Yields:
+      A message file key.
+    """
+    table_names = [u'message_file_per_event_log_provider']
+    column_names = [u'message_file_key']
+    condition = u'event_log_provider_key == {0:d}'.format(
+        event_log_provider_key)
+
+    generator = self._database_file.GetValues(
+        table_names, column_names, condition)
+
+    if generator:
+      for values in generator:
+        yield values[u'message_file_key']
+
+  def _GetMessageFilenames(self, log_source, message_file_type):
+    """Retrieves the message filenames of a specific Event Log provider.
+
+    Args:
+      log_source: the log source of the Event Log provider.
+      message_file_type: string containing the message file type.
+
+    Returns:
+      A list of message filenames.
+    """
+    table_names = [
+        u'event_log_providers', u'message_file_per_event_log_provider',
+        u'message_files']
+    column_names = [u'message_files.path']
+    condition = (
+        u'{0:s}.log_source == "{3:s}" AND '
+        u'{1:s}.message_file_type == "{4:s}" AND '
+        u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
+        u'{1:s}.message_file_key == {2:s}.message_file_key').format(
+            u'event_log_providers', u'message_file_per_event_log_provider',
+            u'message_files', log_source, message_file_type)
+
+    message_filenames = []
+    for values in self._database_file.GetValues(
+        table_names, column_names, condition):
+      message_filename = values[u'message_files.path']
+      message_filenames.append(message_filename)
+
+    return message_filenames
+
   def _GetMessages(self, message_file_key, lcid):
     """Retrieves the messages of a specific message table.
 
@@ -1108,27 +1135,6 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
         [table_name], column_names, condition):
       yield values[u'message_identifier'], values[u'message_string']
 
-  def _GetMessageFileKeys(self, event_log_provider_key):
-    """Retrieves the message file keys.
-
-    Args:
-      event_log_provider_key: the Event Log provider key.
-
-    Yields:
-      A message file key.
-    """
-    table_names = [u'message_file_per_event_log_provider']
-    column_names = [u'message_file_key']
-    condition = u'event_log_provider_key == {0:d}'.format(
-        event_log_provider_key)
-
-    generator = self._database_file.GetValues(
-        table_names, column_names, condition)
-
-    if generator:
-      for values in generator:
-        yield values[u'message_file_key']
-
   def GetEventLogProviders(self):
     """Retrieves the Event Log providers.
 
@@ -1147,11 +1153,17 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:
-      message_filenames = self._GetEventMessageFilenames(
+      message_filenames = self._GetMessageFilenames(
+          event_log_provider.log_source, MESSAGE_FILE_TYPE_CATEGORY)
+      event_log_provider.SetCategoryMessageFilenames(message_filenames)
+
+      message_filenames = self._GetMessageFilenames(
           event_log_provider.log_source, MESSAGE_FILE_TYPE_EVENT)
       event_log_provider.SetEventMessageFilenames(message_filenames)
 
-      # TODO: set category and parameter message filenames.
+      message_filenames = self._GetMessageFilenames(
+          event_log_provider.log_source, MESSAGE_FILE_TYPE_PARAMETER)
+      event_log_provider.SetParameterMessageFilenames(message_filenames)
 
       yield event_log_provider
 
