@@ -39,35 +39,35 @@ class Exporter(object):
         # TODO: merge event providers on mismatch?
 
         provider_guid = existing_event_log_provider.provider_guid
-        if (event_log_provider.provider_guid and provider_guid and
-            event_log_provider.provider_guid != provider_guid):
-          logging.warning((
-              u'Found duplicate alternating event log provider: {0:s}. '
-              u'GUID mismatch').format(log_source))
+        if event_log_provider.provider_guid != provider_guid:
+          if event_log_provider.provider_guid:
+            logging.warning((
+                u'Found duplicate alternating event log provider: {0:s}. '
+                u'GUID mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.category_message_files
-        if (event_log_provider.category_message_files and message_files and
-            event_log_provider.category_message_files != message_files):
-          logging.warning(
-              u'Found duplicate alternating event log provider: {0:s}. '.format(
-              u'Category message files mismatch').format(log_source))
+        if event_log_provider.category_message_files != message_files:
+          if event_log_provider.category_message_files:
+            logging.warning(
+                u'Found duplicate alternating event log provider: {0:s}. '.format(
+                u'Category message files mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.event_message_files
-        if (event_log_provider.event_message_files and message_files and
-            event_log_provider.event_message_files != message_files):
-          logging.warning(
-              u'Found duplicate alternating event log provider: {0:s}. '.format(
-              u'Event message files mismatch').format(log_source))
+        if event_log_provider.event_message_files != message_files:
+          if event_log_provider.event_message_files:
+            logging.warning(
+                u'Found duplicate alternating event log provider: {0:s}. '.format(
+                u'Event message files mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.parameter_message_files
-        if (event_log_provider.parameter_message_files and message_files and
-            event_log_provider.parameter_message_files != message_files):
-          logging.warning(
-              u'Found duplicate alternating event log provider: {0:s}. '.format(
-              u'Parameter message files mismatch').format(log_source))
+        if event_log_provider.parameter_message_files != message_files:
+          if event_log_provider.parameter_message_files:
+            logging.warning(
+                u'Found duplicate alternating event log provider: {0:s}. '.format(
+                u'Parameter message files mismatch').format(log_source))
           continue
 
       self._event_log_providers[log_source] = event_log_provider
