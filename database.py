@@ -70,31 +70,6 @@ class Sqlite3DatabaseFile(object):
 
     self._cursor.execute(sql_query)
 
-  def HasTable(self, table_name):
-    """Determines if a specific table exists.
-
-    Args:
-      table_name: the table name.
-
-    Returns:
-      True if the table exists, false otheriwse.
-
-    Raises:
-      RuntimeError: if the database is not opened.
-    """
-    if not self._connection:
-      raise RuntimeError(
-          u'Cannot determine if table exists database not opened.')
-
-    sql_query = self._HAS_TABLE_QUERY.format(table_name)
-
-    self._cursor.execute(sql_query)
-    if self._cursor.fetchone():
-      has_table = True
-    else:
-      has_table = False
-    return has_table
-
   def GetValues(self, table_names, column_names, condition):
     """Retrieves values from a table.
 
@@ -126,6 +101,31 @@ class Sqlite3DatabaseFile(object):
         column_name = column_names[column_index]
         values[column_name] = row[column_index]
       yield values
+
+  def HasTable(self, table_name):
+    """Determines if a specific table exists.
+
+    Args:
+      table_name: the table name.
+
+    Returns:
+      True if the table exists, false otheriwse.
+
+    Raises:
+      RuntimeError: if the database is not opened.
+    """
+    if not self._connection:
+      raise RuntimeError(
+          u'Cannot determine if table exists database not opened.')
+
+    sql_query = self._HAS_TABLE_QUERY.format(table_name)
+
+    self._cursor.execute(sql_query)
+    if self._cursor.fetchone():
+      has_table = True
+    else:
+      has_table = False
+    return has_table
 
   def InsertValues(self, table_name, column_names, values):
     """Inserts values into a table.
@@ -224,7 +224,7 @@ class Sqlite3DatabaseReader(object):
     Returns:
       A boolean containing True if successful or False if not.
     """
-    self._database_file.Open(filename, read_only=True)
+    return self._database_file.Open(filename, read_only=True)
 
 
 class Sqlite3DatabaseWriter(object):
@@ -1227,6 +1227,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     Returns:
       The value of the metadata attribute or None.
+
+    Raises:
+      RuntimeError: if more than one value is found in the database.
     """
     table_name = u'metadata'
 
