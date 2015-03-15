@@ -1262,9 +1262,15 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
   # Message string specifiers that expand to a variable place holder.
   _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
 
-  def __init__(self):
-    """Initializes the database writer object."""
+  def __init__(self, string_format=u'wrc'):
+    """Initializes the database writer object.
+
+    Args:
+      string_format: optional string format. The default is the Windows
+                     Resource (wrc) format.
+    """
     super(ResourcesSqlite3DatabaseWriter, self).__init__()
+    self._string_format = string_format
 
   def _GetEventLogProviderKey(self, event_log_provider):
     """Retrieves the key of an Event Log provider.
@@ -1359,7 +1365,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_string: the message string.
 
     Returns:
-      The message string in Python format() style.
+      The message string in Python format() (PEP 3103) style.
     """
     def place_holder_specifier_replacer(match_object):
       """Replaces message string place holders into Python format() style."""
@@ -1431,6 +1437,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = False
 
     if insert_values:
+      if self._string_format == u'pep3101':
+        message_string = self._ReformatMessageString(message_string)
+
       values = [message_identifier, message_string]
       self._database_file.InsertValues(table_name, column_names, values)
 

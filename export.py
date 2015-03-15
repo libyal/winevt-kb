@@ -179,15 +179,25 @@ class Exporter(object):
 class Sqlite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
 
-  def __init__(self, database_path):
+  def __init__(self, database_path, string_format=u'wrc'):
     """Initializes the output writer object.
 
     Args:
       database_path: the path to the database file.
+      string_format: optional string format. The default is the Windows
+                     Resource (wrc) format.
     """
     super(Sqlite3OutputWriter, self).__init__()
     self._database_path = database_path
     self._database_writer = None
+    self._string_format = string_format
+
+  def _WriteMetadata(self):
+    """Writes the metadata."""
+    self._database_writer.WriteMetadataAttribute(
+        u'version', u'20150315')
+    self._database_writer.WriteMetadataAttribute(
+        u'string_format', self._string_format)
 
   def Close(self):
     """Closes the output writer object."""
@@ -203,8 +213,10 @@ class Sqlite3OutputWriter(object):
     if os.path.isdir(self._database_path):
       return False
 
-    self._database_writer = database.ResourcesSqlite3DatabaseWriter()
+    self._database_writer = database.ResourcesSqlite3DatabaseWriter(
+        string_format=self._string_format)
     self._database_writer.Open(self._database_path)
+    self._WriteMetadata()
 
     return True
 
@@ -234,16 +246,6 @@ class Sqlite3OutputWriter(object):
     """
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_file, database.MESSAGE_FILE_TYPE_EVENT)
-
-  def WriteMetadataAttribute(self, attribute_name, attribute_value):
-    """Writes a metadata attribute.
-
-    Args:
-      attribute_name: the name of the metadata attribute.
-      attribute_value: the value of the metadata attribute.
-    """
-    self._database_writer.WriteMetadataAttribute(
-        attribute_name, attribute_value)
 
 
 class StdoutOutputWriter(object):
@@ -499,7 +501,8 @@ def Main():
       level=logging.INFO, format=u'[%(levelname)s] %(message)s')
 
   if options.database:
-    output_writer = Sqlite3OutputWriter(options.database)
+    output_writer = Sqlite3OutputWriter(
+        options.database, string_format=options.string_format)
   elif options.wiki:
     output_writer = AsciidocOutputWriter(options.wiki)
   else:
@@ -509,11 +512,6 @@ def Main():
     print(u'Unable to open output writer.')
     print(u'')
     return False
-
-  if options.database:
-    output_writer.WriteMetadataAttribute('version', '20150315')
-    output_writer.WriteMetadataAttribute(
-        'string_format', options.string_format)
 
   exporter = Exporter()
   exporter.Export(options.source, output_writer)
