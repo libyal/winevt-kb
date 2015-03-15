@@ -21,6 +21,7 @@ class Exporter(object):
   def __init__(self):
     """Initializes the exporter object."""
     super(Exporter, self).__init__()
+    self._event_log_providers = {}
 
   def _ExportEventLogProviders(self, database_reader, output_writer):
     """Exports the event log provides from an event provider database.
@@ -31,6 +32,39 @@ class Exporter(object):
       output_writer: the output writer (instance of OutputWriter).
     """
     for event_log_provider in database_reader.GetEventLogProviders():
+      log_source = event_log_provider.log_source
+      existing_event_log_provider = self._event_log_providers.get(
+          log_source, None)
+      if existing_event_log_provider:
+        provider_guid = existing_event_log_provider.provider_guid
+        if event_log_provider.provider_guid != provider_guid:
+          logging.warning((
+              u'Found duplicate alternating event log provider: {0:s}. '
+              u'GUID mismatch').format(log_source))
+          continue
+
+        message_files = existing_event_log_provider.category_message_files
+        if event_log_provider.category_message_files != message_files:
+          logging.warning(
+              u'Found duplicate alternating event log provider: {0:s}. '.format(
+              u'Category message files mismatch').format(log_source))
+          continue
+
+        message_files = existing_event_log_provider.event_message_files
+        if event_log_provider.event_message_files != message_files:
+          logging.warning(
+              u'Found duplicate alternating event log provider: {0:s}. '.format(
+              u'Event message files mismatch').format(log_source))
+          continue
+
+        message_files = existing_event_log_provider.parameter_message_files
+        if event_log_provider.parameter_message_files != message_files:
+          logging.warning(
+              u'Found duplicate alternating event log provider: {0:s}. '.format(
+              u'Parameter message files mismatch').format(log_source))
+          continue
+
+      self._event_log_providers[log_source] = event_log_provider
       output_writer.WriteEventLogProvider(event_log_provider)
 
   def _ExportMessageFile(self, message_file, message_file_database_path):
@@ -75,16 +109,13 @@ class Exporter(object):
 
       output_writer.WriteMessageFile(message_file)
 
-  def _ExportMessageFilesPerEventLogProvider(
-      self, database_reader, output_writer):
+  def _ExportMessageFilesPerEventLogProvider(self, output_writer):
     """Exports the message files used by an Event Log provider.
 
     Args:
-      database_reader: the event provider database reader (instance of
-                       EventProvidersSqlite3DatabaseReader).
       output_writer: the output writer (instance of OutputWriter).
     """
-    for event_log_provider in database_reader.GetEventLogProviders():
+    for event_log_provider in self._event_log_providers.itervalues():
       for message_filename in event_log_provider.event_message_files:
         output_writer.WriteMessageFilesPerEventLogProvider(
             event_log_provider, message_filename)
@@ -171,7 +202,7 @@ class Exporter(object):
 
     # TODO: export parameter and category files.
 
-    self._ExportMessageFilesPerEventLogProvider(database_reader, output_writer)
+    self._ExportMessageFilesPerEventLogProvider(output_writer)
 
     database_reader.Close()
 
@@ -226,6 +257,7 @@ class Sqlite3OutputWriter(object):
     Args:
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
+    # TODO: check if already exists.
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
   def WriteMessageFile(self, message_file):

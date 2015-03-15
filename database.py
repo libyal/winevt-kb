@@ -1142,14 +1142,14 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       An Event Log provider (instance of EventLogProvider).
     """
     table_names = [u'event_log_providers']
-    column_names = [u'log_source', u'log_type', u'provider_guid']
+    column_names = [u'log_source', u'provider_guid']
     condition = u''
 
     event_log_providers = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
       event_log_provider = resources.EventLogProvider(
-          values[u'log_type'], values[u'log_source'], values[u'provider_guid'])
+          None, values[u'log_source'], values[u'provider_guid'])
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:
@@ -1289,8 +1289,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """
     table_names = [u'event_log_providers']
     column_names = [u'event_log_provider_key']
-    condition = u'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
-        event_log_provider.log_source, event_log_provider.log_type)
+    condition = u'log_source = "{0:s}"'.format(
+        event_log_provider.log_source)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -1551,19 +1551,18 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       event_log_provider: the Event Log provider (instance of EventLogProvider).
     """
     table_name = u'event_log_providers'
-    column_names = [u'log_source', u'log_type', u'provider_guid']
+    column_names = [u'log_source', u'provider_guid']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
           u'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'log_source TEXT', u'log_type TEXT', u'provider_guid TEXT']
+          u'log_source TEXT', u'provider_guid TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      condition = u'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
-          event_log_provider.log_source, event_log_provider.log_type)
+      condition = u'log_source = "{0:s}"'.format(event_log_provider.log_source)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -1576,8 +1575,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if insert_values:
       values = [
-          event_log_provider.log_source, event_log_provider.log_type,
-          event_log_provider.provider_guid]
+          event_log_provider.log_source, event_log_provider.provider_guid]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_file):
