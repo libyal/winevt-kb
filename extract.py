@@ -393,6 +393,17 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
     if path_spec is None:
       return None
 
+    return self._OpenMessageResourceFileByPathSpec(path_spec)
+
+  def _OpenMessageResourceFileByPathSpec(self, path_spec):
+    """Opens the message resource file specificed by the path specification.
+
+    Args:
+      path_spec: the path specification (instance of dfvfs.PathSpec).
+
+    Returns:
+      The message resource file (instance of MessageResourceFile) or None.
+    """
     windows_path = self._path_resolver.GetWindowsPath(path_spec)
     if windows_path is None:
       logging.warning(u'Unable to retrieve Windows path.')
@@ -459,7 +470,22 @@ class EventMessageStringExtractor(WindowsVolumeCollector):
     if message_filename in processed_message_filenames:
       return
 
-    message_file = self._OpenMessageResourceFile(message_filename)
+    path_spec = self._path_resolver.ResolvePath(message_filename)
+    if path_spec is not None:
+      file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
+
+      # If message_filename points to a directory try appending the Event Log
+      # provider log source as the file name.
+      if file_entry.IsDirectory():
+        message_filename = u'\\'.join([
+            message_filename, event_log_provider.log_source])
+        path_spec = self._path_resolver.ResolvePath(message_filename)
+
+    if path_spec is not None:
+      message_file = self._OpenMessageResourceFileByPathSpec(path_spec)
+    else:
+      message_file = None
+
     mui_message_filename = None
 
     if not message_file:
@@ -1037,8 +1063,9 @@ def Main():
           u'a storage media image containing the C:\\Windows directory.'))
 
   args_parser.add_argument(
-      u'--db', dest=u'database', action=u'store', metavar=u'./winevt-db/',
-      default=None, help=u'directory to write the sqlite3 databases to.')
+      u'--db', u'--database', dest=u'database', action=u'store',
+      metavar=u'./winevt-db/', default=None, help=(
+          u'directory to write the sqlite3 databases to.'))
 
   args_parser.add_argument(
       u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',
