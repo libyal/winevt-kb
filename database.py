@@ -1219,9 +1219,52 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
           message_file_key, lcid):
         yield message_identifier, message_string
 
+  def GetMetadataAttribute(self, attribute_name):
+    """Retrieves the metadata attribute.
+
+    Args:
+      attribute_name: the name of the metadata attribute.
+
+    Returns:
+      The value of the metadata attribute or None.
+    """
+    table_name = u'metadata'
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      return
+
+    column_names = [u'value']
+    condition = u'name == "{0:s}"'.format(attribute_name)
+
+    values = list(self._database_file.GetValues(
+        [table_name], column_names, condition))
+
+    number_of_values = len(values)
+    if number_of_values == 0:
+      return
+
+    elif number_of_values == 1:
+      return values[0][u'value']
+
+    raise RuntimeError(u'More than one value found in database.')
+
 
 class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
   """Class to represent a sqlite3 Event Log resources database writer."""
+
+  # Message string specifiers that are considered white space.
+  _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
+  # Message string specifiers that expand to text.
+  _TEXT_SPECIFIER_RE = re.compile(r'%([ .!%nrt])')
+  # Curly brackets in a message string.
+  _CURLY_BRACKETS = re.compile(r'([\{\}])')
+  # Message string specifiers that expand to a variable place holder.
+  _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
+
+  def __init__(self):
+    """Initializes the database writer object."""
+    super(ResourcesSqlite3DatabaseWriter, self).__init__()
 
   def _GetEventLogProviderKey(self, event_log_provider):
     """Retrieves the key of an Event Log provider.
@@ -1308,6 +1351,38 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       return values[u'message_file_key']
 
     raise RuntimeError(u'More than one value found in database.')
+
+  def _ReformatMessageString(self, message_string):
+    """Reformats the message string.
+
+    Args:
+      message_string: the message string.
+
+    Returns:
+      The message string in Python format() style.
+    """
+    def place_holder_specifier_replacer(match_object):
+      """Replaces message string place holders into Python format() style."""
+      expanded_groups = []
+      for group in match_object.groups():
+        try:
+          place_holder_number = int(group, 10) - 1
+          expanded_group = u'{{{0:d}:s}}'.format(place_holder_number)
+        except ValueError:
+          expanded_group = group
+
+        expanded_groups.append(expanded_group)
+
+      return u''.join(expanded_groups)
+
+    if not message_string:
+      return
+
+    message_string = self._WHITE_SPACE_SPECIFIER_RE.sub(r'', message_string)
+    message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
+    message_string = self._CURLY_BRACKETS.sub(r'\1\1', message_string)
+    return self._PLACE_HOLDER_SPECIFIER_RE.sub(
+        place_holder_specifier_replacer, message_string)
 
   def _WriteMessage(
       self, message_file, language_identifier, message_identifier,
@@ -1554,3 +1629,34 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = [message_file_key, message_file_type, event_log_provider_key]
       self._database_file.InsertValues(table_name, column_names, values)
 
+  def WriteMetadataAttribute(self, attribute_name, attribute_value):
+    """Writes a metadata attribute.
+
+    Args:
+      attribute_name: the name of the metadata attribute.
+      attribute_value: the value of the metadata attribute.
+    """
+    table_name = u'metadata'
+    column_names = [u'name', u'value']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [u'name TEXT', u'value TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      condition = u'name = "{0:s}"'.format(attribute_name)
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values == 0:
+        insert_values = True
+      else:
+        # TODO: check if more than 1 result.
+        insert_values = False
+
+    if insert_values:
+      values = [attribute_name, attribute_value]
+      self._database_file.InsertValues(table_name, column_names, values)

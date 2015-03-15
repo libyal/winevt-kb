@@ -16,24 +16,24 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
-      'Export strings extracted from message files.'))
+      u'Export strings extracted from message files.'))
 
   args_parser.add_argument(
-      'database', nargs='?', action='store', metavar='DATABASE',
-      default=None, help='filename of the sqlite3 database to read from.')
+      u'database', nargs=u'?', action=u'store', metavar=u'DATABASE',
+      default=None, help=u'filename of the sqlite3 database to read from.')
 
   args_parser.add_argument(
-      'event_provider', nargs='?', action='store', metavar='EVENT_PROVIDER',
-      default=None, help='specific event provider to query.')
+      u'event_provider', nargs=u'?', action=u'store', metavar=u'EVENT_PROVIDER',
+      default=None, help=u'specific event provider to query.')
 
   args_parser.add_argument(
-      'message_identifier', nargs='?', action='store',
-      metavar='MESSAGE_IDENTIFIER', default=None,
-      help='specific message identifier to query.')
+      u'message_identifier', nargs=u'?', action=u'store',
+      metavar=u'MESSAGE_IDENTIFIER', default=None,
+      help=u'specific message identifier to query.')
 
   args_parser.add_argument(
-      '--lcid', dest='lcid', action='store', metavar='LCID',
-      default=0x00000409, help='the preferred LCID.')
+      u'--lcid', dest=u'lcid', action=u'store', metavar=u'LCID',
+      default=0x00000409, help=u'the preferred LCID.')
 
   options = args_parser.parse_args()
 

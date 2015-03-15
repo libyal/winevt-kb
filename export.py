@@ -235,6 +235,16 @@ class Sqlite3OutputWriter(object):
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_file, database.MESSAGE_FILE_TYPE_EVENT)
 
+  def WriteMetadataAttribute(self, attribute_name, attribute_value):
+    """Writes a metadata attribute.
+
+    Args:
+      attribute_name: the name of the metadata attribute.
+      attribute_value: the value of the metadata attribute.
+    """
+    self._database_writer.WriteMetadataAttribute(
+        attribute_name, attribute_value)
+
 
 class StdoutOutputWriter(object):
   """Class that defines a stdout output writer."""
@@ -456,8 +466,14 @@ def Main():
           u'directory that contains the sqlite3 with the extracted strings.'))
 
   args_parser.add_argument(
-      u'--db', dest=u'database', action=u'store', metavar=u'winevt-rc.db',
-      default=None, help=u'filename of the sqlite3 database to write to.')
+      u'--db', u'--database', dest=u'database', action=u'store',
+      metavar=u'winevt-rc.db', default=None, help=(
+          u'filename of the sqlite3 database to write to.'))
+
+  args_parser.add_argument(
+      u'--string_format', u'--string-format', dest=u'string_format',
+      action=u'store', metavar=u'FORMAT', default=u'wrc',
+      choices=[u'pep3101', u'wrc'], help=u'the message string format.')
 
   args_parser.add_argument(
       u'--wiki', dest=u'wiki', action=u'store', metavar=u'./winevt-kb.wiki/',
@@ -493,6 +509,11 @@ def Main():
     print(u'Unable to open output writer.')
     print(u'')
     return False
+
+  if options.database:
+    output_writer.WriteMetadataAttribute('version', '20150315')
+    output_writer.WriteMetadataAttribute(
+        'string_format', options.string_format)
 
   exporter = Exporter()
   exporter.Export(options.source, output_writer)
