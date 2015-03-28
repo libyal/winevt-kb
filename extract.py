@@ -1064,7 +1064,7 @@ def Main():
 
   args_parser.add_argument(
       u'--db', u'--database', dest=u'database', action=u'store',
-      metavar=u'./winevt-db/', default=None, help=(
+      metavar=u'./winevt-kb/', default=None, help=(
           u'directory to write the sqlite3 databases to.'))
 
   args_parser.add_argument(
