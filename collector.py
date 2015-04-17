@@ -1,12 +1,12 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 """Classes to implement a Windows volume collector."""
 
 import os
 
 import dfvfs
 
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
+from dfvfs.lib import definitions
+from dfvfs.lib import errors
 from dfvfs.helpers import source_scanner
 from dfvfs.helpers import windows_path_resolver
 from dfvfs.resolver import resolver
@@ -14,7 +14,7 @@ from dfvfs.volume import tsk_volume_system
 
 
 if dfvfs.__version__ < u'20140727':
-  raise ImportWarning(u'extract.py requires dfvfs 20140727 or later.')
+  raise ImportWarning(u'collector.py requires dfvfs 20140727 or later.')
 
 
 class CollectorError(Exception):
@@ -37,6 +37,8 @@ class WindowsVolumeCollector(object):
     self._file_system = None
     self._path_resolver = None
     self._scanner = source_scanner.SourceScanner()
+    self._single_file = False
+    self._source_path = None
     self._windows_directory = None
 
   def _ScanFileSystem(self, path_resolver):
@@ -94,7 +96,7 @@ class WindowsVolumeCollector(object):
           volume_location)
       volume_path_spec = getattr(volume_scan_node, u'path_spec', None)
 
-      # The leaf scan node shoudl contain the actual file system.
+      # The leaf scan node should contain the actual file system.
       file_system_scan_node = volume_scan_node.GetSubNodeByLocation(u'/')
       if not file_system_scan_node:
         continue
@@ -140,6 +142,7 @@ class WindowsVolumeCollector(object):
       raise CollectorError(
           u'No such device, file or directory: {0:s}.'.format(source_path))
 
+    self._source_path = source_path
     scan_context = source_scanner.SourceScannerContext()
     scan_path_spec = None
 
@@ -150,7 +153,7 @@ class WindowsVolumeCollector(object):
       try:
         scan_context = self._scanner.Scan(
             scan_context, scan_path_spec=scan_path_spec)
-      except dfvfs_errors.BackEndError as exception:
+      except errors.BackEndError as exception:
         raise CollectorError(
             u'Unable to scan source, with error: {0:s}'.format(exception))
 
@@ -167,13 +170,13 @@ class WindowsVolumeCollector(object):
 
       # The source scanner found a file system.
       if scan_context.last_scan_node.type_indicator in [
-          dfvfs_definitions.TYPE_INDICATOR_TSK]:
+          definitions.TYPE_INDICATOR_TSK]:
         break
 
       # The source scanner found a BitLocker encrypted volume and we need
       # a credential to unlock the volume.
       if scan_context.last_scan_node.type_indicator in [
-          dfvfs_definitions.TYPE_INDICATOR_BDE]:
+          definitions.TYPE_INDICATOR_BDE]:
         # TODO: ask for password.
         raise CollectorError(
             u'BitLocker encrypted volume not yet supported.')
@@ -181,7 +184,7 @@ class WindowsVolumeCollector(object):
       # The source scanner found a partition table and we need to determine
       # which partition contains the Windows directory.
       elif scan_context.last_scan_node.type_indicator in [
-          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
+          definitions.TYPE_INDICATOR_TSK_PARTITION]:
         scan_node = self._ScanTSKPartionVolumeSystemPathSpec(scan_context)
         if not scan_node:
           return False
@@ -189,7 +192,7 @@ class WindowsVolumeCollector(object):
 
       # The source scanner found Volume Shadow Snapshot which is ignored.
       elif scan_context.last_scan_node.type_indicator in [
-          dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
+          definitions.TYPE_INDICATOR_VSHADOW]:
         # Get the scan node of the current volume.
         scan_node = scan_context.last_scan_node.GetSubNodeByLocation(u'/')
         scan_context.last_scan_node = scan_node
@@ -200,14 +203,14 @@ class WindowsVolumeCollector(object):
             u'Unsupported volume system found in source: {0:s}.'.format(
                 self._source_path))
 
-    # TODO: add single file support.
     if scan_context.source_type == scan_context.SOURCE_TYPE_FILE:
-      raise CollectorError(
-          u'Unsupported source: {0:s}.'.format(source_path))
+      self._single_file = True
+      return True
 
+    self._single_file = False
     if scan_context.source_type != scan_context.SOURCE_TYPE_DIRECTORY:
       if not scan_context.last_scan_node.type_indicator in [
-          dfvfs_definitions.TYPE_INDICATOR_TSK]:
+          definitions.TYPE_INDICATOR_TSK]:
         raise CollectorError(
             u'Unsupported source: {0:s} found unsupported file system.'.format(
                 source_path))
@@ -217,8 +220,7 @@ class WindowsVolumeCollector(object):
     self._file_system = resolver.Resolver.OpenFileSystem(
         file_system_path_spec)
 
-    if file_system_path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_OS]:
+    if file_system_path_spec.type_indicator == definitions.TYPE_INDICATOR_OS:
       mount_point = file_system_path_spec
     else:
       mount_point = file_system_path_spec.parent
@@ -234,6 +236,8 @@ class WindowsVolumeCollector(object):
     if not self._windows_directory:
       return False
 
+    self._path_resolver.SetEnvironmentVariable(
+        u'SystemRoot', self._windows_directory)
     self._path_resolver.SetEnvironmentVariable(
         u'WinDir', self._windows_directory)
 
