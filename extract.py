@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Script to extract the strings from Event Log message resource files."""
 
+from __future__ import print_function
 import argparse
 import logging
 import os
@@ -30,7 +31,6 @@ if pywrc.get_version() < u'20140128':
 
 
 # pylint: disable=logging-format-interpolation
-# pylint: disable=superfluous-parens
 
 class EventMessageStringExtractor(collector.WindowsVolumeCollector):
   """Class that defines an event message string extractor."""
