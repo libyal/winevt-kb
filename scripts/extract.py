@@ -10,10 +10,10 @@ import re
 import sys
 
 import pyexe
-import pyregf
 import pywrc
 
 from dfvfs.resolver import resolver
+from dfwinreg import registry
 
 import collector
 import database
@@ -22,9 +22,6 @@ import resources
 
 if pyexe.get_version() < u'20131229':
   raise ImportWarning(u'extract.py requires pyexe 20131229 or later.')
-
-if pyregf.get_version() < u'20130716':
-  raise ImportWarning(u'extract.py requires pyregf 20130716 or later.')
 
 if pywrc.get_version() < u'20140128':
   raise ImportWarning(u'extract.py requires pywrc 20140128 or later.')
@@ -35,31 +32,49 @@ if pywrc.get_version() < u'20140128':
 class EventMessageStringExtractor(collector.WindowsVolumeCollector):
   """Class that defines an event message string extractor."""
 
-  def __init__(self):
-    """Initializes the event message string extractor object."""
-    super(EventMessageStringExtractor, self).__init__()
-    self._system_root = None
+  def __init__(self, debug=False, mediator=None):
+    """Initializes the event message string extractor object.
+
+    Args:
+      debug: optional boolean value to indicate if debug information should
+             be printed.
+      mediator: a volume scanner mediator (instance of
+                dfvfs.VolumeScannerMediator) or None.
+    """
+    super(EventMessageStringExtractor, self).__init__(mediator=mediator)
+    self._debug = debug
+    registry_file_reader = collector.CollectorRegistryFileReader(self)
+    self._registry = registry.WinRegistry(
+        registry_file_reader=registry_file_reader)
     self._windows_version = None
+
     self.ascii_codepage = u'cp1252'
     self.invalid_message_filenames = None
     self.missing_table_message_filenames = None
     self.preferred_language_identifier = 0x0409
 
+  @property
+  def windows_version(self):
+    """The Windows version (getter)."""
+    if self._windows_version is None:
+      self._windows_version = self._GetWindowsVersion()
+    return self._windows_version
+
+  @windows_version.setter
+  def windows_version(self, value):
+    """The Windows version (setter)."""
+    self._windows_version = value
+
   def _CollectEventLogTypes(self):
-    """Collects the Event Log types form the SYSTEM Registry file.
+    """Collects the event log types.
 
     Returns:
-      A dictionary containing a dictionary of Event Log providers per event
+      A dictionary containing a dictionary of event log providers per event
       log type. E.g. { 'Application': { 'EventSystem': instance of
                                         EventLogProvider, ... }, ... }
     """
-    registry_filename = u'\\'.join([
-        self._windows_directory, u'System32', u'config', u'SYSTEM'])
-
-    registry_file = self._OpenRegistryFile(registry_filename)
     event_log_types = {}
-
-    for event_log_provider in registry_file.GetEventLogProviders():
+    for event_log_provider in self._GetEventLogProviders():
       if event_log_provider.log_type not in event_log_types:
         event_log_types[event_log_provider.log_type] = {}
 
@@ -71,145 +86,59 @@ class EventMessageStringExtractor(collector.WindowsVolumeCollector):
 
       event_log_sources[event_log_provider.log_source] = event_log_provider
 
-    registry_file.Close()
-
     return event_log_types
 
-  def _GetSystemRoot(self):
-    """Retrieves the value of %SystemRoot%.
-
-    Returns:
-      A string containing the system root.
-    """
-    if not self._system_root:
-      self._system_root = self._GetSystemRootFromRegistry()
-
-    if self._system_root:
-      self._path_resolver.SetEnvironmentVariable(
-          u'SystemRoot', self._system_root)
-
-    return self._system_root
-
-  def _GetSystemRootFromRegistry(self):
-    """Determines the value of %SystemRoot% from the SOFTWARE Registry file.
-
-       The Windows path resolver is updated to expand this environment variable.
-
-    Returns:
-      A string containing the System Root or None otherwise.
-    """
-    registry_filename = u'\\'.join([
-        self._windows_directory, u'System32', u'config', u'SOFTWARE'])
-
-    registry_file = self._OpenRegistryFile(registry_filename)
-    system_root = registry_file.GetSystemRoot()
-    registry_file.Close()
-
-    if system_root:
-      system_root = system_root
-    else:
-      system_root = self._windows_directory
-
-    return system_root
-
-  def _GetWindowsVersion(self):
-    """Determines the Windows version from kernel executable file.
-
-    Returns:
-      A string containing the Windows version or None otherwise.
-    """
-    system_root = self._GetSystemRoot()
-
-    # Window NT variants.
-    kernel_executable_path = u'\\'.join([
-        system_root, u'System32', u'ntoskrnl.exe'])
-    message_file = self._OpenMessageResourceFile(kernel_executable_path)
-
-    if not message_file:
-      # Window 9x variants.
-      kernel_executable_path = u'\\'.join([
-          system_root, u'System32', u'\\kernel32.dll'])
-      message_file = self._OpenMessageResourceFile(kernel_executable_path)
-
-    if not message_file:
-      return None
-
-    return message_file.file_version
-
-  def _OpenMessageResourceFile(self, windows_path):
-    """Opens the message resource file specificed by the Windows path.
+  def _CollectEventLogProvidersFromKey(self, eventlog_key):
+    """Retrieves the Event Log providers from a specific key.
 
     Args:
-      windows_path: the Windows path containing the messagge resource filename.
+      eventlog_key: the event log key object (instance of
+                    dfwinreg.WinRegistryKey).
 
-    Returns:
-      The message resource file (instance of MessageResourceFile) or None.
+    Yields:
+      An event log provider object (instance of EventLogProvider).
     """
-    path_spec = self._path_resolver.ResolvePath(windows_path)
-    if path_spec is None:
-      return None
+    if not eventlog_key:
+      return
 
-    return self._OpenMessageResourceFileByPathSpec(path_spec)
+    for log_type_key in eventlog_key.GetSubkeys():
+      log_type = log_type_key.name
 
-  def _OpenMessageResourceFileByPathSpec(self, path_spec):
-    """Opens the message resource file specificed by the path specification.
+      for log_source_key in log_type_key.GetSubkeys():
+        log_source = log_source_key.name
 
-    Args:
-      path_spec: the path specification (instance of dfvfs.PathSpec).
+        provider_guid_value = log_source_key.GetValueByName(u'ProviderGuid')
 
-    Returns:
-      The message resource file (instance of MessageResourceFile) or None.
-    """
-    windows_path = self._path_resolver.GetWindowsPath(path_spec)
-    if windows_path is None:
-      logging.warning(u'Unable to retrieve Windows path.')
+        if provider_guid_value:
+          provider_guid = provider_guid_value.GetDataAsObject()
+        else:
+          provider_guid = None
 
-    try:
-      file_object = resolver.Resolver.OpenFileObject(path_spec)
-    except IOError as exception:
-      logging.warning(u'Unable to open: {0:s} with error: {1:s}'.format(
-          path_spec.comparable, exception))
-      file_object = None
+        event_log_provider = resources.EventLogProvider(
+            log_type, log_source, provider_guid)
 
-    if file_object is None:
-      return None
+        category_message_file_value = log_source_key.GetValueByName(
+            u'CategoryMessageFile')
 
-    message_file = MessageResourceFile(
-        windows_path, ascii_codepage=self.ascii_codepage,
-        preferred_language_identifier=self.preferred_language_identifier)
-    if not message_file.Open(file_object):
-      return None
+        if category_message_file_value:
+          event_log_provider.SetCategoryMessageFilenames(
+              category_message_file_value.GetDataAsObject())
 
-    return message_file
+        event_message_file_value = log_source_key.GetValueByName(
+            u'EventMessageFile')
 
-  def _OpenRegistryFile(self, windows_path):
-    """Opens the registry file specificed by the Windows path.
+        if event_message_file_value:
+          event_log_provider.SetEventMessageFilenames(
+              event_message_file_value.GetDataAsObject())
 
-    Args:
-      windows_path: the Windows path containing the Registry filename.
+        parameter_message_file_value = log_source_key.GetValueByName(
+            u'ParameterMessageFile')
 
-    Returns:
-      The Registry file (instance of RegistryFile) or None.
-    """
-    file_object = self.OpenFile(windows_path)
-    if file_object is None:
-      return None
+        if parameter_message_file_value:
+          event_log_provider.SetParameterMessageFilenames(
+              parameter_message_file_value.GetDataAsObject())
 
-    registry_file = RegistryFile()
-    registry_file.Open(file_object)
-    return registry_file
-
-  @property
-  def windows_version(self):
-    """The Windows version."""
-    if self._windows_version is None:
-      self._windows_version = self._GetWindowsVersion()
-    return self._windows_version
-
-  @windows_version.setter
-  def windows_version(self, value):
-    """The Windows version."""
-    self._windows_version = value
+        yield event_log_provider
 
   def _ExtractMessageFile(
       self, output_writer, processed_message_filenames, event_log_provider,
@@ -315,6 +244,129 @@ class EventMessageStringExtractor(collector.WindowsVolumeCollector):
     processed_message_filenames.append(message_filename)
 
     message_file.Close()
+
+  def _GetEventLogProviders(self):
+    """Retrieves the Event Log providers.
+
+    Yields:
+      An event log provider object (instance of EventLogProvider).
+    """
+    # TODO: have CLI argument control this mode.
+    all_control_sets = False
+    if all_control_sets:
+      system_key = self._registry.GetKeyByPath(u'HKEY_LOCAL_MACHINE\\System\\')
+      if not system_key:
+        return
+
+      for control_set_key in system_key.GetSubkeys():
+        if control_set_key.name.startswith(u'ControlSet'):
+          eventlog_key = control_set_key.GetSubkeyByPath(
+              u'Services\\EventLog')
+          if eventlog_key:
+            print(u'Control set: {0:s}'.format(control_set_key.name))
+            for event_log_provider in self._CollectEventLogProvidersFromKey(
+                eventlog_key):
+              yield event_log_provider
+
+    else:
+      eventlog_key = self._registry.GetKeyByPath(
+          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog')
+      if eventlog_key:
+        print(u'Current control set')
+        for event_log_provider in self._CollectEventLogProvidersFromKey(
+            eventlog_key):
+          yield event_log_provider
+
+  def _GetSystemRoot(self):
+    """Determines the value of %SystemRoot%.
+
+    Returns:
+      A string containing the value of SystemRoot or None if the value cannot
+      be determined.
+    """
+    current_version_key = self._registry.GetKeyByPath(
+        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+
+    system_root = None
+    if current_version_key:
+      system_root_value = current_version_key.GetValueByName(u'SystemRoot')
+      if system_root_value:
+        system_root = system_root_value.GetDataAsObject()
+
+    if not system_root:
+      system_root = self._windows_directory
+
+    return system_root
+
+  def _GetWindowsVersion(self):
+    """Determines the Windows version from kernel executable file.
+
+    Returns:
+      A string containing the Windows version or None otherwise.
+    """
+    system_root = self._GetSystemRoot()
+
+    # Window NT variants.
+    kernel_executable_path = u'\\'.join([
+        system_root, u'System32', u'ntoskrnl.exe'])
+    message_file = self._OpenMessageResourceFile(kernel_executable_path)
+
+    if not message_file:
+      # Window 9x variants.
+      kernel_executable_path = u'\\'.join([
+          system_root, u'System32', u'\\kernel32.dll'])
+      message_file = self._OpenMessageResourceFile(kernel_executable_path)
+
+    if not message_file:
+      return None
+
+    return message_file.file_version
+
+  def _OpenMessageResourceFile(self, windows_path):
+    """Opens the message resource file specificed by the Windows path.
+
+    Args:
+      windows_path: the Windows path containing the messagge resource filename.
+
+    Returns:
+      The message resource file (instance of MessageResourceFile) or None.
+    """
+    path_spec = self._path_resolver.ResolvePath(windows_path)
+    if path_spec is None:
+      return None
+
+    return self._OpenMessageResourceFileByPathSpec(path_spec)
+
+  def _OpenMessageResourceFileByPathSpec(self, path_spec):
+    """Opens the message resource file specificed by the path specification.
+
+    Args:
+      path_spec: the path specification (instance of dfvfs.PathSpec).
+
+    Returns:
+      The message resource file (instance of MessageResourceFile) or None.
+    """
+    windows_path = self._path_resolver.GetWindowsPath(path_spec)
+    if windows_path is None:
+      logging.warning(u'Unable to retrieve Windows path.')
+
+    try:
+      file_object = resolver.Resolver.OpenFileObject(path_spec)
+    except IOError as exception:
+      logging.warning(u'Unable to open: {0:s} with error: {1:s}'.format(
+          path_spec.comparable, exception))
+      file_object = None
+
+    if file_object is None:
+      return None
+
+    message_file = MessageResourceFile(
+        windows_path, ascii_codepage=self.ascii_codepage,
+        preferred_language_identifier=self.preferred_language_identifier)
+    if not message_file.Open(file_object):
+      return None
+
+    return message_file
 
   def ExtractEventLogMessageStrings(self, output_writer):
     """Extracts the Event Log message strings from the message files.
@@ -506,133 +558,6 @@ class MessageResourceFile(object):
     self._file_object = None
 
 
-class RegistryFile(object):
-  """Class that defines a Windows Registry file."""
-
-  def __init__(self, ascii_codepage=u'cp1252'):
-    """Initializes the Windows Registry file.
-
-    Args:
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
-    """
-    super(RegistryFile, self).__init__()
-    self._file_object = None
-    self._regf_file = pyregf.file()
-    self._regf_file.set_ascii_codepage(ascii_codepage)
-
-  def Open(self, file_object):
-    """Opens the Windows Registry file using a file-like object.
-
-    Args:
-      file_object: the file-like object.
-
-    Returns:
-      A boolean containing True if successful or False if not.
-    """
-    self._file_object = file_object
-    self._regf_file.open_file_object(self._file_object)
-    return True
-
-  def Close(self):
-    """Closes the Windows Registry file."""
-    self._regf_file.close()
-    self._file_object.close()
-    self._file_object = None
-
-  def GetSystemRoot(self):
-    """Retrieves the value of %SystemRoot%.
-
-    Returns:
-      A string containing value of %SystemRoot%
-      or None if the value could not be retrieved.
-    """
-    system_root = None
-
-    current_version_key = self._regf_file.get_key_by_path(
-        u'Microsoft\\Windows NT\\CurrentVersion')
-
-    if current_version_key:
-      system_root_value = current_version_key.get_value_by_name(u'SystemRoot')
-      if system_root_value:
-        system_root = system_root_value.data_as_string
-
-    return system_root
-
-  def GetCurrentControlSet(self):
-    """Retrieves the current control set.
-
-    Returns:
-      An integer containing the number of the current control set
-      or 0 if no current control set could be retrieved.
-    """
-    control_set = 0
-
-    select_key = self._regf_file.get_key_by_path(u'Select')
-
-    if select_key:
-      current_value = select_key.get_value_by_name(u'Current')
-      if current_value:
-        control_set = current_value.data_as_integer
-
-    return control_set
-
-  def GetEventLogProviders(self):
-    """Retrieves the Event Log providers.
-
-    Yields:
-      An Event Log provider object (EventLogProvider).
-    """
-    control_set = self.GetCurrentControlSet()
-
-    if control_set > 0 and control_set <= 999:
-      eventlog_key_path = u'ControlSet{0:03d}\\Services\\EventLog'.format(
-          control_set)
-
-      eventlog_key = self._regf_file.get_key_by_path(eventlog_key_path)
-
-      if eventlog_key:
-        for log_type_key in eventlog_key.sub_keys:
-          log_type = log_type_key.name
-
-          for log_source_key in log_type_key.sub_keys:
-            log_source = log_source_key.name
-
-            provider_guid_value = log_source_key.get_value_by_name(
-                u'ProviderGuid')
-
-            if provider_guid_value:
-              provider_guid = provider_guid_value.data_as_string
-            else:
-              provider_guid = None
-
-            event_log_provider = resources.EventLogProvider(
-                log_type, log_source, provider_guid)
-
-            category_message_file_value = log_source_key.get_value_by_name(
-                u'CategoryMessageFile')
-
-            if category_message_file_value:
-              event_log_provider.SetCategoryMessageFilenames(
-                  category_message_file_value.data_as_string)
-
-            event_message_file_value = log_source_key.get_value_by_name(
-                u'EventMessageFile')
-
-            if event_message_file_value:
-              event_log_provider.SetEventMessageFilenames(
-                  event_message_file_value.data_as_string)
-
-            parameter_message_file_value = log_source_key.get_value_by_name(
-                u'ParameterMessageFile')
-
-            if parameter_message_file_value:
-              event_log_provider.SetParameterMessageFilenames(
-                  parameter_message_file_value.data_as_string)
-
-            yield event_log_provider
-
-
 class Sqlite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
 
@@ -809,31 +734,35 @@ def Main():
   Returns:
     A boolean containing True if successful or False if not.
   """
-  args_parser = argparse.ArgumentParser(description=(
+  argument_parser = argparse.ArgumentParser(description=(
       u'Extract strings from message resource files for Event Log sources.'))
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
+      u'-d', u'--debug', dest=u'debug', action=u'store_true', default=False,
+      help=u'enable debug output.')
+
+  argument_parser.add_argument(
+      u'--db', u'--database', dest=u'database', action=u'store',
+      metavar=u'./winevt-kb/', default=None, help=(
+          u'directory to write the sqlite3 databases to.'))
+
+  argument_parser.add_argument(
+      u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',
+      default=None, help=(
+          u'string that identifies the Windows version in the database.'))
+
+  argument_parser.add_argument(
       u'source', nargs=u'?', action=u'store', metavar=u'/mnt/c/',
       default=None, help=(
           u'path of the volume containing C:\\Windows or the filename of '
           u'a storage media image containing the C:\\Windows directory.'))
 
-  args_parser.add_argument(
-      u'--db', u'--database', dest=u'database', action=u'store',
-      metavar=u'./winevt-kb/', default=None, help=(
-          u'directory to write the sqlite3 databases to.'))
-
-  args_parser.add_argument(
-      u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',
-      default=None, help=(
-          u'string that identifies the Windows version in the database.'))
-
-  options = args_parser.parse_args()
+  options = argument_parser.parse_args()
 
   if not options.source:
     print(u'Source value is missing.')
     print(u'')
-    args_parser.print_help()
+    argument_parser.print_help()
     print(u'')
     return False
 
@@ -858,9 +787,10 @@ def Main():
     print(u'')
     return False
 
-  extractor = EventMessageStringExtractor()
+  # TODO: pass mediator.
+  extractor = EventMessageStringExtractor(debug=options.debug)
 
-  if not extractor.GetWindowsVolumePathSpec(options.source):
+  if not extractor.ScanForWindowsVolume(options.source):
     print((u'Unable to retrieve the volume with the Windows directory from: '
            u'{0:s}.').format(options.source))
     print(u'')
