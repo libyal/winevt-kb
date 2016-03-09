@@ -10,8 +10,11 @@ try:
 except ImportError:
   import sqlite3
 
-import resources
+from winevtrc import definitions
+from winevtrc import resources
 
+
+# pylint: disable=logging-format-interpolation
 
 MESSAGE_FILE_TYPE_CATEGORY = u'category'
 MESSAGE_FILE_TYPE_EVENT = u'event'
@@ -693,10 +696,10 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
       elif number_of_values != 0:
         logging.warning((
-             u'More than one message string found for LCID: 0x{0:08x}, '
-             u'file version: {1:s}, message identifier: {2:s}.').format(
-                 language_identifier, message_resource_file.file_version,
-                 message_identifier))
+            u'More than one message string found for LCID: 0x{0:08x}, '
+            u'file version: {1:s}, message identifier: {2:s}.').format(
+                language_identifier, message_resource_file.file_version,
+                message_identifier))
 
       # TODO: warn if new message has been found.
       insert_values = False
@@ -823,7 +826,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if insert_values:
       values = [
           u'0x{0:08x}'.format(language_identifier), message_file_key,
-          resources.LANGUAGES.get(language_identifier, [u'', u''])[0]]
+          definitions.LANGUAGES.get(language_identifier, [u'', u''])[0]]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteMessageTables(self):
@@ -879,16 +882,16 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           logging.warning((
               u'String mismatch for LCID: 0x{0:08x}, '
               u'file version: {1:s}, string identifier: {2:s}.\n'
-              u'Found: {2:s}\nStored: {3:s}\n').format(
+              u'Found: {3:s}\nStored: {4:s}\n').format(
                   language_identifier, message_resource_file.file_version,
                   string_identifier, string, values[u'string']))
 
       elif number_of_values != 0:
         logging.warning((
-             u'More than one string found for LCID: 0x{0:08x}, '
-             u'file version: {1:s}, string identifier: {2:s}.').format(
-                 language_identifier, message_resource_file.file_version,
-                 string_identifier))
+            u'More than one string found for LCID: 0x{0:08x}, '
+            u'file version: {1:s}, string identifier: {2:s}.').format(
+                language_identifier, message_resource_file.file_version,
+                string_identifier))
 
       # TODO: warn if new string has been found.
       insert_values = False
@@ -967,7 +970,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if insert_values:
       values = [
           u'0x{0:08x}'.format(language_identifier), message_file_key,
-          resources.LANGUAGES.get(language_identifier, ['', ''])[0]]
+          definitions.LANGUAGES.get(language_identifier, ['', ''])[0]]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteStringTables(self):
@@ -1427,17 +1430,17 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           logging.warning((
               u'Message string mismatch for LCID: {0:s}, '
               u'file version: {1:s}, message identifier: {2:s}.\n'
-              u'Found: {2:s}\nStored: {3:s}\n').format(
+              u'Found: {3:s}\nStored: {4:s}\n').format(
                   language_identifier, message_file.file_version,
                   message_identifier, message_string,
                   values[u'message_string']))
 
       elif number_of_values != 0:
         logging.warning((
-             u'More than one message string found for LCID: {0:s}, '
-             u'file version: {1:s}, message identifier: {2:s}.').format(
-                 language_identifier, message_file.file_version,
-                 message_identifier))
+            u'More than one message string found for LCID: {0:s}, '
+            u'file version: {1:s}, message identifier: {2:s}.').format(
+                language_identifier, message_file.file_version,
+                message_identifier))
 
       # TODO: warn if new message has been found.
       insert_values = False

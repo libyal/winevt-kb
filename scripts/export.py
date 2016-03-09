@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Script to export strings extracted from message files."""
 
+from __future__ import print_function
 import argparse
 import difflib
 import logging
@@ -9,9 +10,11 @@ import os
 import re
 import sys
 
-import database
-import resources
+from winevtrc import database
+from winevtrc import resources
 
+
+# pylint: disable=logging-format-interpolation
 
 class Exporter(object):
   """Class that exports the strings extracted from message files."""
@@ -49,24 +52,24 @@ class Exporter(object):
         message_files = existing_event_log_provider.category_message_files
         if event_log_provider.category_message_files != message_files:
           if event_log_provider.category_message_files:
-            logging.warning(
-                u'Found duplicate alternating event log provider: {0:s}. '.format(
+            logging.warning((
+                u'Found duplicate alternating event log provider: {0:s}. '
                 u'Category message files mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.event_message_files
         if event_log_provider.event_message_files != message_files:
           if event_log_provider.event_message_files:
-            logging.warning(
-                u'Found duplicate alternating event log provider: {0:s}. '.format(
+            logging.warning((
+                u'Found duplicate alternating event log provider: {0:s}. '
                 u'Event message files mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.parameter_message_files
         if event_log_provider.parameter_message_files != message_files:
           if event_log_provider.parameter_message_files:
-            logging.warning(
-                u'Found duplicate alternating event log provider: {0:s}. '.format(
+            logging.warning((
+                u'Found duplicate alternating event log provider: {0:s}. '
                 u'Parameter message files mismatch').format(log_source))
           continue
 

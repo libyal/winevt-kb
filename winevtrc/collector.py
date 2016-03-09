@@ -5,9 +5,6 @@ import dfvfs
 import dfwinreg
 
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as dfvfs_path_spec_factory
-from dfvfs.resolver import resolver as dfvfs_resolver
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 

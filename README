@@ -1,5 +1,9 @@
-winevt-kb is a project to build a Windows Event Log Knowledge Base.
+winevt-kb is a project to build a Windows Event Log knowledge base.
+
+winevtrc is a Python module part of winevt-kb to allow easy reuse of
+the Windows Event Log resource extraction and database functionality.
 
 For more information see:
+
 * Project documentation: https://github.com/libyal/winevt-kb/wiki/Home
 

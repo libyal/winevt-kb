@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 """Script to query a winevt-kb SQLite database."""
 
+from __future__ import print_function
 import argparse
 import logging
 import sys
 
-import database
+from winevtrc import database
 
 
 def Main():
