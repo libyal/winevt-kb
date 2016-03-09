@@ -100,13 +100,37 @@ class MessageResourceFile(object):
       self._GetVersionInformation()
     return self._product_version
 
+  def Close(self):
+    """Closes the Windows Message Resource file.
+
+    Raises:
+      IOError: if not open.
+    """
+    if not self._is_open:
+      raise IOError(u'Not opened.')
+
+    self._wrc_stream.close()
+    self._exe_file.close()
+    self._file_object.close()
+    self._file_object = None
+    self._is_open = False
+
   def GetMessageTableResource(self):
-    """Retrieves the message table resource."""
+    """Retrieves the message table resource.
+
+    Returns:
+      A message table resource object (instance of pywrc.message_table) or None
+      if not available.
+    """
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
 
-  def GetMuiLanguage(self):
-    """Retrieves the MUI language or None if not available."""
+  def GetMUILanguage(self):
+    """Retrieves the MUI language.
+
+    Returns:
+      A string containing the MUI language or None if not available.
+    """
     mui_resource = self._wrc_stream.get_resource_by_name(u'MUI')
     if not mui_resource:
       return None
@@ -125,11 +149,16 @@ class MessageResourceFile(object):
     return mui_language
 
   def GetStringResource(self):
-    """Retrieves the string resource."""
+    """Retrieves the string resource.
+
+    Returns:
+      A string resource object (instance of pywrc.string) or None
+      if not available.
+    """
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_STRING)
 
-  def Open(self, file_object):
+  def OpenFileObject(self, file_object):
     """Opens the Windows Message Resource file using a file-like object.
 
     Args:
@@ -144,8 +173,7 @@ class MessageResourceFile(object):
     if self._is_open:
       raise IOError(u'Already open.')
 
-    self._file_object = file_object
-    self._exe_file.open_file_object(self._file_object)
+    self._exe_file.open_file_object(file_object)
     exe_section = self._exe_file.get_section_by_name(u'.rsrc')
 
     if not exe_section:
@@ -155,18 +183,7 @@ class MessageResourceFile(object):
     self._wrc_stream.set_virtual_address(exe_section.virtual_address)
     self._wrc_stream.open_file_object(exe_section)
 
+    self._file_object = file_object
+    self._is_open = True
+
     return True
-
-  def Close(self):
-    """Closes the Windows Message Resource file.
-
-    Raises:
-      IOError: if not open.
-    """
-    if self._is_open:
-      raise IOError(u'Not opened.')
-
-    self._wrc_stream.close()
-    self._exe_file.close()
-    self._file_object.close()
-    self._file_object = None

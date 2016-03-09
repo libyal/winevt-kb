@@ -1,4 +1,4 @@
-include AUTHORS LICENSE README
+include ACKNOWLEDGEMENTS AUTHORS LICENSE README
 include run_tests.py
 exclude .gitignore
 exclude *.pyc

@@ -9,9 +9,6 @@ import os
 import re
 import sys
 
-import pyexe
-import pywrc
-
 from dfvfs.resolver import resolver
 from dfwinreg import registry
 
@@ -19,13 +16,6 @@ from winevtrc import collector
 from winevtrc import database
 from winevtrc import resource_file
 from winevtrc import resources
-
-
-if pyexe.get_version() < u'20131229':
-  raise ImportWarning(u'extract.py requires pyexe 20131229 or later.')
-
-if pywrc.get_version() < u'20140128':
-  raise ImportWarning(u'extract.py requires pywrc 20140128 or later.')
 
 
 # pylint: disable=logging-format-interpolation
@@ -187,7 +177,7 @@ class EventMessageStringExtractor(collector.WindowsVolumeCollector):
     if not message_table:
       # Windows Vista and later use a MUI resource to redirect to
       # a language specific message file.
-      mui_language = message_file.GetMuiLanguage()
+      mui_language = message_file.GetMUILanguage()
 
       if mui_language:
         message_filename_path, _, message_filename_name = (
@@ -364,7 +354,7 @@ class EventMessageStringExtractor(collector.WindowsVolumeCollector):
     message_file = resource_file.MessageResourceFile(
         windows_path, ascii_codepage=self.ascii_codepage,
         preferred_language_identifier=self.preferred_language_identifier)
-    if not message_file.Open(file_object):
+    if not message_file.OpenFileObject(file_object):
       return None
 
     return message_file

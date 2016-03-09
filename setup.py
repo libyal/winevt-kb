@@ -152,6 +152,6 @@ setup(
     },
     data_files=[
         ('share/doc/winevtrc', [
-            'AUTHORS', 'LICENSE', 'README']),
+            'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
     ],
 )
