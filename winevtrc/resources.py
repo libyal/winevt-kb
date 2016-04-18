@@ -30,7 +30,7 @@ class EventLogProvider(object):
     self.event_message_files = None
     self.log_type = log_type
     self.log_source = log_source
-    self.parameter_message_files = None
+    self.parameter_message_filenames = None
     self.provider_guid = provider_guid
 
   def SetCategoryMessageFilenames(self, category_message_filenames):
@@ -65,13 +65,13 @@ class EventLogProvider(object):
                                    or a list of filenames.
     """
     if isinstance(parameter_message_filenames, basestring):
-      self.parameter_message_files = parameter_message_filenames.split(u';')
+      self.parameter_message_filenames = parameter_message_filenames.split(u';')
     else:
-      self.parameter_message_files = parameter_message_filenames
+      self.parameter_message_filenames = parameter_message_filenames
 
 
 class MessageFile(object):
-  """Class that contains the messages per file.
+  """Class that defines a Windows Event Log message file.
 
   Attributes:
     name: a string containing the name.
@@ -143,7 +143,7 @@ class MessageFile(object):
     Yields:
       A message table (instance of MessageTable).
     """
-    for message_table in self._message_tables_per_language.itervalues():
+    for message_table in iter(self._message_tables_per_language.values()):
       yield message_table
 
   def GetStringTables(self):
@@ -152,7 +152,7 @@ class MessageFile(object):
     Yields:
       A string table (instance of StringTable).
     """
-    for string_table in self._string_tables_per_language.itervalues():
+    for string_table in iter(self._string_tables_per_language.values()):
       yield string_table
 
 

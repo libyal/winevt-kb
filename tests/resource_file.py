@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the fake Windows Registry back-end."""
+"""Tests for the Windows Message Resource file class."""
 
 import os
 import unittest
@@ -11,8 +11,8 @@ from winevtrc import resource_file
 class MessageResourceFileTest(unittest.TestCase):
   """Tests for the Windows Message Resource file object."""
 
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
+  # pylint: disable=protected-access
+
   maxDiff = None
 
   def testOpenFileObjectAndClose(self):

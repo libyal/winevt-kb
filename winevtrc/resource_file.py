@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Script to extract the strings from Event Log message resource files."""
+"""Classes to represent a Windows Message Resource file."""
 
 import logging
 
