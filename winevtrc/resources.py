@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Classes to represent Event Log resources."""
+"""Classes to represent Windows Event Log resources."""
 
 
 class EventLogProvider(object):

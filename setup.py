@@ -117,11 +117,11 @@ if 'bdist_msi' in sys.argv:
   winevtrc_version += '.1'
 
 winevtrc_description = (
-    'Digital Forensics Windows Registry (dfWinReg).')
+    'Windows Event Log resources (winevtrc).')
 
 winevtrc_long_description = (
-    'dfWinReg, or Digital Forensics Windows Registry, is a Python module '
-    'that provides read-only access to Windows Registry objects.')
+    'winevtrc is a Python module part of winevt-kb to allow easy reuse of '
+    'the Windows Event Log resource extraction and database functionality.')
 
 setup(
     name='winevtrc',
@@ -132,24 +132,24 @@ setup(
     url='https://github.com/libyal/winevt-kb',
     maintainer='Joachim Metz',
     maintainer_email='joachim.metz@gmail.com',
-    scripts=[
-        os.path.join('scripts', 'export.py'),
-        os.path.join('scripts', 'extract.py'),
-        os.path.join('scripts', 'query.py')]
-    cmdclass={
-        'bdist_rpm': BdistRPMCommand,
-        'test': TestCommand},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
+    cmdclass={
+        'bdist_rpm': BdistRPMCommand,
+        'test': TestCommand},
     packages=find_packages('.', exclude=[
         'tests', 'tests.*', 'utils']),
     package_dir={
         'winevtrc': 'winevtrc'
     },
+    scripts=[
+        os.path.join('scripts', 'export.py'),
+        os.path.join('scripts', 'extract.py'),
+        os.path.join('scripts', 'query.py')],
     data_files=[
         ('share/doc/winevtrc', [
             'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),

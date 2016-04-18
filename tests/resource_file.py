@@ -76,6 +76,8 @@ class MessageResourceFileTest(unittest.TestCase):
       message_resource_file.Close()
       file_object.close()
 
+  # TODO: add test for GetMUILanguage
+
   def testGetStringResource(self):
     """Tests the GetStringResource function."""
     message_resource_file = resource_file.MessageResourceFile(
