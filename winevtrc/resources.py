@@ -6,14 +6,14 @@ class EventLogProvider(object):
   """Class that defines a Windows Event Log provider.
 
   Attributes:
-    category_message_filenames: a list of strings containing the filenames
-                                of the category message files.
-    event_message_filenames: a list of strings containing the filenames
-                             of the event message files.
+    category_message_files: a list of strings containing the filenames
+                            of the category message files.
+    event_message_files: a list of strings containing the filenames
+                         of the event message files.
     log_type: a string containing the Event Log type.
     log_source: a string containing the Event Log source.
-    parameter_message_filenames: a list of strings containing the filenames
-                                 of the parameter message files.
+    parameter_message_files: a list of strings containing the filenames
+                             of the parameter message files.
     provider_guid: a string containing the Event Log provider GUID.
   """
 
@@ -30,7 +30,7 @@ class EventLogProvider(object):
     self.event_message_files = None
     self.log_type = log_type
     self.log_source = log_source
-    self.parameter_message_filenames = None
+    self.parameter_message_files = None
     self.provider_guid = provider_guid
 
   def SetCategoryMessageFilenames(self, category_message_filenames):
@@ -65,9 +65,9 @@ class EventLogProvider(object):
                                    or a list of filenames.
     """
     if isinstance(parameter_message_filenames, basestring):
-      self.parameter_message_filenames = parameter_message_filenames.split(u';')
+      self.parameter_message_files = parameter_message_filenames.split(u';')
     else:
-      self.parameter_message_filenames = parameter_message_filenames
+      self.parameter_message_files = parameter_message_filenames
 
 
 class MessageFile(object):

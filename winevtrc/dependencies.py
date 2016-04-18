@@ -24,8 +24,8 @@ LIBYAL_DEPENDENCIES = {
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_DEPENDENCIES = [
-    (u'dfvfs', u'__version__', u'20160227', None),
-    (u'dfwinreg', u'__version__', u'20151026', None)]
+    (u'dfvfs', u'__version__', u'20160418', None),
+    (u'dfwinreg', u'__version__', u'20160418', None)]
 
 
 def DownloadPageContent(download_url):

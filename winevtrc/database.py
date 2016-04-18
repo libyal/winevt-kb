@@ -14,13 +14,6 @@ from winevtrc import definitions
 from winevtrc import resources
 
 
-# pylint: disable=logging-format-interpolation
-
-MESSAGE_FILE_TYPE_CATEGORY = u'category'
-MESSAGE_FILE_TYPE_EVENT = u'event'
-MESSAGE_FILE_TYPE_PARAMETER = u'parameter'
-
-
 class Sqlite3DatabaseFile(object):
   """Class that defines a sqlite3 database file."""
 
@@ -309,15 +302,17 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     for event_log_provider in event_log_providers:
       message_filenames = self._GetMessageFilenames(
-          event_log_provider.log_source, MESSAGE_FILE_TYPE_CATEGORY)
+          event_log_provider.log_source,
+          definitions.MESSAGE_FILE_TYPE_CATEGORY)
       event_log_provider.SetCategoryMessageFilenames(message_filenames)
 
       message_filenames = self._GetMessageFilenames(
-          event_log_provider.log_source, MESSAGE_FILE_TYPE_EVENT)
+          event_log_provider.log_source, definitions.MESSAGE_FILE_TYPE_EVENT)
       event_log_provider.SetEventMessageFilenames(message_filenames)
 
       message_filenames = self._GetMessageFilenames(
-          event_log_provider.log_source, MESSAGE_FILE_TYPE_PARAMETER)
+          event_log_provider.log_source,
+          definitions.MESSAGE_FILE_TYPE_PARAMETER)
       event_log_provider.SetParameterMessageFilenames(message_filenames)
 
       yield event_log_provider
@@ -970,7 +965,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if insert_values:
       values = [
           u'0x{0:08x}'.format(language_identifier), message_file_key,
-          definitions.LANGUAGES.get(language_identifier, ['', ''])[0]]
+          definitions.LANGUAGES.get(language_identifier, [u'', u''])[0]]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteStringTables(self):
@@ -1160,15 +1155,17 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     for event_log_provider in event_log_providers:
       message_filenames = self._GetMessageFilenames(
-          event_log_provider.log_source, MESSAGE_FILE_TYPE_CATEGORY)
+          event_log_provider.log_source,
+          definitions.MESSAGE_FILE_TYPE_CATEGORY)
       event_log_provider.SetCategoryMessageFilenames(message_filenames)
 
       message_filenames = self._GetMessageFilenames(
-          event_log_provider.log_source, MESSAGE_FILE_TYPE_EVENT)
+          event_log_provider.log_source, definitions.MESSAGE_FILE_TYPE_EVENT)
       event_log_provider.SetEventMessageFilenames(message_filenames)
 
       message_filenames = self._GetMessageFilenames(
-          event_log_provider.log_source, MESSAGE_FILE_TYPE_PARAMETER)
+          event_log_provider.log_source,
+          definitions.MESSAGE_FILE_TYPE_PARAMETER)
       event_log_provider.SetParameterMessageFilenames(message_filenames)
 
       yield event_log_provider
@@ -1509,7 +1506,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
         self._database_file.CreateTable(table_name, column_definitions)
 
       message_strings = message_table.message_strings
-      for message_identifier, message_string in message_strings.iteritems():
+      for message_identifier, message_string in iter(message_strings.items()):
         self._WriteMessage(
             message_file, message_table.lcid, message_identifier,
             message_string, table_name, has_table)

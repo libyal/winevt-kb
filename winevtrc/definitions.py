@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """The Windows Event Log resource definitions."""
 
+MESSAGE_FILE_TYPE_CATEGORY = u'category'
+MESSAGE_FILE_TYPE_EVENT = u'event'
+MESSAGE_FILE_TYPE_PARAMETER = u'parameter'
+
 LANGUAGES = {
     0x0001: ['ar', 'Arabic'],
     0x0002: ['bg', 'Bulgarian'],

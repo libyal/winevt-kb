@@ -53,18 +53,18 @@ class EventLogProviderTest(unittest.TestCase):
     event_log_provider = resources.EventLogProvider(
         u'log_type', u'log_source', u'provider_guid')
 
-    expected_parameter_message_filenames = [u'test1', u'test2', u'test3']
+    expected_parameter_message_files = [u'test1', u'test2', u'test3']
 
     event_log_provider.SetParameterMessageFilenames(
-        expected_parameter_message_filenames)
+        expected_parameter_message_files)
     self.assertEqual(
-        event_log_provider.parameter_message_filenames,
-        expected_parameter_message_filenames)
+        event_log_provider.parameter_message_files,
+        expected_parameter_message_files)
 
     event_log_provider.SetParameterMessageFilenames(u'test1;test2;test3')
     self.assertEqual(
-        event_log_provider.parameter_message_filenames,
-        expected_parameter_message_filenames)
+        event_log_provider.parameter_message_files,
+        expected_parameter_message_files)
 
 
 class MessageFileTest(unittest.TestCase):

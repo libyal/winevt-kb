@@ -14,8 +14,6 @@ from winevtrc import database
 from winevtrc import resources
 
 
-# pylint: disable=logging-format-interpolation
-
 class Exporter(object):
   """Class that exports the strings extracted from message files."""
 
