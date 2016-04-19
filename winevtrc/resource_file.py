@@ -49,7 +49,7 @@ class MessageResourceFile(object):
     self.windows_path = windows_path
 
   def _GetVersionInformation(self):
-    """Determines the file and produce version."""
+    """Determines the file and product version."""
     version_resource = self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_VERSION)
     if not version_resource:
