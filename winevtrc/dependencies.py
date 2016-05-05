@@ -24,7 +24,7 @@ LIBYAL_DEPENDENCIES = {
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_DEPENDENCIES = [
-    (u'dfvfs', u'__version__', u'20160418', None),
+    (u'dfvfs', u'__version__', u'20160505', None),
     (u'dfwinreg', u'__version__', u'20160418', None)]
 
 
