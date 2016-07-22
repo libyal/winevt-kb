@@ -8,6 +8,8 @@ import logging
 import os
 import sys
 
+from xml.etree import ElementTree
+
 import pyevt
 import pyevtx
 
@@ -17,12 +19,25 @@ class EventLogRecord(object):
 
   Attributes:
     event_identifier (int): event identifier.
+    strings (list[str]): string values.
   """
 
   def __init__(self):
     """Initializes an EventLog record."""
     super(EventLogRecord, self).__init__()
     self.event_identifier = None
+    self.strings = []
+
+  def get_string(self, string_index):
+    """Retrieves a specific string value.
+
+    Args:
+      string_index (int): string index
+
+    Return:
+      str: string value.
+    """
+    return self.strings[string_index]
 
 
 class Process(object):
@@ -180,9 +195,35 @@ class ProcessTree(object):
     Yields:
       EventLogRecord: EventLog record.
     """
-    # TODO: implement.
-    yield
-    return
+    with open(source, 'r') as file_object:
+      for line_index, line in enumerate(file_object.readlines()):
+        line = line.strip()
+
+        try:
+          xml = ElementTree.fromstring(line)
+        except ElementTree.ParseError:
+          logging.error(u'Unable to parse line: {0:d} "{1:s}"'.format(
+              line_index, line))
+          continue
+
+        xml_system = xml.find(
+            u'{http://schemas.microsoft.com/win/2004/08/events/event}System')
+        xml_event_id = xml_system.find(
+            u'{http://schemas.microsoft.com/win/2004/08/events/event}EventID')
+        xml_event_data = xml.find(
+            u'{http://schemas.microsoft.com/win/2004/08/events/event}EventData')
+
+        event_log_record = EventLogRecord()
+
+        try:
+          event_log_record.event_identifier = int(xml_event_id.text, 10)
+        except ValueError:
+          continue
+
+        for xml_data in iter(xml_event_data):
+          event_log_record.strings.append(xml_data.text)
+
+        yield event_log_record
 
   def Generate(self, source):
     """Generates a process tree from the source.
