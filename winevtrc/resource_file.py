@@ -6,12 +6,11 @@ import logging
 import pyexe
 import pywrc
 
+from winevtrc import dependencies
 
-if pyexe.get_version() < u'20131229':
-  raise ImportWarning(u'extract.py requires pyexe 20131229 or later.')
 
-if pywrc.get_version() < u'20140128':
-  raise ImportWarning(u'extract.py requires pywrc 20140128 or later.')
+dependencies.CheckModuleVersion(u'pyexe')
+dependencies.CheckModuleVersion(u'pywrc')
 
 
 # pylint: disable=logging-format-interpolation

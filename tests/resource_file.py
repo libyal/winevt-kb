@@ -7,21 +7,22 @@ import unittest
 
 from winevtrc import resource_file
 
+from tests import test_lib as shared_test_lib
 
-class MessageResourceFileTest(unittest.TestCase):
+
+class MessageResourceFileTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Message Resource file object."""
 
   # pylint: disable=protected-access
 
-  maxDiff = None
-
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
   def testOpenFileObjectAndClose(self):
     """Tests the OpenFileObject and Close functions."""
     message_resource_file = resource_file.MessageResourceFile(
-        u'C:\\Windows\\System32\\sqlite3.dll')
+        u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = os.path.join(u'test_data', u'sqlite3.dll')
-    file_object = open(test_file, 'rb')
+    test_path = self._GetTestFilePath([u'wrc_test.dll'])
+    file_object = open(test_path, 'rb')
     try:
       message_resource_file.OpenFileObject(file_object)
 
@@ -35,23 +36,24 @@ class MessageResourceFileTest(unittest.TestCase):
     # TODO: add test on non PE/COFF file.
     # TODO: add test on PE/COFF file without resource section.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
   def testGetVersionInformation(self):
     """Tests the GetVersionInformation function."""
     message_resource_file = resource_file.MessageResourceFile(
-        u'C:\\Windows\\System32\\sqlite3.dll')
+        u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = os.path.join(u'test_data', u'sqlite3.dll')
-    file_object = open(test_file, 'rb')
+    test_path = self._GetTestFilePath([u'wrc_test.dll'])
+    file_object = open(test_path, 'rb')
     try:
       message_resource_file.OpenFileObject(file_object)
 
       message_resource_file._GetVersionInformation()
 
-      expected_file_version = u'3.11.1.0'
+      expected_file_version = u'1.0.0.0'
       self.assertEqual(
           message_resource_file.file_version, expected_file_version)
 
-      expected_product_version = u'3.11.1.0'
+      expected_product_version = u'1.0.0.0'
       self.assertEqual(
           message_resource_file.product_version, expected_product_version)
 
@@ -59,13 +61,14 @@ class MessageResourceFileTest(unittest.TestCase):
       message_resource_file.Close()
       file_object.close()
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
   def testGetMessageTableResource(self):
     """Tests the GetMessageTableResource function."""
     message_resource_file = resource_file.MessageResourceFile(
-        u'C:\\Windows\\System32\\sqlite3.dll')
+        u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = os.path.join(u'test_data', u'sqlite3.dll')
-    file_object = open(test_file, 'rb')
+    test_path = self._GetTestFilePath([u'wrc_test.dll'])
+    file_object = open(test_path, 'rb')
     try:
       message_resource_file.OpenFileObject(file_object)
 
@@ -78,13 +81,14 @@ class MessageResourceFileTest(unittest.TestCase):
 
   # TODO: add test for GetMUILanguage
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
   def testGetStringResource(self):
     """Tests the GetStringResource function."""
     message_resource_file = resource_file.MessageResourceFile(
-        u'C:\\Windows\\System32\\sqlite3.dll')
+        u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = os.path.join(u'test_data', u'sqlite3.dll')
-    file_object = open(test_file, 'rb')
+    test_path = self._GetTestFilePath([u'wrc_test.dll'])
+    file_object = open(test_path, 'rb')
     try:
       message_resource_file.OpenFileObject(file_object)
 
