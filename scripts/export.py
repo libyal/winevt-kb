@@ -498,36 +498,36 @@ def Main():
   Returns:
     A boolean containing True if successful or False if not.
   """
-  args_parser = argparse.ArgumentParser(description=(
+  argument_parser = argparse.ArgumentParser(description=(
       u'Export strings extracted from message files.'))
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'source', nargs=u'?', action=u'store', metavar=u'./winevt-db/',
       default=None, help=(
           u'directory that contains the sqlite3 with the extracted strings.'))
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'--db', u'--database', dest=u'database', action=u'store',
       metavar=u'winevt-rc.db', default=None, help=(
           u'filename of the sqlite3 database to write to.'))
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'--string_format', u'--string-format', dest=u'string_format',
       action=u'store', metavar=u'FORMAT', default=u'wrc',
       choices=[u'pep3101', u'wrc'], help=u'the message string format.')
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'--wiki', dest=u'wiki', action=u'store', metavar=u'./winevt-kb.wiki/',
       default=None, help=u'path to write the wiki pages to.')
 
   # TODO: allow to set preferred language.
 
-  options = args_parser.parse_args()
+  options = argument_parser.parse_args()
 
   if not options.source:
     print(u'Source value is missing.')
     print(u'')
-    args_parser.print_help()
+    argument_parser.print_help()
     print(u'')
     return False
 

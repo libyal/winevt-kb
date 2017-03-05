@@ -16,32 +16,32 @@ def Main():
   Returns:
     A boolean containing True if successful or False if not.
   """
-  args_parser = argparse.ArgumentParser(description=(
+  argument_parser = argparse.ArgumentParser(description=(
       u'Export strings extracted from message files.'))
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'database', nargs=u'?', action=u'store', metavar=u'DATABASE',
       default=None, help=u'filename of the sqlite3 database to read from.')
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'event_provider', nargs=u'?', action=u'store', metavar=u'EVENT_PROVIDER',
       default=None, help=u'specific event provider to query.')
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'message_identifier', nargs=u'?', action=u'store',
       metavar=u'MESSAGE_IDENTIFIER', default=None,
       help=u'specific message identifier to query.')
 
-  args_parser.add_argument(
+  argument_parser.add_argument(
       u'--lcid', dest=u'lcid', action=u'store', metavar=u'LCID',
       default=0x00000409, help=u'the preferred LCID.')
 
-  options = args_parser.parse_args()
+  options = argument_parser.parse_args()
 
   if not options.database:
     print(u'Database value is missing.')
     print(u'')
-    args_parser.print_help()
+    argument_parser.print_help()
     print(u'')
     return False
 
