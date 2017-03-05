@@ -1079,9 +1079,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     generator = self._database_file.GetValues(
         table_names, column_names, condition)
 
-    if generator:
-      for values in generator:
-        yield values[u'message_file_key']
+    # pylint: disable=not-an-iterable
+    for values in generator:
+      yield values[u'message_file_key']
 
   def _GetMessageFilenames(self, log_source, message_file_type):
     """Retrieves the message filenames of a specific Event Log provider.

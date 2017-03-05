@@ -13,23 +13,95 @@ import re
 # Where ersion_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
+    u'construct': (u'__version__', u'2.5.2', u'2.5.3'),
+    u'Crypto': (u'__version__', u'2.6.0', None),
+    u'dfdatetime': (u'__version__', u'20160319', None),
+    u'dfvfs': (u'__version__', u'20160803', None),
+    u'dfwinreg': (u'__version__', u'20170301', None),
+    u'pybde': (u'get_version()', u'20140531', None),
+    u'pyewf': (u'get_version()', u'20131210', None),
     u'pyexe': (u'get_version()', u'20131229', None),
-    u'pywrc': (u'get_version()', u'20140128', None)}
+    u'pyfsntfs': (u'get_version()', u'20151130', None),
+    u'pyfvde': (u'get_version()', u'20160719', None),
+    u'pyfwnt': (u'get_version()', u'20160418', None),
+    u'pyfwsi': (u'get_version()', u'20150606', None),
+    u'pyqcow': (u'get_version()', u'20131204', None),
+    u'pyregf': (u'get_version()', u'20150315', None),
+    u'pysigscan': (u'get_version()', u'20150627', None),
+    u'pysmdev': (u'get_version()', u'20140529', None),
+    u'pysmraw': (u'get_version()', u'20140612', None),
+    u'pytsk3': (u'get_version()', u'20160721', None),
+    u'pyvhdi': (u'get_version()', u'20131210', None),
+    u'pyvmdk': (u'get_version()', u'20140421', None),
+    u'pyvshadow': (u'get_version()', u'20160109', None),
+    u'pyvslvm': (u'get_version()', u'20160109', None),
+    u'pywrc': (u'get_version()', u'20140128', None),
+    u'six': (u'__version__', u'1.1.0', None)}
 
 # Maps Python module names to DPKG packages.
 _DPKG_PACKAGE_NAMES = {
+    u'Crypto': u'python-crypto',
+    u'pybde': u'libbde-python',
+    u'pyewf': u'libewf-python',
     u'pyexe': u'libexe-python',
+    u'pyfsntfs': u'libfsntfs-python',
+    u'pyfvde': u'libfvde-python',
+    u'pyfwnt': u'libfwnt-python',
+    u'pyfwsi': u'libfwsi-python',
+    u'pyqcow': u'libqcow-python',
+    u'pyregf': u'libregf-python',
+    u'pysigscan': u'libsigscan-python',
+    u'pysmdev': u'libsmdev-python',
+    u'pysmraw': u'libsmraw-python',
+    u'pyvhdi': u'libvhdi-python',
+    u'pyvmdk': u'libvmdk-python',
+    u'pyvshadow': u'libvshadow-python',
+    u'pyvslvm': u'libvslvm-python',
     u'pywrc': u'libwrc-python'}
 
 # Maps Python module names to PyPI projects.
 _PYPI_PROJECT_NAMES = {
+    u'Crypto': u'pycrypto',
+    u'pybde': u'libbde-python',
+    u'pyewf': u'libewf-python',
     u'pyexe': u'libexe-python',
-    u'pywrc': u'libwrc-python'}
+    u'pyfsntfs': u'libfsntfs-python',
+    u'pyfvde': u'libfvde-python',
+    u'pyfwnt': u'libfwnt-python',
+    u'pyfwsi': u'libfwsi-python',
+    u'pyqcow': u'libqcow-python',
+    u'pyregf': u'libregf-python',
+    u'pysigscan': u'libsigscan-python',
+    u'pysmdev': u'libsmdev-python',
+    u'pysmraw': u'libsmraw-python',
+    u'pyvhdi': u'libvhdi-python',
+    u'pyvmdk': u'libvmdk-python',
+    u'pyvshadow': u'libvshadow-python',
+    u'pyvslvm': u'libvslvm-python',
+    u'pywrc': u'libwrc-python',
+    u'sqlite3': u'pysqlite'}
 
 # Maps Python module names to RPM packages.
 _RPM_PACKAGE_NAMES = {
+    u'Crypto': u'python-crypto',
+    u'pybde': u'libbde-python',
+    u'pyewf': u'libewf-python',
     u'pyexe': u'libexe-python',
-    u'pywrc': u'libwrc-python'}
+    u'pyfsntfs': u'libfsntfs-python',
+    u'pyfvde': u'libfvde-python',
+    u'pyfwnt': u'libfwnt-python',
+    u'pyfwsi': u'libfwsi-python',
+    u'pyqcow': u'libqcow-python',
+    u'pyregf': u'libregf-python',
+    u'pysigscan': u'libsigscan-python',
+    u'pysmdev': u'libsmdev-python',
+    u'pysmraw': u'libsmraw-python',
+    u'pyvhdi': u'libvhdi-python',
+    u'pyvmdk': u'libvmdk-python',
+    u'pyvshadow': u'libvshadow-python',
+    u'pyvslvm': u'libvslvm-python',
+    u'pywrc': u'libwrc-python',
+    u'sqlite3': u'python-libs'}
 
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
@@ -107,6 +179,55 @@ def _CheckPythonModule(
   return True
 
 
+def _CheckSQLite3(verbose_output=True):
+  """Checks the availability of sqlite3.
+
+  Args:
+    verbose_output (Optional[bool]): True if output should be verbose.
+
+  Returns:
+    bool: True if the sqlite3 Python module is available, False otherwise.
+  """
+  # On Windows sqlite3 can be provided by both pysqlite2.dbapi2 and
+  # sqlite3. sqlite3 is provided with the Python installation and
+  # pysqlite2.dbapi2 by the pysqlite2 Python module. Typically
+  # pysqlite2.dbapi2 would contain a newer version of sqlite3, hence
+  # we check for its presence first.
+  module_name = u'pysqlite2.dbapi2'
+  minimum_version = u'3.7.8'
+
+  module_object = _ImportPythonModule(module_name)
+  if not module_object:
+    module_name = u'sqlite3'
+
+  module_object = _ImportPythonModule(module_name)
+  if not module_object:
+    print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
+    return False
+
+  module_version = getattr(module_object, u'sqlite_version', None)
+  if not module_version:
+    return False
+
+  # Split the version string and convert every digit into an integer.
+  # A string compare of both version strings will yield an incorrect result.
+  module_version_map = list(
+      map(int, _VERSION_SPLIT_REGEX.split(module_version)))
+  minimum_version_map = list(
+      map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
+
+  if module_version_map < minimum_version_map:
+    print((
+        u'[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
+        u'required.').format(module_name, module_version, minimum_version))
+    return False
+
+  if verbose_output:
+    print(u'[OK]\t\t{0:s} version: {1!s}'.format(module_name, module_version))
+
+  return True
+
+
 def _ImportPythonModule(module_name):
   """Imports a Python module.
 
@@ -146,6 +267,9 @@ def CheckDependencies(verbose_output=True):
         module_name, version_tuple[0], version_tuple[1],
         maximum_version=version_tuple[2], verbose_output=verbose_output):
       check_result = False
+
+  if not _CheckSQLite3(verbose_output=verbose_output):
+    check_result = False
 
   if check_result and not verbose_output:
     print(u'[OK]')

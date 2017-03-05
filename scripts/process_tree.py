@@ -120,6 +120,7 @@ class ProcessTree(object):
     evt_file = pyevt.file()
     evt_file.open(source)
 
+    # pylint: disable=not-an-iterable
     for evt_record in evt_file.records:
       yield evt_record
 
@@ -137,6 +138,7 @@ class ProcessTree(object):
     evtx_file = pyevtx.file()
     evtx_file.open(source)
 
+    # pylint: disable=not-an-iterable
     for evtx_record in evtx_file.records:
       if evtx_record.event_identifier == 4688:
         process_start_event = ProcessStartEvent()
