@@ -22,7 +22,7 @@ class Sqlite3DatabaseFile(object):
       u'WHERE type = "table" AND name = "{0:s}"')
 
   def __init__(self):
-    """Initializes the database file object."""
+    """Initializes the database file."""
     super(Sqlite3DatabaseFile, self).__init__()
     self._connection = None
     self._cursor = None
@@ -51,12 +51,12 @@ class Sqlite3DatabaseFile(object):
     """Creates a table.
 
     Args:
-      table_name: the table name.
-      column_definitions: list of strings containing column definitions.
+      table_name (str): table name.
+      column_definitions (list[str]): column definitions.
 
     Raises:
       RuntimeError: if the database is not opened or
-                    if the database is in read-only mode.
+          if the database is in read-only mode.
     """
     if not self._connection:
       raise RuntimeError(u'Cannot create table database not opened.')
@@ -73,12 +73,12 @@ class Sqlite3DatabaseFile(object):
     """Retrieves values from a table.
 
     Args:
-      table_names: list of table names.
-      column_names: list of column names.
-      condition: string containing the condition.
+      table_names (list[str]): table names.
+      column_names (list[str]): column names.
+      condition (str): condition.
 
     Yields:
-      A row object (instance of sqlite3.row).
+      dict[str, str]: values.
 
     Raises:
       RuntimeError: if the database is not opened.
@@ -105,10 +105,10 @@ class Sqlite3DatabaseFile(object):
     """Determines if a specific table exists.
 
     Args:
-      table_name: the table name.
+      table_name (str): table name.
 
     Returns:
-      True if the table exists, false otheriwse.
+      bool: True if the table exists, false otheriwse.
 
     Raises:
       RuntimeError: if the database is not opened.
@@ -130,14 +130,14 @@ class Sqlite3DatabaseFile(object):
     """Inserts values into a table.
 
     Args:
-      table_name: the table name.
-      column_names: list of column names.
-      values: list of values formatted as a string.
+      table_name (str): table name.
+      column_names (list[str]): column names.
+      values (list[str]): values formatted as a string.
 
     Raises:
       RuntimeError: if the database is not opened or
-                    if the database is in read-only mode or
-                    if an unsupported value type is encountered.
+          if the database is in read-only mode or
+          if an unsupported value type is encountered.
     """
     if not self._connection:
       raise RuntimeError(u'Cannot insert values database not opened.')
@@ -173,14 +173,13 @@ class Sqlite3DatabaseFile(object):
     """Opens the database file.
 
     Args:
-      filename: the filename of the database.
-      read_only: optional boolean value to indicate the database should be
-                 opened in read-only mode. The default is false. Since sqlite3
-                 does not support a real read-only mode we fake it by only
-                 permitting SELECT queries.
+      filename (str): filename of the database.
+      read_only (Optional[bool]): True if the database should be opened in
+          read-only mode. Since sqlite3 does not support a real read-only
+          mode we fake it by only permitting SELECT queries.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
 
     Raises:
       RuntimeError: if the database is already opened.
@@ -206,22 +205,22 @@ class Sqlite3DatabaseReader(object):
   """Class to represent a sqlite3 database reader."""
 
   def __init__(self):
-    """Initializes the database reader object."""
+    """Initializes the database reader."""
     super(Sqlite3DatabaseReader, self).__init__()
     self._database_file = Sqlite3DatabaseFile()
 
   def Close(self):
-    """Closes the database reader object."""
+    """Closes the database reader."""
     self._database_file.Close()
 
   def Open(self, filename):
-    """Opens the database reader object.
+    """Opens the database reader.
 
     Args:
-      filename: the filename of the database.
+      filename (str): filename of the database.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     return self._database_file.Open(filename, read_only=True)
 
@@ -230,22 +229,22 @@ class Sqlite3DatabaseWriter(object):
   """Class to represent a sqlite3 database writer."""
 
   def __init__(self):
-    """Initializes the database writer object."""
+    """Initializes the database writer."""
     super(Sqlite3DatabaseWriter, self).__init__()
     self._database_file = Sqlite3DatabaseFile()
 
   def Close(self):
-    """Closes the database writer object."""
+    """Closes the database writer."""
     self._database_file.Close()
 
   def Open(self, filename):
-    """Opens the database writer object.
+    """Opens the database writer.
 
     Args:
-      filename: the filename of the database.
+      filename (str): filename of the database.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     self._database_file.Open(filename)
 
@@ -257,11 +256,11 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message filenames of a specific Event Log provider.
 
     Args:
-      log_source: the log source of the Event Log provider.
-      message_file_type: string containing the message file type.
+      log_source (str): source of the Event Log provider.
+      message_file_type (str): message file type.
 
     Returns:
-      A list of message filenames.
+      list[str]: message filenames.
     """
     table_names = [
         u'event_log_providers', u'message_file_per_event_log_provider',
@@ -287,7 +286,7 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the Event Log providers.
 
     Yields:
-      An Event Log provider (instance of EventLogProvider).
+      EventLogProvider: event log provider.
     """
     table_names = [u'event_log_providers']
     column_names = [u'log_source', u'log_type', u'provider_guid']
@@ -321,7 +320,7 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message filenames.
 
     Yields:
-      A tuple of a message filename and the corresponding database filename.
+      tuple[str, str]: message filename and corresponding database filename.
     """
     table_names = [u'message_files']
     column_names = [u'message_filename', u'database_filename']
@@ -339,10 +338,10 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Retrieves the key of an Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): event log provider.
 
     Returns:
-      An integer containing the Event Log provider key or None if no such value.
+      int: Event Log provider key or None if no such value.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -368,10 +367,10 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Retrieves the key of a message file.
 
     Args:
-      message_filename: the message filename.
+      message_filename (str): message filename.
 
     Returns:
-      An integer containing the message file key or None if no such value.
+      int: message file key or None if no such value.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -598,7 +597,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
   """Class to represent a message file sqlite3 database writer."""
 
   def __init__(self, message_resource_file):
-    """Initializes the message file database writer object.
+    """Initializes the message file database writer.
 
     Args:
       message_resource_file: the message file (instance of MessageResourceFile).
@@ -1269,11 +1268,11 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
   _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
 
   def __init__(self, string_format=u'wrc'):
-    """Initializes the database writer object.
+    """Initializes the database writer.
 
     Args:
       string_format: optional string format. The default is the Windows
-                     Resource (wrc) format.
+          Resource (wrc) format.
     """
     super(ResourcesSqlite3DatabaseWriter, self).__init__()
     self._string_format = string_format

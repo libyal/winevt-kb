@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Message Resource file class."""
 
-import os
 import unittest
 
 from winevtrc import resource_file
@@ -23,8 +22,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'nowrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'nowrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
@@ -36,8 +35,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'wrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
@@ -51,8 +50,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'nowrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'nowrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
@@ -64,8 +63,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'wrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       message_resource_file._GetVersionInformation()
@@ -86,8 +85,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'nowrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'nowrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
@@ -99,8 +98,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'wrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       message_table_resource = message_resource_file.GetMessageTableResource()
@@ -116,8 +115,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'nowrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'nowrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
@@ -129,8 +128,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     message_resource_file = resource_file.MessageResourceFile(
         u'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file = self._GetTestFilePath([u'wrc_test.dll'])
-    with open(test_file, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       string_resource = message_resource_file.GetStringResource()

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Event Log message resource extractor class."""
 
-import os
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -12,31 +11,32 @@ from dfvfs.path import factory as path_spec_factory
 
 from winevtrc import extractor
 
+from tests import test_lib as shared_test_lib
+
 
 class TestOutputWriter(object):
   """Class that defines a test output writer.
 
   Attributes:
-    event_log_providers: a list of Event Log providers objects (instances of
-                         EventLogProvider).
-    message_files: a list of message file objects (instances of MessageFile).
+    event_log_providers (list[EventLogProvider]): event log providers.
+    message_files (list[MessageFile]): message files.
   """
 
   def __init__(self):
-    """Initializes the test output writer object."""
+    """Initializes the test output writer."""
     super(TestOutputWriter, self).__init__()
     self.event_log_providers = []
     self.message_files = []
 
   def Close(self):
-    """Closes the output writer object."""
+    """Closes the output writer."""
     pass
 
   def Open(self):
-    """Opens the output writer object.
+    """Opens the output writer.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     return True
 
@@ -44,7 +44,7 @@ class TestOutputWriter(object):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): event log provider.
     """
     self.event_log_providers.append(event_log_provider)
 
@@ -54,36 +54,21 @@ class TestOutputWriter(object):
     """Writes the Windows Message Resource file.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageResourceFile).
-      message_filename: string containing the message filename.
-      message_file_type: string containing the message file type.
+      event_log_provider (EventLogProvider): event log provider.
+      message_file (MessageResourceFile): message resource file.
+      message_filename (str): message filename.
+      message_file_type (str): message file type.
     """
     self.message_files.append(message_file)
 
 
-class EventMessageStringExtractorTest(unittest.TestCase):
-  """Tests for the  Windows Event Log message resource extractor object."""
+class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows Event Log message resource extractor."""
 
   # pylint: disable=protected-access
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
-
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testExtractEventLogMessageStrings(self):
     """Tests the ExtractEventLogMessageStrings function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
