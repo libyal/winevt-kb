@@ -28,11 +28,10 @@ class MessageResourceFile(object):
     """Initializes the Windows Message Resource file.
 
     Args:
-      windows_path: normalized version of the Windows path.
-      ascii_codepage: optional ASCII string codepage. The default is cp1252
-                      (or windows-1252).
-      preferred_language_identifier: optional preferred language identifier
-                                     (LCID). The default is 0x0409 (en-US).
+      windows_path (str): normalized version of the Windows path.
+      ascii_codepage (Optional[str]): ASCII string codepage.
+      preferred_language_identifier (Optional[int]): preferred language
+          identifier (LCID).
     """
     super(MessageResourceFile, self).__init__()
     self._ascii_codepage = ascii_codepage
@@ -87,14 +86,14 @@ class MessageResourceFile(object):
 
   @property
   def file_version(self):
-    """The file version."""
+    """str: the file version."""
     if self._file_version is None:
       self._GetVersionInformation()
     return self._file_version
 
   @property
   def product_version(self):
-    """The product version."""
+    """str: the product version."""
     if self._product_version is None:
       self._GetVersionInformation()
     return self._product_version
@@ -118,8 +117,7 @@ class MessageResourceFile(object):
     """Retrieves the message table resource.
 
     Returns:
-      A message table resource object (instance of pywrc.message_table) or None
-      if not available.
+      pywrc.message_table: message table resource or None if not available.
     """
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_MESSAGE_TABLE)
@@ -128,7 +126,7 @@ class MessageResourceFile(object):
     """Retrieves the MUI language.
 
     Returns:
-      A string containing the MUI language or None if not available.
+      str: MUI language or None if not available.
     """
     mui_resource = self._wrc_stream.get_resource_by_name(u'MUI')
     if not mui_resource:
@@ -151,8 +149,7 @@ class MessageResourceFile(object):
     """Retrieves the string resource.
 
     Returns:
-      A string resource object (instance of pywrc.string) or None
-      if not available.
+      pywrc.string: string resource or None if not available.
     """
     return self._wrc_stream.get_resource_by_identifier(
         self._RESOURCE_IDENTIFIER_STRING)
@@ -161,10 +158,10 @@ class MessageResourceFile(object):
     """Opens the Windows Message Resource file using a file-like object.
 
     Args:
-      file_object: the file-like object.
+      file_object (file): file-like object.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
 
     Raises:
       IOError: if already open.

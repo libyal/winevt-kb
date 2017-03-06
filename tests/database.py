@@ -8,6 +8,7 @@ import unittest
 import sqlite3
 
 from winevtrc import database
+from winevtrc import resource_file
 
 from tests import test_lib as shared_test_lib
 
@@ -126,43 +127,389 @@ class Sqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 class Sqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the SQLite database writer."""
 
-  # TODO: add tests.
+  def testOpenClose(self):
+    """Tests the Open and Close functions."""
+    database_writer = database.Sqlite3DatabaseWriter()
+
+    with shared_test_lib.TempDirectory() as temporary_directory:
+      test_file_path = os.path.join(temporary_directory, u'winevt-rc.db')
+      database_writer.Open(test_file_path)
+
+      database_writer.Close()
 
 
 class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the event providers SQLite database reader."""
 
-  # TODO: add tests.
+  # pylint: disable=protected-access
+
+  # TODO: add test for _GetMessageFilenames
+  # TODO: add test for GetEventLogProviders
+  # TODO: add test for GetMessageFiles
 
 
-class EventProvidersSqlite3DatabaseWriter(shared_test_lib.BaseTestCase):
+class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the event providers SQLite database writer."""
 
-  # TODO: add tests.
+  # pylint: disable=protected-access
+
+  # TODO: add test for _GetEventLogProviderKey
+  # TODO: add test for _GetMessageFileKey
+  # TODO: add test for WriteMessageFilesPerEventLogProvider
+  # TODO: add test for WriteEventLogProvider
+  # TODO: add test for WriteMessageFile
 
 
 class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the message file SQLite database reader."""
 
-  # TODO: add tests.
+  @shared_test_lib.skipUnlessHasTestFile([u'message_file.db'])
+  def testGetMessageTables(self):
+    """Tests the GetMessageTables function."""
+    database_reader = database.MessageFileSqlite3DatabaseReader()
+
+    test_file_path = self._GetTestFilePath([u'message_file.db'])
+    database_reader.Open(test_file_path)
+
+    generator = database_reader.GetMessageTables()
+    message_tables = list(generator)
+
+    self.assertEqual(len(message_tables), 1)
+
+    database_reader.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'message_file.db'])
+  def testGetMessages(self):
+    """Tests the GetMessages function."""
+    database_reader = database.MessageFileSqlite3DatabaseReader()
+
+    test_file_path = self._GetTestFilePath([u'message_file.db'])
+    database_reader.Open(test_file_path)
+
+    generator = database_reader.GetMessages(u'0x00000409', u'1.0.0.0')
+    messages = list(generator)
+
+    self.assertEqual(len(messages), 3)
+    self.assertEqual(messages[0], (u'0x00000001', u'Category\r\n'))
+
+    generator = database_reader.GetMessages(u'0x00000413', u'1.0.0.0')
+
+    with self.assertRaises(sqlite3.OperationalError):
+      list(generator)
+
+    database_reader.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'message_file.db'])
+  def testGetStringTables(self):
+    """Tests the GetStringTables function."""
+    database_reader = database.MessageFileSqlite3DatabaseReader()
+
+    test_file_path = self._GetTestFilePath([u'message_file.db'])
+    database_reader.Open(test_file_path)
+
+    generator = database_reader.GetStringTables()
+
+    # TODO: string tables currently not written.
+    with self.assertRaises(sqlite3.OperationalError):
+      list(generator)
+
+    database_reader.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'message_file.db'])
+  def testGetStrings(self):
+    """Tests the GetStrings function."""
+    database_reader = database.MessageFileSqlite3DatabaseReader()
+
+    test_file_path = self._GetTestFilePath([u'message_file.db'])
+    database_reader.Open(test_file_path)
+
+    generator = database_reader.GetStrings(u'0x00000409', u'1.0.0.0')
+
+    # TODO: string tables currently not written.
+    with self.assertRaises(sqlite3.OperationalError):
+      list(generator)
+
+    database_reader.Close()
 
 
-class MessageFileSqlite3DatabaseWriter(shared_test_lib.BaseTestCase):
+class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the message file SQLite database writer."""
 
-  # TODO: add tests.
+  # pylint: disable=protected-access
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testGetMessageFileKey(self):
+    """Tests the _GetMessageFileKey function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        message_file_key = database_writer._GetMessageFileKey(
+            message_resource_file)
+        self.assertEqual(message_file_key, 1)
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  # TODO: add test for _WriteMessage
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteMessageFile(self):
+    """Tests the _WriteMessageFile function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteMessageTable(self):
+    """Tests the _WriteMessageTable function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      message_table_resource = message_resource_file.GetMessageTableResource()
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        database_writer._WriteMessageTable(
+            message_resource_file, message_table_resource, 0x00000409)
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteMessageTableLanguage(self):
+    """Tests the _WriteMessageTableLanguage function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        message_file_key = database_writer._GetMessageFileKey(
+            message_resource_file)
+
+        database_writer._WriteMessageTableLanguage(
+            message_file_key, 0x00000409)
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteMessageTables(self):
+    """Tests the _WriteMessageTables function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        database_writer._WriteMessageTables()
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteStringTable(self):
+    """Tests the _WriteStringTable function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      string_resource = message_resource_file.GetStringResource()
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        database_writer._WriteStringTable(
+            message_resource_file, string_resource, 0x00000409)
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteStringTableLanguage(self):
+    """Tests the _WriteStringTableLanguage function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        message_file_key = database_writer._GetMessageFileKey(
+            message_resource_file)
+
+        database_writer._WriteStringTableLanguage(
+            message_file_key, 0x00000409)
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteStringTables(self):
+    """Tests the _WriteStringTables function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer._WriteMessageFile(message_resource_file)
+
+        database_writer._WriteStringTables()
+
+        database_writer.Close()
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testWriteResources(self):
+    """Tests the WriteResources function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      database_writer = database.MessageFileSqlite3DatabaseWriter(
+          message_resource_file)
+
+      with shared_test_lib.TempDirectory() as temporary_directory:
+        test_file_path = os.path.join(temporary_directory, u'message_file.db')
+        database_writer.Open(test_file_path)
+
+        database_writer.WriteResources()
+
+        database_writer.Close()
+
+      message_resource_file.Close()
 
 
 class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the resources SQLite database reader."""
 
-  # TODO: add tests.
+  # pylint: disable=protected-access
+
+  # TODO: add test for _GetEventLogProviderKey
+  # TODO: add test for _GetMessage
+  # TODO: add test for _GetMessageFileKeys
+  # TODO: add test for _GetMessageFilenames
+  # TODO: add test for _GetMessages
+  # TODO: add test for GetEventLogProviders
+  # TODO: add test for GetMessage
+  # TODO: add test for GetMessages
+  # TODO: add test for GetMetadataAttribute
 
 
-class ResourcesSqlite3DatabaseWriter(shared_test_lib.BaseTestCase):
+class ResourcesSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the resources SQLite database writer."""
 
-  # TODO: add tests.
+  # pylint: disable=protected-access
+
+  # TODO: add test for _GetEventLogProviderKey
+  # TODO: add test for _GetMessageFileKey
+  # TODO: add test for _GetMessageFileKeyByPath
+  # TODO: add test for _ReformatMessageString
+  # TODO: add test for _WriteMessage
+  # TODO: add test for _WriteMessageFile
+  # TODO: add test for _WriteMessageTable
+  # TODO: add test for _WriteMessageTableLanguage
+  # TODO: add test for WriteEventLogProvider
+  # TODO: add test for WriteMessageFile
+  # TODO: add test for WriteMessageFilesPerEventLogProvider
+  # TODO: add test for WriteMetadataAttribute
 
 
 if __name__ == '__main__':

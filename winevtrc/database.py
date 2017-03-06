@@ -521,8 +521,8 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message tables.
 
     Yields:
-      A tuple of a language code identifier (LCID) and the message file
-      file version.
+      tuple[int, str]: language code identifier (LCID) and the message file
+          version.
     """
     table_names = [u'message_files', u'message_table_languages']
     column_names = [u'file_version', u'lcid', u'identifier']
@@ -538,11 +538,11 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the messages of a specific message table.
 
     Args:
-      lcid: the language code identifier (LCID).
-      file_version: the message file file version.
+      lcid (str): language code identifier (LCID).
+      file_version (str): message file file version.
 
     Yields:
-      A tuple of a message identifier and string.
+      tuple[int, str]: message identifier and message string.
     """
     table_name = u'message_table_{0:s}'.format(lcid)
     if file_version:
@@ -560,8 +560,8 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the string tables.
 
     Yields:
-      A tuple of a language code identifier (LCID) and the message file
-      file version.
+      tuple[int, str]: language code identifier (LCID) and the message file
+          version.
     """
     table_names = [u'message_files', u'string_table_languages']
     column_names = [u'file_version', u'lcid', u'identifier']
@@ -577,11 +577,11 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the strings of a specific string table.
 
     Args:
-      lcid: the language code identifier (LCID).
-      file_version: the message file file version.
+      lcid (str): language code identifier (LCID).
+      file_version (str): message file file version.
 
     Yields:
-      A tuple of a string identifier and string.
+      tuple[int, str]: string identifier and string.
     """
     table_name = u'string_table_{0:s}_{1:s}'.format(
         lcid, re.sub(r'\.', '_', file_version))
@@ -600,7 +600,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Initializes the message file database writer.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
+      message_resource_file (MessageResourceFile): message resource file.
     """
     super(MessageFileSqlite3DatabaseWriter, self).__init__()
     self._message_resource_file = message_resource_file
@@ -609,10 +609,10 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Retrieves the key of a message file.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
+      message_resource_file (MessageResourceFile): message resource file.
 
     Returns:
-      An integer containing the message file key or None if no such value.
+      int: message file key or None if no such value.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -649,13 +649,12 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message to a specific message table.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
-      message_table: the message table (instance of pywrc.message_table).
-      language_identifier: the language identifier (LCID).
-      message_index: the message index.
-      table_name: the name of the table.
-      has_table: boolean value to indicate the table previously existed in
-                 the database.
+      message_resource_file (MessageResourceFile): message resource file.
+      message_table (pywrc.message_table): message table resource.
+      language_identifier (int): language identifier (LCID).
+      message_index (int): message index.
+      table_name (str): name of the table.
+      has_table (bool): True if the table previously existed in the database.
     """
     column_names = [u'message_identifier', u'message_string']
 
@@ -706,7 +705,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message file.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
+      message_resource_file (MessageResourceFile): message resource file.
     """
     table_name = u'message_files'
     column_names = [u'path', u'file_version', u'product_version']
@@ -754,9 +753,9 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message table for a specific language identifier.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
-      message_table: the message table (instance of pywrc.message_table).
-      language_identifier: the language identifier (LCID).
+      message_resource_file (MessageResourceFile): message resource file.
+      message_table (pywrc.message_table): message table resource.
+      language_identifier (int): language identifier (LCID).
     """
     number_of_messages = message_table.get_number_of_messages(
         language_identifier)
@@ -790,8 +789,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message table language.
 
     Args:
-      message_file_key: the message file key.
-      language_identifier: the language identifier (LCID).
+      message_file_key (int): message file key.
+      language_identifier (int): language identifier (LCID).
     """
     table_name = u'message_table_languages'
     column_names = [u'lcid', u'message_file_key', u'identifier']
@@ -845,13 +844,12 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a string to a specific string table.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
-      string_table: the string table (instance of pywrc.strings).
-      language_identifier: the language identifier (LCID).
-      string_index: the string index.
-      table_name: the name of the table.
-      has_table: boolean value to indicate the table previously existed in
-                 the database.
+      message_resource_file (MessageResourceFile): message resource file.
+      string_table (pywrc.strings): string table.
+      language_identifier (int): language identifier (LCID).
+      string_index (int): string index.
+      table_name (str): name of the table.
+      has_table (bool): True if the table previously existed in the database.
     """
     column_names = [u'string_identifier', u'string']
 
@@ -899,9 +897,9 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a string table for a specific language identifier.
 
     Args:
-      message_resource_file: the message file (instance of MessageResourceFile).
-      string_table: the string table (instance of pywrc.strings).
-      language_identifier: the language identifier (LCID).
+      message_resource_file (MessageResourceFile): message resource file.
+      string_table (pywrc.strings): string table.
+      language_identifier (int): language identifier (LCID).
     """
     number_of_strings = string_table.get_number_of_strings(
         language_identifier)
@@ -934,8 +932,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a string table language.
 
     Args:
-      message_file_key: the message file key.
-      language_identifier: the language identifier (LCID).
+      message_file_key (int): message file key.
+      language_identifier (int): language identifier (LCID).
     """
     table_name = u'string_table_languages'
     column_names = [u'lcid', u'message_file_key', u'identifier']
