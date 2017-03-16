@@ -26,6 +26,10 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 
     database_file.Close()
 
+    # Test close after close.
+    with self.assertRaises(RuntimeError):
+      database_file.Close()
+
   def testCreateTable(self):
     """Tests the CreateTable function."""
     database_file = database.Sqlite3DatabaseFile()
@@ -42,6 +46,21 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 
     with self.assertRaises(RuntimeError):
       database_file.CreateTable(table_name, column_names)
+
+  def testCreateTableReadOnly(self):
+    """Tests the CreateTable function read-only mode."""
+    database_file = database.Sqlite3DatabaseFile()
+    table_name = u'event_log_providers'
+    column_names = [u'log_source', u'log_type', u'provider_guid']
+
+    with shared_test_lib.TempDirectory() as temporary_directory:
+      test_file_path = os.path.join(temporary_directory, u'winevt-rc.db')
+      database_file.Open(test_file_path, read_only=True)
+
+      with self.assertRaises(RuntimeError):
+        database_file.CreateTable(table_name, column_names)
+
+      database_file.Close()
 
   @shared_test_lib.skipUnlessHasTestFile([u'winevt-rc.db'])
   def testGetValues(self):
