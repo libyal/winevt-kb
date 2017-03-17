@@ -29,11 +29,10 @@ class EventMessageStringRegistryFileReader(
   """Class that defines a Windows Registry file reader."""
 
   def __init__(self, volume_scanner):
-    """Initializes the Windows Registry file reader object.
+    """Initializes a Windows Registry file reader object.
 
     Args:
-      volume_scanner: the Windows volume scanner (instance of
-                      WindowsVolumeScanner).
+      volume_scanner (WindowsVolumeScanner): Windows volume scanner.
     """
     super(EventMessageStringRegistryFileReader, self).__init__()
     self._volume_scanner = volume_scanner
@@ -42,14 +41,14 @@ class EventMessageStringRegistryFileReader(
     """Opens the Windows Registry file specificed by the path.
 
     Args:
-      path: string containing the path of the Windows Registry file. The path
-            is a Windows path relative to the root of the file system that
-            contains the specfic Windows Registry file. E.g.
-            C:\\Windows\\System32\\config\\SYSTEM
-      ascii_codepage: optional ASCII string codepage.
+      path (str): path of the Windows Registry file. The path is a Windows path
+          relative to the root of the file system that contains the specfic
+          Windows Registry file. E.g.  C:\\Windows\\System32\\config\\SYSTEM
+      ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:
-      The Windows Registry file (instance of WinRegistryFile) or None.
+      WinRegistryFile: Windows Registry file or None if the file cannot
+          be opened.
     """
     file_object = self._volume_scanner.OpenFile(path)
     if file_object is None:

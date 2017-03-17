@@ -19,10 +19,10 @@ class Sqlite3OutputWriter(object):
   EVENT_PROVIDERS_DATABASE_FILENAME = u'winevt-kb.db'
 
   def __init__(self, databases_path):
-    """Initializes the output writer object.
+    """Initializes an output writer object.
 
     Args:
-      databases_path: the path to the database files.
+      databases_path (str): path to the database files.
     """
     super(Sqlite3OutputWriter, self).__init__()
     self._databases_path = databases_path
@@ -37,7 +37,7 @@ class Sqlite3OutputWriter(object):
     """Opens the output writer object.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     if not os.path.isdir(self._databases_path):
       return False
@@ -52,7 +52,7 @@ class Sqlite3OutputWriter(object):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): Event Log provider.
     """
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
@@ -62,10 +62,10 @@ class Sqlite3OutputWriter(object):
     """Writes the Windows Message Resource file.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_resource_file: the message file (instance of MessageResourceFile).
-      message_filename: string containing the message filename.
-      message_file_type: string containing the message file type.
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_resource_file (MessageResourceFile): message resource file.
+      message_filename (str): message filename.
+      message_file_type (str): message file type.
     """
     database_filename = message_resource_file.windows_path
     _, _, database_filename = database_filename.rpartition(u'\\')
@@ -94,7 +94,7 @@ class StdoutOutputWriter(object):
     """Writes the Windows Message Resource file message table.
 
     Args:
-      message_table: the message table (instance of pywrc.message_table).
+      message_table (pywrc.message_table): message table resource.
     """
     try:
       number_of_languages = message_table.get_number_of_languages()
@@ -133,7 +133,7 @@ class StdoutOutputWriter(object):
     """Opens the output writer object.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     return True
 
@@ -141,7 +141,7 @@ class StdoutOutputWriter(object):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): Event Log provider.
     """
     print(u'Source\t\t: {0:s}'.format(
         event_log_provider.log_source))
@@ -166,10 +166,10 @@ class StdoutOutputWriter(object):
     """Writes the Windows Message Resource file.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageResourceFile).
-      message_filename: string containing the message filename.
-      message_file_type: string containing the message file type.
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_resource_file (MessageResourceFile): message resource file.
+      message_filename (str): message filename.
+      message_file_type (str): message file type.
     """
     file_version = getattr(message_file, u'file_version', u'')
     product_version = getattr(message_file, u'product_version', u'')
@@ -187,7 +187,7 @@ def Main():
   """The main program function.
 
   Returns:
-    A boolean containing True if successful or False if not.
+    bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
       u'Extract strings from message resource files for Event Log sources.'))

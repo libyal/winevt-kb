@@ -397,9 +397,9 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes the message files used by an Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_filename: string containing the message filename.
-      message_file_type: string containing the message file type.
+      event_log_provider (EventLogProvider): event log provider.
+      message_filename (str): message filename.
+      message_file_type (str): message file type.
     """
     table_name = u'message_file_per_event_log_provider'
     column_names = [
@@ -446,7 +446,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): event log provider.
     """
     table_name = u'event_log_providers'
     column_names = [u'log_source', u'log_type', u'provider_guid']
@@ -482,8 +482,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes the Windows Message Resource file.
 
     Args:
-      message_filename: the message filename.
-      database_filename: the database filename.
+      message_filename (str): message filename.
+      database_filename (str): database filename.
     """
     table_name = u'message_files'
     column_names = [u'message_filename', u'database_filename']
@@ -999,10 +999,10 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the Event Log provider key.
 
     Args:
-      log_source: the Event Log source.
+      log_source (str): Event Log source.
 
     Returns:
-      An Event Log provider key or None if not available.
+      int: An Event Log provider key or None if not available.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -1028,9 +1028,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves a specific message from a specific message table.
 
     Args:
-      message_file_key: the message file key.
-      lcid: integer containing the language code identifier (LCID).
-      message_identifier: the message identifier.
+      message_file_key (int): message file key.
+      lcid (int): language code identifier (LCID).
+      message_identifier (int): message identifier.
 
     Returns:
       The message string or None if not available.
@@ -1084,11 +1084,11 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message filenames of a specific Event Log provider.
 
     Args:
-      log_source: the log source of the Event Log provider.
-      message_file_type: string containing the message file type.
+      log_source (str): Event Log source.
+      message_file_type (str): message file type.
 
     Returns:
-      A list of message filenames.
+      list[str]: message filenames.
     """
     table_names = [
         u'event_log_providers', u'message_file_per_event_log_provider',
@@ -1114,8 +1114,8 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the messages of a specific message table.
 
     Args:
-      message_file_key: the message file key.
-      lcid: integer containing the language code identifier (LCID).
+      message_file_key (int): message file key.
+      lcid (int): language code identifier (LCID).
 
     Yields:
       A tuple of a message identifier and string.
@@ -1171,9 +1171,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves a specific message for a specific Event Log source.
 
     Args:
-      log_source: the Event Log source.
-      lcid: the language code identifier (LCID).
-      message_identifier: the message identifier.
+      log_source (str): Event Log source.
+      lcid (int): language code identifier (LCID).
+      message_identifier (int): message identifier.
 
     Returns:
       The message string or None if not available.
@@ -1200,8 +1200,8 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the messages of a specific Event Log source.
 
     Args:
-      log_source: the Event Log source.
-      lcid: the language code identifier (LCID).
+      log_source (str): Event Log source.
+      lcid (int): language code identifier (LCID).
 
     Yields:
       A tuple of a message identifier and string.
@@ -1223,10 +1223,10 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the metadata attribute.
 
     Args:
-      attribute_name: the name of the metadata attribute.
+      attribute_name (str): name of the metadata attribute.
 
     Returns:
-      The value of the metadata attribute or None.
+      str: value of the metadata attribute or None.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -1279,7 +1279,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Retrieves the key of an Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): event log provider.
 
     Returns:
       An integer containing the Event Log provider key or None if no such value.
@@ -1308,7 +1308,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Retrieves the key of a message file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
+      message_file (MessageFile): message file.
 
     Returns:
       An integer containing the message file key or None if no such value.
@@ -1337,7 +1337,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Retrieves the key of a message file for a specific path.
 
     Args:
-      message_filename: the message filename.
+      message_filename (str): message filename.
 
     Returns:
       An integer containing the message file key or None if no such value.
@@ -1365,7 +1365,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Reformats the message string.
 
     Args:
-      message_string: the message string.
+      message_string (str): message string.
 
     Returns:
       The message string in Python format() (PEP 3103) style.
@@ -1399,13 +1399,12 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message to a specific message table.
 
     Args:
-      message_file: the message file (instance of MessageFile).
-      language_identifier: the language identifier (LCID).
-      message_identifier: the message identifier.
-      message_string: the message string.
-      table_name: the name of the table.
-      has_table: boolean value to indicate the table previously existed in
-                 the database.
+      message_file (MessageFile): message file.
+      language_identifier (int): language identifier (LCID).
+      message_identifier (int): message identifier.
+      message_string (str): message string.
+      table_name (str): name of the table.
+      has_table (bool): True if the table previously existed in the database.
     """
     column_names = [u'message_identifier', u'message_string']
 
@@ -1450,7 +1449,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
+      message_file (MessageFile): message file.
     """
     table_name = u'message_files'
     column_names = [u'path']
@@ -1484,8 +1483,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message table for a specific language identifier.
 
     Args:
-      message_file: the message file (instance of MessageFile).
-      message_table: the message table (instance of MessageTable).
+      message_file (MessageFile): message file.
+      message_table (MessageTable): message table.
     """
     if message_table.message_strings:
       message_file_key = self._GetMessageFileKey(message_file)
@@ -1514,8 +1513,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a message table language.
 
     Args:
-      message_file_key: the message file key.
-      language_identifier: the language identifier (LCID).
+      message_file_key (int): message file key.
+      language_identifier (int): language identifier (LCID).
     """
     table_name = u'message_table_languages'
     column_names = [u'lcid', u'message_file_key']
@@ -1548,7 +1547,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): event log provider.
     """
     table_name = u'event_log_providers'
     column_names = [u'log_source', u'provider_guid']
@@ -1582,7 +1581,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes the Windows Message Resource file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
+      message_file (MessageFile): message file.
     """
     self._WriteMessageFile(message_file)
 
@@ -1595,8 +1594,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes the message files used by an Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_filename: the message filename.
+      event_log_provider (EventLogProvider): event log provider.
+      message_filename (str): message filename.
     """
     table_name = u'message_file_per_event_log_provider'
     column_names = [
@@ -1643,8 +1642,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Writes a metadata attribute.
 
     Args:
-      attribute_name: the name of the metadata attribute.
-      attribute_value: the value of the metadata attribute.
+      attribute_name (str): name of the metadata attribute.
+      attribute_value (str): value of the metadata attribute.
     """
     table_name = u'metadata'
     column_names = [u'name', u'value']

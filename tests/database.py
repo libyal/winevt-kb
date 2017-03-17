@@ -9,6 +9,7 @@ import sqlite3
 
 from winevtrc import database
 from winevtrc import resource_file
+from winevtrc import resources
 
 from tests import test_lib as shared_test_lib
 
@@ -163,8 +164,36 @@ class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   # pylint: disable=protected-access
 
   # TODO: add test for _GetMessageFilenames
-  # TODO: add test for GetEventLogProviders
-  # TODO: add test for GetMessageFiles
+
+  @shared_test_lib.skipUnlessHasTestFile([u'winevt-kb.db'])
+  def testGetEventLogProviders(self):
+    """Tests the GetEventLogProviders function."""
+    database_reader = database.EventProvidersSqlite3DatabaseReader()
+
+    test_file_path = self._GetTestFilePath([u'winevt-kb.db'])
+    database_reader.Open(test_file_path)
+
+    generator = database_reader.GetEventLogProviders()
+    event_log_providers = list(generator)
+
+    self.assertEqual(len(event_log_providers), 388)
+
+    database_reader.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'winevt-kb.db'])
+  def testGetMessageFiles(self):
+    """Tests the GetMessageFiles function."""
+    database_reader = database.EventProvidersSqlite3DatabaseReader()
+
+    test_file_path = self._GetTestFilePath([u'winevt-kb.db'])
+    database_reader.Open(test_file_path)
+
+    generator = database_reader.GetMessageFiles()
+    message_files = list(generator)
+
+    self.assertEqual(len(message_files), 187)
+
+    database_reader.Close()
 
 
 class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
@@ -174,9 +203,59 @@ class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
   # TODO: add test for _GetEventLogProviderKey
   # TODO: add test for _GetMessageFileKey
-  # TODO: add test for WriteMessageFilesPerEventLogProvider
-  # TODO: add test for WriteEventLogProvider
-  # TODO: add test for WriteMessageFile
+
+  def testWriteMessageFilesPerEventLogProvider(self):
+    """Tests the WriteMessageFilesPerEventLogProvider function."""
+    event_log_provider = resources.EventLogProvider(
+        u'Application',
+        u'Microsoft-Windows-RPC-Events',
+        u'{f4aed7c7-a898-4627-b053-44a7caa12fcd}')
+
+    database_writer = database.EventProvidersSqlite3DatabaseWriter()
+
+    with shared_test_lib.TempDirectory() as temporary_directory:
+      test_file_path = os.path.join(temporary_directory, u'winevt-kb.db')
+      database_writer.Open(test_file_path)
+
+      database_writer.WriteEventLogProvider(event_log_provider)
+
+      database_writer.WriteMessageFile(
+          u'%SystemRoot%\\system32\\rpcrt4.dll', u'rpcrt4.dll.db')
+
+      database_writer.WriteMessageFilesPerEventLogProvider(
+          event_log_provider, u'%SystemRoot%\\system32\\rpcrt4.dll', u'event')
+
+      database_writer.Close()
+
+  def testWriteEventLogProvider(self):
+    """Tests the WriteEventLogProvider function."""
+    event_log_provider = resources.EventLogProvider(
+        u'Application',
+        u'Microsoft-Windows-RPC-Events',
+        u'{f4aed7c7-a898-4627-b053-44a7caa12fcd}')
+
+    database_writer = database.EventProvidersSqlite3DatabaseWriter()
+
+    with shared_test_lib.TempDirectory() as temporary_directory:
+      test_file_path = os.path.join(temporary_directory, u'winevt-kb.db')
+      database_writer.Open(test_file_path)
+
+      database_writer.WriteEventLogProvider(event_log_provider)
+
+      database_writer.Close()
+
+  def testWriteMessageFile(self):
+    """Tests the WriteMessageFile function."""
+    database_writer = database.EventProvidersSqlite3DatabaseWriter()
+
+    with shared_test_lib.TempDirectory() as temporary_directory:
+      test_file_path = os.path.join(temporary_directory, u'winevt-kb.db')
+      database_writer.Open(test_file_path)
+
+      database_writer.WriteMessageFile(
+          u'%SystemRoot%\\system32\\rpcrt4.dll', u'rpcrt4.dll.db')
+
+      database_writer.Close()
 
 
 class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
