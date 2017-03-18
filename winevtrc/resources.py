@@ -6,24 +6,22 @@ class EventLogProvider(object):
   """Class that defines a Windows Event Log provider.
 
   Attributes:
-    category_message_files: a list of strings containing the filenames
-                            of the category message files.
-    event_message_files: a list of strings containing the filenames
-                         of the event message files.
-    log_type: a string containing the Event Log type.
-    log_source: a string containing the Event Log source.
-    parameter_message_files: a list of strings containing the filenames
-                             of the parameter message files.
-    provider_guid: a string containing the Event Log provider GUID.
+    category_message_files (list[str]): filenames of the category message files.
+    event_message_files (list[str]): filenames of the event message files.
+    log_type (str): Event Log type.
+    log_source (str): Event Log source.
+    parameter_message_files (list[str]): filenames of the parameter message
+        files.
+    provider_guid (str): Log provider GUID.
   """
 
   def __init__(self, log_type, log_source, provider_guid):
     """Initializes the Windows Event Log provider.
 
     Args:
-      log_type: a string containing the Event Log type.
-      log_source: a string containing the Event Log source.
-      provider_guid: a string containing the Event Log provider GUID.
+      log_type (str): Event Log type.
+      log_source (str): Event Log source.
+      provider_guid (str): Event Log provider GUID.
     """
     super(EventLogProvider, self).__init__()
     self.category_message_files = None
@@ -37,8 +35,8 @@ class EventLogProvider(object):
     """Sets the category message filenames.
 
     Args:
-      category_message_filenames: a string containing ; separated filenames,
-                                  or a list of filenames.
+      category_message_filenames (str|list[str]): category message filenames,
+          where multiple filenames in the same string are separated by ';'.
     """
     if isinstance(category_message_filenames, basestring):
       self.category_message_files = category_message_filenames.split(u';')
@@ -49,8 +47,8 @@ class EventLogProvider(object):
     """Sets the event message filenames.
 
     Args:
-      event_message_filenames: a string containing ; separated filenames,
-                               or a list of filenames.
+      event_message_filenames (str|list[str]): event message filenames,
+          where multiple filenames in the same string are separated by ';'.
     """
     if isinstance(event_message_filenames, basestring):
       self.event_message_files = event_message_filenames.split(u';')
@@ -61,8 +59,8 @@ class EventLogProvider(object):
     """Sets the parameter message filenames.
 
     Args:
-      parameter_message_filenames: a string containing ; separated filenames,
-                                   or a list of filenames.
+      parameter_message_filenames (str|list[str]): parameter message filenames,
+          where multiple filenames in the same string are separated by ';'.
     """
     if isinstance(parameter_message_filenames, basestring):
       self.parameter_message_files = parameter_message_filenames.split(u';')
@@ -74,15 +72,15 @@ class MessageFile(object):
   """Class that defines a Windows Event Log message file.
 
   Attributes:
-    name: a string containing the name.
-    windows_path: a string containing the Windows path.
+    name (str): name.
+    windows_path (str): Windows path.
   """
 
   def __init__(self, name):
-    """Initializes the message file object.
+    """Initializes the message file.
 
     Args:
-      name: a string containing the name.
+      name (str): name.
     """
     super(MessageFile, self).__init__()
     self._message_tables_per_language = {}
@@ -94,9 +92,9 @@ class MessageFile(object):
     """Appends a message table.
 
     Args:
-      lcid: an integer containing the language identifier.
-      file_version: a string containing the Windows Event Log resource
-                    file version.
+      lcid (int): language identifier (LCID).
+      file_version (str): Windows Event Log resource file version of the file
+          that contains the message table.
     """
     if lcid not in self._message_tables_per_language:
       self._message_tables_per_language[lcid] = MessageTable(lcid)
@@ -107,8 +105,9 @@ class MessageFile(object):
     """Appends a string table.
 
     Args:
-      lcid: an integer containing the language identifier.
-      file_version: the string file version.
+      lcid (int): language identifier (LCID).
+      file_version (str): Windows Event Log resource file version of the file
+          that contains the string table.
     """
     if lcid not in self._string_tables_per_language:
       self._string_tables_per_language[lcid] = StringTable(lcid)
@@ -119,10 +118,10 @@ class MessageFile(object):
     """Retrieves the message table for a specific language.
 
     Args:
-      lcid: an integer containing the language identifier.
+      lcid (int): language identifier (LCID).
 
     Returns:
-      The message table (instance of MessageTable).
+      MessageTable: message table or None.
     """
     return self._message_tables_per_language.get(lcid, None)
 
@@ -130,10 +129,10 @@ class MessageFile(object):
     """Retrieves the string table for a specific language.
 
     Args:
-      lcid: an integer containing the language identifier.
+      lcid (int): language identifier (LCID).
 
     Returns:
-      The string table (instance of StringTable).
+      StringTable: string table or None.
     """
     return self._string_tables_per_language.get(lcid, None)
 
@@ -141,7 +140,7 @@ class MessageFile(object):
     """Retrieves the message tables.
 
     Yields:
-      A message table (instance of MessageTable).
+      MessageTable: message table.
     """
     for message_table in iter(self._message_tables_per_language.values()):
       yield message_table
@@ -150,7 +149,7 @@ class MessageFile(object):
     """Retrieves the string tables.
 
     Yields:
-      A string table (instance of StringTable).
+      StringTable: string table.
     """
     for string_table in iter(self._string_tables_per_language.values()):
       yield string_table
@@ -160,17 +159,16 @@ class MessageTable(object):
   """Class that contains the messages per language.
 
   Attributes:
-    file_versions: a list of strings containing the Windows Event Log
-                   resource file versions.
-    lcid: an integer containing the language identifier.
-    message_strings: a list of Windows Event Log resource message strings.
+    file_versions (list[str]): Windows Event Log resource file versions.
+    lcid (int): language identifier (LCID).
+    message_strings (list[str]): Windows Event Log resource message strings.
   """
 
   def __init__(self, lcid):
-    """Initializes the message table object.
+    """Initializes the message table.
 
     Args:
-      lcid: the language identifier.
+      lcid (int): language identifier (LCID).
     """
     super(MessageTable, self).__init__()
     self.file_versions = []
@@ -182,17 +180,16 @@ class StringTable(object):
   """Class that contains the strings per language.
 
   Attributes:
-    file_versions: a list of strings containing the Windows Event Log
-                   resource file versions.
-    lcid: an integer containing the language identifier.
-    strings: a list of Windows Event Log resource strings.
+    file_versions (list[str]): Windows Event Log resource file versions.
+    lcid (int): language identifier (LCID).
+    strings (list[str]): Windows Event Log resource strings.
   """
 
   def __init__(self, lcid):
-    """Initializes the string table object.
+    """Initializes the string table.
 
     Args:
-      lcid: an integer containing the language identifier.
+      lcid (int): language identifier (LCID).
     """
     super(StringTable, self).__init__()
     self.file_versions = []

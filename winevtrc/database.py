@@ -11,6 +11,7 @@ except ImportError:
   import sqlite3
 
 from winevtrc import definitions
+from winevtrc import py2to3
 from winevtrc import resources
 
 
@@ -163,10 +164,10 @@ class SQLite3DatabaseFile(object):
 
     sql_values = []
     for value in values:
-      if isinstance(value, basestring):
+      if isinstance(value, py2to3.STRING_TYPES):
         # In sqlite3 the double quote is escaped with a second double quote.
         value = u'"{0:s}"'.format(re.sub('"', '""', value))
-      elif isinstance(value, (int, long)):
+      elif isinstance(value, py2to3.INTEGER_TYPES):
         value = u'{0:d}'.format(value)
       elif isinstance(value, float):
         value = u'{0:f}'.format(value)

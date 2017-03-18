@@ -25,6 +25,9 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath([u'winevt-rc.db'])
     database_file.Open(test_file_path, read_only=True)
 
+    with self.assertRaises(IOError):
+      database_file.Open(test_file_path, read_only=True)
+
     database_file.Close()
 
     # Test close after close.
@@ -111,6 +114,9 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     database_file = database.SQLite3DatabaseFile()
     table_name = u'event_log_providers'
     column_names = [u'log_source', u'log_type', u'provider_guid']
+    values = [
+        u'LocationNotifications', u'Application',
+        u'{5b93cdfa-5f51-45e0-9fde-296983129e6c}']
 
     with shared_test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, u'winevt-rc.db')
@@ -118,13 +124,32 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 
       database_file.CreateTable(table_name, column_names)
 
-      # TODO: add call to InsertValues
+      database_file.InsertValues(table_name, column_names, values)
+
+      database_file.InsertValues(table_name, column_names, [])
 
       database_file.Close()
 
-    # TODO: add call to InsertValues
-    # with self.assertRaises(IOError):
-    #   database_file.InsertValues()
+    with self.assertRaises(IOError):
+      database_file.InsertValues(table_name, column_names, values)
+
+  def testInsertValuesReadOnly(self):
+    """Tests the CreInsertValues function read-only mode."""
+    database_file = database.SQLite3DatabaseFile()
+    table_name = u'event_log_providers'
+    column_names = [u'log_source', u'log_type', u'provider_guid']
+    values = [
+        u'LocationNotifications', u'Application',
+        u'{5b93cdfa-5f51-45e0-9fde-296983129e6c}']
+
+    with shared_test_lib.TempDirectory() as temporary_directory:
+      test_file_path = os.path.join(temporary_directory, u'winevt-rc.db')
+      database_file.Open(test_file_path, read_only=True)
+
+      with self.assertRaises(IOError):
+        database_file.InsertValues(table_name, column_names, values)
+
+      database_file.Close()
 
 
 class Sqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
