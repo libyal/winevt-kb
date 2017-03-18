@@ -14,13 +14,13 @@ from winevtrc import resources
 from tests import test_lib as shared_test_lib
 
 
-class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
+class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
   """Tests for the SQLite database file."""
 
   @shared_test_lib.skipUnlessHasTestFile([u'winevt-rc.db'])
   def testOpenClose(self):
     """Tests the Open and Close functions."""
-    database_file = database.Sqlite3DatabaseFile()
+    database_file = database.SQLite3DatabaseFile()
 
     test_file_path = self._GetTestFilePath([u'winevt-rc.db'])
     database_file.Open(test_file_path, read_only=True)
@@ -28,12 +28,12 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     database_file.Close()
 
     # Test close after close.
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(IOError):
       database_file.Close()
 
   def testCreateTable(self):
     """Tests the CreateTable function."""
-    database_file = database.Sqlite3DatabaseFile()
+    database_file = database.SQLite3DatabaseFile()
     table_name = u'event_log_providers'
     column_names = [u'log_source', u'log_type', u'provider_guid']
 
@@ -45,12 +45,12 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 
       database_file.Close()
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(IOError):
       database_file.CreateTable(table_name, column_names)
 
   def testCreateTableReadOnly(self):
     """Tests the CreateTable function read-only mode."""
-    database_file = database.Sqlite3DatabaseFile()
+    database_file = database.SQLite3DatabaseFile()
     table_name = u'event_log_providers'
     column_names = [u'log_source', u'log_type', u'provider_guid']
 
@@ -58,7 +58,7 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
       test_file_path = os.path.join(temporary_directory, u'winevt-rc.db')
       database_file.Open(test_file_path, read_only=True)
 
-      with self.assertRaises(RuntimeError):
+      with self.assertRaises(IOError):
         database_file.CreateTable(table_name, column_names)
 
       database_file.Close()
@@ -66,7 +66,7 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'winevt-rc.db'])
   def testGetValues(self):
     """Tests the GetValues function."""
-    database_file = database.Sqlite3DatabaseFile()
+    database_file = database.SQLite3DatabaseFile()
 
     test_file_path = self._GetTestFilePath([u'winevt-rc.db'])
     database_file.Open(test_file_path, read_only=True)
@@ -80,19 +80,17 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
         [u'bogus'], [u'name', u'value'], u'')
 
     with self.assertRaises(sqlite3.OperationalError):
-      values_dict = next(generator)
+      next(generator)
 
     database_file.Close()
 
-    # TODO: change to IOError.
-    # TODO: determine why this not raises.
-    # with self.assertRaises(RuntimeError):
-    #   database_file.GetValues([u'metadata'], [u'name', u'value'], u'')
+    with self.assertRaises(IOError):
+      database_file.GetValues([u'metadata'], [u'name', u'value'], u'')
 
   @shared_test_lib.skipUnlessHasTestFile([u'winevt-rc.db'])
   def testHasTable(self):
     """Tests the HasTable function."""
-    database_file = database.Sqlite3DatabaseFile()
+    database_file = database.SQLite3DatabaseFile()
 
     test_file_path = self._GetTestFilePath([u'winevt-rc.db'])
     database_file.Open(test_file_path, read_only=True)
@@ -105,13 +103,12 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 
     database_file.Close()
 
-    # TODO: change to IOError.
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(IOError):
       database_file.HasTable(u'metadata')
 
   def testInsertValues(self):
     """Tests the InsertValues function."""
-    database_file = database.Sqlite3DatabaseFile()
+    database_file = database.SQLite3DatabaseFile()
     table_name = u'event_log_providers'
     column_names = [u'log_source', u'log_type', u'provider_guid']
 
@@ -126,7 +123,7 @@ class Sqlite3DatabaseFileTest(shared_test_lib.BaseTestCase):
       database_file.Close()
 
     # TODO: add call to InsertValues
-    # with self.assertRaises(RuntimeError):
+    # with self.assertRaises(IOError):
     #   database_file.InsertValues()
 
 

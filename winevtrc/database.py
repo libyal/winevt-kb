@@ -14,7 +14,7 @@ from winevtrc import definitions
 from winevtrc import resources
 
 
-class Sqlite3DatabaseFile(object):
+class SQLite3DatabaseFile(object):
   """Class that defines a sqlite3 database file."""
 
   _HAS_TABLE_QUERY = (
@@ -23,7 +23,7 @@ class Sqlite3DatabaseFile(object):
 
   def __init__(self):
     """Initializes the database file."""
-    super(Sqlite3DatabaseFile, self).__init__()
+    super(SQLite3DatabaseFile, self).__init__()
     self._connection = None
     self._cursor = None
     self.filename = None
@@ -33,10 +33,10 @@ class Sqlite3DatabaseFile(object):
     """Closes the database file.
 
     Raises:
-      RuntimeError: if the database is not opened.
+      IOError: if the database is not opened.
     """
     if not self._connection:
-      raise RuntimeError(u'Cannot close database not opened.')
+      raise IOError(u'Cannot close database not opened.')
 
     # We need to run commit or not all data is stored in the database.
     self._connection.commit()
@@ -55,14 +55,14 @@ class Sqlite3DatabaseFile(object):
       column_definitions (list[str]): column definitions.
 
     Raises:
-      RuntimeError: if the database is not opened or
+      IOError: if the database is not opened or
           if the database is in read-only mode.
     """
     if not self._connection:
-      raise RuntimeError(u'Cannot create table database not opened.')
+      raise IOError(u'Cannot create table database not opened.')
 
     if self.read_only:
-      raise RuntimeError(u'Cannot create table database in read-only mode.')
+      raise IOError(u'Cannot create table database in read-only mode.')
 
     sql_query = u'CREATE TABLE {0:s} ( {1:s} )'.format(
         table_name, u', '.join(column_definitions))
@@ -77,29 +77,43 @@ class Sqlite3DatabaseFile(object):
       column_names (list[str]): column names.
       condition (str): condition.
 
-    Yields:
-      dict[str, str]: values.
+    Returns:
+      generator: values generator.
 
     Raises:
-      RuntimeError: if the database is not opened.
+      IOError: if the database is not opened.
     """
+    def _GetValues(cursor, table_names, column_names, condition):
+      """Values generator function.
+
+      Args:
+        cursor (sqlite3.Cursor): SQLite database cursor.
+        table_names (list[str]): table names.
+        column_names (list[str]): column names.
+        condition (str): condition.
+
+      Yields:
+        dict[str, object]: value.
+      """
+      if condition:
+        condition = u' WHERE {0:s}'.format(condition)
+
+      sql_query = u'SELECT {1:s} FROM {0:s}{2:s}'.format(
+          u', '.join(table_names), u', '.join(column_names), condition)
+
+      cursor.execute(sql_query)
+
+      for row in cursor:
+        values = {}
+        for column_index in range(0, len(column_names)):
+          column_name = column_names[column_index]
+          values[column_name] = row[column_index]
+        yield values
+
     if not self._connection:
-      raise RuntimeError(u'Cannot retrieve values database not opened.')
+      raise IOError(u'Cannot retrieve values database not opened.')
 
-    if condition:
-      condition = u' WHERE {0:s}'.format(condition)
-
-    sql_query = u'SELECT {1:s} FROM {0:s}{2:s}'.format(
-        u', '.join(table_names), u', '.join(column_names), condition)
-
-    self._cursor.execute(sql_query)
-
-    for row in self._cursor:
-      values = {}
-      for column_index in range(0, len(column_names)):
-        column_name = column_names[column_index]
-        values[column_name] = row[column_index]
-      yield values
+    return _GetValues(self._cursor, table_names, column_names, condition)
 
   def HasTable(self, table_name):
     """Determines if a specific table exists.
@@ -111,11 +125,10 @@ class Sqlite3DatabaseFile(object):
       bool: True if the table exists, false otheriwse.
 
     Raises:
-      RuntimeError: if the database is not opened.
+      IOError: if the database is not opened.
     """
     if not self._connection:
-      raise RuntimeError(
-          u'Cannot determine if table exists database not opened.')
+      raise IOError(u'Cannot determine if table exists database not opened.')
 
     sql_query = self._HAS_TABLE_QUERY.format(table_name)
 
@@ -135,15 +148,15 @@ class Sqlite3DatabaseFile(object):
       values (list[str]): values formatted as a string.
 
     Raises:
-      RuntimeError: if the database is not opened or
+      IOError: if the database is not opened or
           if the database is in read-only mode or
           if an unsupported value type is encountered.
     """
     if not self._connection:
-      raise RuntimeError(u'Cannot insert values database not opened.')
+      raise IOError(u'Cannot insert values database not opened.')
 
     if self.read_only:
-      raise RuntimeError(u'Cannot insert values database in read-only mode.')
+      raise IOError(u'Cannot insert values database in read-only mode.')
 
     if not values:
       return
@@ -160,8 +173,7 @@ class Sqlite3DatabaseFile(object):
       elif value is None:
         value = u'NULL'
       else:
-        raise RuntimeError(u'Unsupported value type: {0:s}.'.format(
-            type(value)))
+        raise IOError(u'Unsupported value type: {0:s}.'.format(type(value)))
       sql_values.append(value)
 
     sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
@@ -182,10 +194,10 @@ class Sqlite3DatabaseFile(object):
       bool: True if successful or False if not.
 
     Raises:
-      RuntimeError: if the database is already opened.
+      IOError: if the database is already opened.
     """
     if self._connection:
-      raise RuntimeError(u'Cannot open database already opened.')
+      raise IOError(u'Cannot open database already opened.')
 
     self.filename = filename
     self.read_only = read_only
@@ -207,7 +219,7 @@ class Sqlite3DatabaseReader(object):
   def __init__(self):
     """Initializes the database reader."""
     super(Sqlite3DatabaseReader, self).__init__()
-    self._database_file = Sqlite3DatabaseFile()
+    self._database_file = SQLite3DatabaseFile()
 
   def Close(self):
     """Closes the database reader."""
@@ -231,7 +243,7 @@ class Sqlite3DatabaseWriter(object):
   def __init__(self):
     """Initializes the database writer."""
     super(Sqlite3DatabaseWriter, self).__init__()
-    self._database_file = Sqlite3DatabaseFile()
+    self._database_file = SQLite3DatabaseFile()
 
   def Close(self):
     """Closes the database writer."""
@@ -344,7 +356,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       int: Event Log provider key or None if no such value.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'event_log_providers']
     column_names = [u'event_log_provider_key']
@@ -361,7 +373,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = values_list[0]
       return values[u'event_log_provider_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _GetMessageFileKey(self, message_filename):
     """Retrieves the key of a message file.
@@ -373,7 +385,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       int: message file key or None if no such value.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
@@ -390,7 +402,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = values_list[0]
       return values[u'message_file_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_filename, message_file_type):
@@ -615,7 +627,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       int: message file key or None if no such value.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
@@ -641,7 +653,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = values_list[0]
       return values[u'message_file_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _WriteMessage(
       self, message_resource_file, message_table, language_identifier,
@@ -1005,7 +1017,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       int: An Event Log provider key or None if not available.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'event_log_providers']
     column_names = [u'event_log_provider_key']
@@ -1022,7 +1034,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       values = values_list[0]
       return values[u'event_log_provider_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _GetMessage(self, message_file_key, lcid, message_identifier):
     """Retrieves a specific message from a specific message table.
@@ -1036,7 +1048,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       The message string or None if not available.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_name = u'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
 
@@ -1057,7 +1069,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     elif number_of_values == 1:
       return values[0][u'message_string']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _GetMessageFileKeys(self, event_log_provider_key):
     """Retrieves the message file keys.
@@ -1229,7 +1241,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       str: value of the metadata attribute or None.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_name = u'metadata'
 
@@ -1250,7 +1262,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     elif number_of_values == 1:
       return values[0][u'value']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
 
 class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
@@ -1285,7 +1297,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       An integer containing the Event Log provider key or None if no such value.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'event_log_providers']
     column_names = [u'event_log_provider_key']
@@ -1302,7 +1314,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = values_list[0]
       return values[u'event_log_provider_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _GetMessageFileKey(self, message_file):
     """Retrieves the key of a message file.
@@ -1314,7 +1326,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       An integer containing the message file key or None if no such value.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
@@ -1331,7 +1343,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = values_list[0]
       return values[u'message_file_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _GetMessageFileKeyByPath(self, message_filename):
     """Retrieves the key of a message file for a specific path.
@@ -1343,7 +1355,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       An integer containing the message file key or None if no such value.
 
     Raises:
-      RuntimeError: if more than one value is found in the database.
+      IOError: if more than one value is found in the database.
     """
     table_names = [u'message_files']
     column_names = [u'message_file_key']
@@ -1359,7 +1371,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       values = values_list[0]
       return values[u'message_file_key']
 
-    raise RuntimeError(u'More than one value found in database.')
+    raise IOError(u'More than one value found in database.')
 
   def _ReformatMessageString(self, message_string):
     """Reformats the message string.
