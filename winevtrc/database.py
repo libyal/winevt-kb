@@ -164,6 +164,7 @@ class SQLite3DatabaseFile(object):
 
     sql_values = []
     for value in values:
+      # TODO: handle bool.
       if isinstance(value, py2to3.STRING_TYPES):
         # In sqlite3 the double quote is escaped with a second double quote.
         value = u'"{0:s}"'.format(re.sub('"', '""', value))
