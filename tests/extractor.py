@@ -62,6 +62,24 @@ class TestOutputWriter(object):
     self.message_files.append(message_file)
 
 
+class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
+  """Tests for the Windows Registry file reader."""
+
+  def testOpen(self):
+    """Tests the Open function."""
+    volume_scanner = extractor.EventMessageStringExtractor()
+
+    file_reader = extractor.EventMessageStringRegistryFileReader(
+        volume_scanner)
+
+    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+
+    # TODO: implement tests.
+    # file_reader.Open(test_file_path)
+
+    # file_reader.Open(u'bogus')
+
+
 class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Event Log message resource extractor."""
 

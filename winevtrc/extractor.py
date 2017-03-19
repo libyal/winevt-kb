@@ -12,16 +12,14 @@ from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
+from winevtrc import dependencies
 from winevtrc import definitions
 from winevtrc import resource_file
 from winevtrc import resources
 
 
-if dfvfs.__version__ < u'20160418':
-  raise ImportWarning(u'extractor.py requires dfvfs 20160418 or later.')
-
-if dfwinreg.__version__ < u'20160418':
-  raise ImportWarning(u'extractor.py requires dfwinreg 20160418 or later.')
+dependencies.CheckModuleVersion(u'dfvfs')
+dependencies.CheckModuleVersion(u'dfwinreg')
 
 
 class EventMessageStringRegistryFileReader(
@@ -70,24 +68,19 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
   """Class that defines a Windows Event Log message string extractor.
 
   Attributes:
-    ascii_codepage: a string containing the ASCII string codepage.
-    invalid_message_filenames: a list of strings containing the invalid
-                               message file names.
-    missing_table_message_filenames: a list of strings containing the message
-                                     file names, where the message table
-                                     resource is missing.
-    preferred_language_identifier: an integer containing the preferred language
-                                   identifier (LCID).
+    ascii_codepage (str): ASCII string codepage.
+    invalid_message_filenames (list[str]): invalid message file names.
+    missing_table_message_filenames (list[str]): message file names, where the
+        message table resource is missing.
+    preferred_language_identifier (int): preferred language identifier (LCID).
   """
 
   def __init__(self, debug=False, mediator=None):
     """Initializes a Windows Event Log message string extractor object.
 
     Args:
-      debug: optional boolean value to indicate if debug information should
-             be printed.
-      mediator: a volume scanner mediator (instance of
-                dfvfs.VolumeScannerMediator) or None.
+      debug (Optional[bool]): True if debug information should be printed.
+      mediator (dfvfs.VolumeScannerMediator): a volume scanner mediator or None.
     """
     super(EventMessageStringExtractor, self).__init__(mediator=mediator)
     registry_file_reader = EventMessageStringRegistryFileReader(self)
@@ -118,13 +111,12 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Collects the Event Log types.
 
     Args:
-      all_control_sets: a boolean value to indicate if all control sets
-                        should be processed or only the current control set.
+      all_control_sets (Optional[bool]): True if all control sets should
+          be processed or only the current control set.
 
     Returns:
-      A dictionary containing a dictionary of Event Log providers per event
-      log type. E.g. { 'Application': { 'EventSystem': instance of
-                                        EventLogProvider, ... }, ... }
+      dict[str, dict[str, EventLogProvider]]: Event Log providers per event
+          log type.
     """
     event_log_types = {}
     for event_log_provider in self._GetEventLogProviders(
@@ -146,11 +138,10 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Retrieves the Event Log providers from a specific key.
 
     Args:
-      eventlog_key: the Event Log key object (instance of
-                    dfwinreg.WinRegistryKey).
+      eventlog_key (dfwinreg.WinRegistryKey): Event Log key.
 
     Yields:
-      An Event Log provider object (instance of EventLogProvider).
+      EventLogProvider: Event Log provider.
     """
     if not eventlog_key:
       return
@@ -200,11 +191,11 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Extracts the Event Log message strings from a message file.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
-      processed_message_filenames: a list of the processed message filenames.
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_filename: string containing the message filename.
-      message_file_type: string containing the message file type.
+      output_writer (OutputWriter): output writer.
+      processed_message_filenames (list[str]): processed message filenames.
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_filename (str): message filename.
+      message_file_type (str): message file type.
     """
     if message_filename in processed_message_filenames:
       return
@@ -303,11 +294,11 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Retrieves the Event Log providers.
 
     Args:
-      all_control_sets: a boolean value to indicate if all control sets
-                        should be processed or only the current control set.
+      all_control_sets (Optional[bool]): True if all control sets should
+          be processed or only the current control set.
 
     Yields:
-      An Event Log provider object (instance of EventLogProvider).
+      EventLogProvider: Event Log provider.
     """
     if all_control_sets:
       system_key = self._registry.GetKeyByPath(u'HKEY_LOCAL_MACHINE\\System\\')
@@ -337,8 +328,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Determines the value of %SystemRoot%.
 
     Returns:
-      A string containing the value of SystemRoot or None if the value cannot
-      be determined.
+      str: value of SystemRoot or None if the value cannot be determined.
     """
     current_version_key = self._registry.GetKeyByPath(
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
@@ -358,7 +348,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Determines the Windows version from kernel executable file.
 
     Returns:
-      A string containing the Windows version or None otherwise.
+      str: Windows version or None otherwise.
     """
     system_root = self._GetSystemRoot()
 
@@ -382,10 +372,10 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Opens the message resource file specificed by the Windows path.
 
     Args:
-      windows_path: the Windows path containing the messagge resource filename.
+      windows_path (str): Windows path containing the messagge resource filename.
 
     Returns:
-      The message resource file (instance of MessageResourceFile) or None.
+      MessageResourceFile: message resource file or None.
     """
     path_spec = self._path_resolver.ResolvePath(windows_path)
     if path_spec is None:
@@ -397,10 +387,10 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Opens the message resource file specificed by the path specification.
 
     Args:
-      path_spec: the path specification (instance of dfvfs.PathSpec).
+      path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      The message resource file (instance of MessageResourceFile) or None.
+      MessageResourceFile: message resource file or None.
     """
     windows_path = self._path_resolver.GetWindowsPath(path_spec)
     if windows_path is None:
@@ -428,7 +418,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Extracts the Event Log message strings from the message files.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
     """
     # TODO: have CLI argument control this mode.
     all_control_sets = False

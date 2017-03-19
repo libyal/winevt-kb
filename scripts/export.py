@@ -28,9 +28,9 @@ class Exporter(object):
     """Exports the event log provides from an event provider database.
 
     Args:
-      database_reader: the event provider database reader (instance of
-                       EventProvidersSqlite3DatabaseReader).
-      output_writer: the output writer (instance of OutputWriter).
+      database_reader (EventProvidersSqlite3DatabaseReader): event provider
+          database reader.
+      output_writer (OutputWriter): output writer.
     """
     for event_log_provider in database_reader.GetEventLogProviders():
       log_source = event_log_provider.log_source
@@ -78,8 +78,8 @@ class Exporter(object):
     """Exports a message file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
-      message_file_database_path: the path of the message file database.
+      message_file (MessageFile): message file.
+      message_file_database_path (str): path of the message file database.
     """
     database_reader = database.MessageFileSqlite3DatabaseReader()
     database_reader.Open(message_file_database_path)
@@ -95,10 +95,10 @@ class Exporter(object):
     """Exports the message files from an event provider database.
 
     Args:
-      source_path: the source path.
-      database_reader: the event provider database reader (instance of
-                       EventProvidersSqlite3DatabaseReader).
-      output_writer: the output writer (instance of OutputWriter).
+      source_path (str): source path.
+      database_reader (EventProvidersSqlite3DatabaseReader): event provider
+          database reader.
+      output_writer (OutputWriter): output writer.
     """
     for windows_path, database_filename in database_reader.GetMessageFiles():
       message_file_database_path = os.path.join(source_path, database_filename)
@@ -120,7 +120,7 @@ class Exporter(object):
     """Exports the message files used by an Event Log provider.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
     """
     for event_log_provider in self._event_log_providers.itervalues():
       for message_filename in event_log_provider.event_message_files:
@@ -131,9 +131,9 @@ class Exporter(object):
     """Exports the message strings from a message file database.
 
     Args:
-      message_file: the message file (instance of MessageFile).
-      database_reader: the message file database reader (instance of
-                       MessageFileSqlite3DatabaseReader).
+      message_file (MessageFile): message file.
+      database_reader (MessageFileSqlite3DatabaseReader): message file
+          database reader.
     """
     for lcid, file_version in database_reader.GetMessageTables():
       message_file.AppendMessageTable(lcid, file_version)
@@ -165,9 +165,9 @@ class Exporter(object):
     """Exports the strings in a message file database.
 
     Args:
-      message_file: the message file (instance of MessageFile).
-      database_reader: the message file database reader (instance of
-                       MessageFileSqlite3DatabaseReader).
+      message_file (MessageFile): message file.
+      database_reader (MessageFileSqlite3DatabaseReader): message file
+          database reader.
     """
     for lcid, file_version in database_reader.GetStringTables():
       message_file.AppendStringTable(lcid, file_version)
@@ -195,8 +195,8 @@ class Exporter(object):
     """Exports the strings extracted from message files.
 
     Args:
-      source_path: the source path.
-      output_writer: the output writer (instance of OutputWriter).
+      source_path (str): source path.
+      output_writer (OutputWriter): output writer.
     """
     database_reader = database.EventProvidersSqlite3DatabaseReader()
     database_reader.Open(os.path.join(
@@ -218,12 +218,11 @@ class Sqlite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
 
   def __init__(self, database_path, string_format=u'wrc'):
-    """Initializes the output writer object.
+    """Initializes an output writer object.
 
     Args:
-      database_path: the path to the database file.
-      string_format: optional string format. The default is the Windows
-                     Resource (wrc) format.
+      database_path (str): path to the database file.
+      string_format (Optional[str]): string format.
     """
     super(Sqlite3OutputWriter, self).__init__()
     self._database_path = database_path
@@ -246,7 +245,7 @@ class Sqlite3OutputWriter(object):
     """Opens the output writer object.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     if os.path.isdir(self._database_path):
       return False
@@ -262,7 +261,7 @@ class Sqlite3OutputWriter(object):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): Event Log provider.
     """
     # TODO: check if already exists.
     self._database_writer.WriteEventLogProvider(event_log_provider)
@@ -271,7 +270,7 @@ class Sqlite3OutputWriter(object):
     """Writes the Windows Message Resource file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
+      message_file (MessageFile): message file.
     """
     self._database_writer.WriteMessageFile(message_file)
 
@@ -280,8 +279,8 @@ class Sqlite3OutputWriter(object):
     """Writes the Windows Message Resource file per Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageFile).
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_file (MessageFile): message file.
     """
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_file, database.MESSAGE_FILE_TYPE_EVENT)
@@ -294,7 +293,7 @@ class StdoutOutputWriter(object):
     """Writes the message table.
 
     Args:
-      message_table: the message table (instance of MessageTable).
+      message_table (MessageTable): message table.
     """
     print(u'{0:s} (LCID: {1:s})'.format(
         message_table.language, message_table.lcid))
@@ -316,7 +315,7 @@ class StdoutOutputWriter(object):
     """Opens the file.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     return True
 
@@ -327,7 +326,7 @@ class StdoutOutputWriter(object):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): Event Log provider.
     """
     print(u'Log type:\t{0:s}'.format(event_log_provider.log_type))
     print(u'Log source:\t{0:s}'.format(event_log_provider.log_source))
@@ -338,7 +337,7 @@ class StdoutOutputWriter(object):
     """Writes the Windows Message Resource file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
+      message_file (MessageFile): message file.
     """
     print(u'{0:s}'.format(message_file.name))
     print(u'Path:\t{0:s}'.format(message_file.windows_path))
@@ -351,8 +350,8 @@ class StdoutOutputWriter(object):
     """Writes the Windows Message Resource file per Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageFile).
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_file (MessageFile): message file.
     """
     pass
 
@@ -371,10 +370,10 @@ class AsciidocFileWriter(object):
     """Opens the file.
 
     Args:
-      filename: the filename.
+      filename (str): name of the file.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     # Using binary mode to make sure to write Unix end of lines.
     self._file = open(filename, 'wb')
@@ -401,7 +400,7 @@ class AsciidocOutputWriter(object):
     """Initializes the asciidoc output writer object.
 
     Args:
-      path: the path to the directory containing the asciidoc files.
+      path (str): path to the directory containing the asciidoc files.
     """
     super(AsciidocOutputWriter, self).__init__()
     self._path = path
@@ -410,8 +409,8 @@ class AsciidocOutputWriter(object):
     """Writes the message table.
 
     Args:
-      message_table: the message table (instance of MessageTable).
-      file_writer: the file writer (instance of AsciidocFileWriter).
+      message_table (MessageTable): message table.
+      file_writer (AsciidocFileWriter): file writer.
     """
     file_writer.WriteLines([
         u'=== {0:s} (LCID: {1:s})'.format(
@@ -442,7 +441,7 @@ class AsciidocOutputWriter(object):
     """Opens the output writer object.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     if not os.path.isdir(self._path):
       return False
@@ -452,7 +451,7 @@ class AsciidocOutputWriter(object):
     """Writes the Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
+      event_log_provider (EventLogProvider): Event Log provider.
     """
     # TODO: print details.
     return
@@ -461,7 +460,7 @@ class AsciidocOutputWriter(object):
     """Writes the Windows Message Resource file.
 
     Args:
-      message_file: the message file (instance of MessageFile).
+      message_file (MessageFile): message file.
     """
     file_writer = AsciidocFileWriter()
     path = os.path.join(
@@ -486,8 +485,8 @@ class AsciidocOutputWriter(object):
     """Writes the Windows Message Resource file per Event Log provider.
 
     Args:
-      event_log_provider: the Event Log provider (instance of EventLogProvider).
-      message_file: the message file (instance of MessageFile).
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_file (MessageFile): message file.
     """
     pass
 
@@ -496,7 +495,7 @@ def Main():
   """The main program function.
 
   Returns:
-    A boolean containing True if successful or False if not.
+    bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
       u'Export strings extracted from message files.'))
