@@ -84,6 +84,9 @@ class MessageFileTest(unittest.TestCase):
     message_table = message_file.GetMessageTable(6)
     self.assertIsNone(message_table)
 
+    message_tables = list(message_file.GetMessageTables())
+    self.assertEqual(len(message_tables), 1)
+
   def testStringTable(self):
     """Tests the AppendStringTable and GetStringTable functions."""
     message_file = resources.MessageFile(u'test')
@@ -95,6 +98,9 @@ class MessageFileTest(unittest.TestCase):
 
     string_table = message_file.GetStringTable(6)
     self.assertIsNone(string_table)
+
+    string_tables = list(message_file.GetStringTables())
+    self.assertEqual(len(string_tables), 1)
 
 
 if __name__ == '__main__':

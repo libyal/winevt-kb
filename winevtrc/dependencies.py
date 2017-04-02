@@ -393,10 +393,7 @@ def GetInstallRequires():
 
     # Map the import name to the PyPI project name.
     module_name = _PYPI_PROJECT_NAMES.get(module_name, module_name)
-    if module_name == u'efilter':
-      module_version = u'1-{0:s}'.format(module_version)
-
-    elif module_name == u'pysqlite':
+    if module_name == u'pysqlite':
       # Override the pysqlite version since it does not match
       # the sqlite3 version.
       module_version = None
