@@ -10,6 +10,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from winevtrc import extractor
+from winevtrc import resources
 
 from tests import test_lib as shared_test_lib
 
@@ -80,15 +81,19 @@ class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
     # file_reader.Open(u'bogus')
 
 
+@shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+@shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
 class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Event Log message resource extractor."""
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
-  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
-  def testExtractEventLogMessageStrings(self):
-    """Tests the ExtractEventLogMessageStrings function."""
+  def _CreateTestEventMessageStringExtractor(self):
+    """Creates an event message string extractor for testing.
+
+    Returns:
+      EventMessageStringExtractor: an event message string extractor.
+    """
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
 
     test_file_path = self._GetTestFilePath([u'SOFTWARE'])
@@ -115,8 +120,34 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     extractor_object._path_resolver.SetEnvironmentVariable(
         u'WinDir', extractor_object._windows_directory)
 
-    system_root = extractor_object._GetSystemRoot()
-    self.assertEqual(system_root, u'C:\\WINDOWS')
+    return extractor_object
+
+  # TODO: test windows_version property
+  # TODO: test _CollectEventLogTypes
+  # TODO: test _CollectEventLogProvidersFromKey
+
+  def testExtractMessageFile(self):
+    """Tests the _ExtractMessageFile function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    # TODO: improve test.
+    output_writer = TestOutputWriter()
+    processed_message_filenames = []
+    event_log_provider = resources.EventLogProvider(
+        u'log_type', u'log_source', u'provider_guid')
+    message_filename = u''
+    message_file_type = u''
+
+    extractor_object._ExtractMessageFile(
+        output_writer, processed_message_filenames, event_log_provider,
+        message_filename, message_file_type)
+
+    self.assertEqual(len(output_writer.event_log_providers), 0)
+    self.assertEqual(len(output_writer.message_files), 0)
+
+  def testGetEventLogProviders(self):
+    """Tests the _GetEventLogProviders function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
 
     event_log_providers = list(extractor_object._GetEventLogProviders())
     self.assertEqual(len(event_log_providers), 258)
@@ -124,6 +155,28 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     event_log_providers = list(
         extractor_object._GetEventLogProviders(all_control_sets=True))
     self.assertEqual(len(event_log_providers), 516)
+
+  def testGetSystemRoot(self):
+    """Tests the _GetSystemRoot function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    system_root = extractor_object._GetSystemRoot()
+    self.assertEqual(system_root, u'C:\\WINDOWS')
+
+  def testGetWindowsVersion(self):
+    """Tests the _GetWindowsVersion function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    windows_version = extractor_object._GetWindowsVersion()
+    # TODO: improve test.
+    self.assertIsNone(windows_version)
+
+  # TODO: test _OpenMessageResourceFile
+  # TODO: test _OpenMessageResourceFileByPathSpec
+
+  def testExtractEventLogMessageStrings(self):
+    """Tests the ExtractEventLogMessageStrings function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
 
     output_writer = TestOutputWriter()
 

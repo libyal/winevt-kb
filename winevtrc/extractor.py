@@ -27,7 +27,7 @@ class EventMessageStringRegistryFileReader(
   """Class that defines a Windows Registry file reader."""
 
   def __init__(self, volume_scanner):
-    """Initializes a Windows Registry file reader object.
+    """Initializes a Windows Registry file reader.
 
     Args:
       volume_scanner (WindowsVolumeScanner): Windows volume scanner.
@@ -76,7 +76,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
   """
 
   def __init__(self, debug=False, mediator=None):
-    """Initializes a Windows Event Log message string extractor object.
+    """Initializes a Windows Event Log message string extractor.
 
     Args:
       debug (Optional[bool]): True if debug information should be printed.
@@ -91,8 +91,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     self._windows_version = None
 
     self.ascii_codepage = u'cp1252'
-    self.invalid_message_filenames = None
-    self.missing_table_message_filenames = None
+    self.invalid_message_filenames = []
+    self.missing_table_message_filenames = []
     self.preferred_language_identifier = 0x0409
 
   @property
