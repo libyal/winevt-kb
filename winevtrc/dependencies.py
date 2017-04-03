@@ -285,7 +285,7 @@ def CheckModuleVersion(module_name):
 
   Raises:
     ImportError: if the module does not exists or does not meet
-                 the version requirements.
+        the version requirements.
   """
   try:
     module_object = list(map(__import__, [module_name]))[0]
