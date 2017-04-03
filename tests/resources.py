@@ -6,11 +6,11 @@ import unittest
 
 from winevtrc import resources
 
+from tests import test_lib as shared_test_lib
 
-class EventLogProviderTest(unittest.TestCase):
+
+class EventLogProviderTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Event Log provider object."""
-
-  maxDiff = None
 
   def testSetCategoryMessageFilenames(self):
     """Tests the SetCategoryMessageFilenames function."""
@@ -67,10 +67,8 @@ class EventLogProviderTest(unittest.TestCase):
         expected_parameter_message_files)
 
 
-class MessageFileTest(unittest.TestCase):
+class MessageFileTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Event Log message file  object."""
-
-  maxDiff = None
 
   def testMessageTable(self):
     """Tests the AppendMessageTable and GetMessageTable functions."""

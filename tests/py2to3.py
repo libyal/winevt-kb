@@ -1,0 +1,46 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""Tests for the Python 2 and 3 compatible type definitions."""
+
+import sys
+import unittest
+
+if sys.version_info[0] < 3:
+  from mock import MagicMock
+else:
+  from unittest.mock import MagicMock
+  from importlib import reload
+
+from winevtrc import py2to3
+
+from tests import test_lib as shared_test_lib
+
+
+class Py2To3Test(shared_test_lib.BaseTestCase):
+  """Tests for the Python 2 and 3 compatible type definitions."""
+
+  _SYS_MODULE = sys
+
+  def testPython2Definitions(self):
+    """Tests the Python 2 definitions."""
+    mock_sys = MagicMock(version_info=[2, 7])
+
+    self._SYS_MODULE.modules[u'sys'] = mock_sys
+
+    reload(py2to3)
+
+    self._SYS_MODULE.modules[u'sys'] = self._SYS_MODULE
+
+  def testPython3Definitions(self):
+    """Tests the Python 3 definitions."""
+    mock_sys = MagicMock(version_info=[3, 4])
+
+    self._SYS_MODULE.modules[u'sys'] = mock_sys
+
+    reload(py2to3)
+
+    self._SYS_MODULE.modules[u'sys'] = self._SYS_MODULE
+
+
+if __name__ == '__main__':
+  unittest.main()

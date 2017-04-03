@@ -122,9 +122,39 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
 
     return extractor_object
 
-  # TODO: test windows_version property
-  # TODO: test _CollectEventLogTypes
-  # TODO: test _CollectEventLogProvidersFromKey
+  def testWindowsVersionProperty(self):
+    """Tests the windows_version property."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    windows_version = extractor_object.windows_version
+    # TODO: improve test.
+    self.assertIsNone(windows_version)
+
+  def testCollectEventLogTypes(self):
+    """Tests the _CollectEventLogTypes function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    event_log_types = extractor_object._CollectEventLogTypes()
+    self.assertEqual(len(event_log_types), 3)
+    self.assertEqual(len(event_log_types[u'Application']), 65)
+    self.assertEqual(len(event_log_types[u'Security']), 7)
+    self.assertEqual(len(event_log_types[u'System']), 186)
+
+    # TODO: hide duplication warnings.
+    event_log_types = extractor_object._CollectEventLogTypes(
+        all_control_sets=True)
+    self.assertEqual(len(event_log_types), 3)
+    self.assertEqual(len(event_log_types[u'Application']), 65)
+    self.assertEqual(len(event_log_types[u'Security']), 7)
+    self.assertEqual(len(event_log_types[u'System']), 186)
+
+  def testCollectEventLogProvidersFromKey(self):
+    """Tests the _CollectEventLogProvidersFromKey function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    generator = extractor_object._CollectEventLogProvidersFromKey(None)
+    # TODO: fix generator method.
+    self.assertIsNotNone(generator)
 
   def testExtractMessageFile(self):
     """Tests the _ExtractMessageFile function."""
@@ -171,7 +201,16 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     # TODO: improve test.
     self.assertIsNone(windows_version)
 
-  # TODO: test _OpenMessageResourceFile
+  def testOpenMessageResourceFile(self):
+    """Tests the _OpenMessageResourceFile function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    # TODO: improve test.
+
+    message_resource_file = extractor_object._OpenMessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+    self.assertIsNone(message_resource_file)
+
   # TODO: test _OpenMessageResourceFileByPathSpec
 
   def testExtractEventLogMessageStrings(self):

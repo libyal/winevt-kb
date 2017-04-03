@@ -37,6 +37,9 @@ PYTHON_DEPENDENCIES = {
     u'pywrc': (u'get_version()', u'20140128', None),
     u'six': (u'__version__', u'1.1.0', None)}
 
+PYTHON_TEST_DEPENDENCIES = {
+    u'mock': (u'__version__', u'0.7.1', None)}
+
 # Maps Python module names to DPKG packages.
 _DPKG_PACKAGE_NAMES = {
     u'Crypto': u'python-crypto',
@@ -341,7 +344,7 @@ def CheckTestDependencies(verbose_output=True):
     return False
 
   print(u'Checking availability and versions of test dependencies.')
-  for module_name, version_tuple in sorted(PYTHON_DEPENDENCIES.items()):
+  for module_name, version_tuple in sorted(PYTHON_TEST_DEPENDENCIES.items()):
     if not _CheckPythonModule(
         module_name, version_tuple[0], version_tuple[1],
         maximum_version=version_tuple[2], verbose_output=verbose_output):

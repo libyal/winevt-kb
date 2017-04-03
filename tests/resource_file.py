@@ -14,6 +14,44 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  @shared_test_lib.skipUnlessHasTestFile([u'nowrc_test.dll'])
+  def testGetVersionInformationNoWrc(self):
+    """Tests the _GetVersionInformation function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\nowrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'nowrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      with self.assertRaises(IOError):
+        message_resource_file._GetVersionInformation()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testGetVersionInformationWrc(self):
+    """Tests the _GetVersionInformation function."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      message_resource_file._GetVersionInformation()
+
+      expected_file_version = u'1.0.0.0'
+      self.assertEqual(
+          message_resource_file.file_version, expected_file_version)
+
+      expected_product_version = u'1.0.0.0'
+      self.assertEqual(
+          message_resource_file.product_version, expected_product_version)
+
+      message_resource_file.Close()
+
+  # TODO: test file_version property.
+  # TODO: test product_version property.
+
   # TODO: add open/close test on non PE/COFF file.
 
   @shared_test_lib.skipUnlessHasTestFile([u'nowrc_test.dll'])
@@ -41,41 +79,6 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
       with self.assertRaises(IOError):
         message_resource_file.OpenFileObject(file_object)
-
-      message_resource_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'nowrc_test.dll'])
-  def testGetVersionInformationNoWrc(self):
-    """Tests the GetVersionInformation function."""
-    message_resource_file = resource_file.MessageResourceFile(
-        u'C:\\Windows\\System32\\nowrc_test.dll')
-
-    test_file_path = self._GetTestFilePath([u'nowrc_test.dll'])
-    with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
-
-      with self.assertRaises(IOError):
-        message_resource_file._GetVersionInformation()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
-  def testGetVersionInformationWrc(self):
-    """Tests the GetVersionInformation function."""
-    message_resource_file = resource_file.MessageResourceFile(
-        u'C:\\Windows\\System32\\wrc_test.dll')
-
-    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
-    with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
-
-      message_resource_file._GetVersionInformation()
-
-      expected_file_version = u'1.0.0.0'
-      self.assertEqual(
-          message_resource_file.file_version, expected_file_version)
-
-      expected_product_version = u'1.0.0.0'
-      self.assertEqual(
-          message_resource_file.product_version, expected_product_version)
 
       message_resource_file.Close()
 

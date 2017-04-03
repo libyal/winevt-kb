@@ -12,7 +12,7 @@ import winevtrc.dependencies
 
 
 if __name__ == '__main__':
-  if not winevtrc.dependencies.CheckDependencies():
+  if not winevtrc.dependencies.CheckTestDependencies():
     sys.exit(1)
 
   test_suite = unittest.TestLoader().discover('tests', pattern='*.py')
