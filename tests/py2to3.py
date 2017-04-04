@@ -21,6 +21,7 @@ class Py2To3Test(shared_test_lib.BaseTestCase):
 
   _SYS_MODULE = sys
 
+  @unittest.skipIf(sys.version_info[0] > 2, 'Python version not supported')
   def testPython2Definitions(self):
     """Tests the Python 2 definitions."""
     mock_sys = MagicMock(version_info=[2, 7])
@@ -31,6 +32,9 @@ class Py2To3Test(shared_test_lib.BaseTestCase):
 
     self._SYS_MODULE.modules[u'sys'] = self._SYS_MODULE
 
+    # Make sure to reload the module after clearing the mock.
+    reload(py2to3)
+
   def testPython3Definitions(self):
     """Tests the Python 3 definitions."""
     mock_sys = MagicMock(version_info=[3, 4])
@@ -40,6 +44,9 @@ class Py2To3Test(shared_test_lib.BaseTestCase):
     reload(py2to3)
 
     self._SYS_MODULE.modules[u'sys'] = self._SYS_MODULE
+
+    # Make sure to reload the module after clearing the mock.
+    reload(py2to3)
 
 
 if __name__ == '__main__':

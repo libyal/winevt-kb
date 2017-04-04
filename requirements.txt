@@ -1,5 +1,6 @@
 pip >= 7.0.0
 pytest
+mock
 construct >= 2.5.2,<= 2.5.3
 dfdatetime >= 20160319
 dfvfs >= 20160803

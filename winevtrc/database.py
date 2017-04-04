@@ -175,7 +175,7 @@ class SQLite3DatabaseFile(object):
       elif value is None:
         value = u'NULL'
       else:
-        raise IOError(u'Unsupported value type: {0:s}.'.format(type(value)))
+        raise IOError(u'Unsupported value type: {0!s}.'.format(type(value)))
       sql_values.append(value)
 
     sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
