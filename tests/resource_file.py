@@ -138,8 +138,33 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(message_resource_file.file_version, u'0.0.0.0')
     self.assertEqual(message_resource_file.product_version, u'2.0.0.0')
 
-  # TODO: test file_version property.
-  # TODO: test product_version property.
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testFileVersionProperty(self):
+    """Tests the file_version property."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      self.assertEqual(message_resource_file.file_version, u'1.0.0.0')
+
+      message_resource_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wrc_test.dll'])
+  def testProductVersionProperty(self):
+    """Tests the product_version property."""
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\wrc_test.dll')
+
+    test_file_path = self._GetTestFilePath([u'wrc_test.dll'])
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      self.assertEqual(message_resource_file.product_version, u'1.0.0.0')
+
+      message_resource_file.Close()
 
   # TODO: add open/close test on non PE/COFF file.
 
