@@ -9,6 +9,79 @@ from winevtrc import resource_file
 from tests import test_lib as shared_test_lib
 
 
+class TestVersionResource(object):
+  """Windows Resource Compiler (WRC) version resource for testing.
+
+  Attributes:
+    language_identifiers (list[int]): language identifiers.
+    versions (dict[int, int]): versions per language identifier.
+  """
+
+  def __init__(self):
+    """Initializes a version resource."""
+    super(TestVersionResource, self).__init__()
+    self.file_versions = {0x0409: 0}
+    self.language_identifiers = [0x0409]
+    self.product_versions = {0x0409: 2 << 48}
+
+  def get_file_version(self, language_identifier):
+    """Retrieves the file version.
+
+    Args:
+      language_identifier (int): language identifier.
+
+    Returns:
+      int: file version.
+    """
+    return self.file_versions.get(language_identifier, 0)
+
+  def get_product_version(self, language_identifier):
+    """Retrieves the product version.
+
+    Args:
+      language_identifier (int): language identifier.
+
+    Returns:
+      int: product version.
+    """
+    return self.product_versions.get(language_identifier, 0)
+
+
+class TestWrcStream(object):
+  """Windows Resource Compiler (WRC) stream for testing.
+
+  Attributes:
+    resources (dict[int|str, object]): resources per identifier.
+  """
+
+  def __init__(self):
+    """Initializes a version resource."""
+    super(TestWrcStream, self).__init__()
+    self.resources = {}
+
+  def get_resource_by_identifier(self, identifier):
+    """Retrieves a specific resource by identifier.
+
+    Args:
+      identifier (int): identifier.
+
+    Returns:
+      object: resource or None.
+    """
+    return self.resources.get(identifier, None)
+
+  def get_resource_by_name(self, name):
+    """Retrieves a specific resource by name.
+
+    Args:
+      name (str): name.
+
+    Returns:
+      object: resource or None.
+    """
+    return self.resources.get(name, None)
+
+
 class MessageResourceFileTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Message Resource file object."""
 
@@ -39,15 +112,31 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
       message_resource_file._GetVersionInformation()
 
-      expected_file_version = u'1.0.0.0'
-      self.assertEqual(
-          message_resource_file.file_version, expected_file_version)
-
-      expected_product_version = u'1.0.0.0'
-      self.assertEqual(
-          message_resource_file.product_version, expected_product_version)
+      self.assertEqual(message_resource_file.file_version, u'1.0.0.0')
+      self.assertEqual(message_resource_file.product_version, u'1.0.0.0')
 
       message_resource_file.Close()
+
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\test.dll')
+
+    # Test with an empty WRC stream.
+    wrc_stream = TestWrcStream()
+
+    message_resource_file._wrc_stream = wrc_stream
+
+    message_resource_file._GetVersionInformation()
+    self.assertIsNone(message_resource_file.file_version)
+    self.assertIsNone(message_resource_file.product_version)
+
+    # Test with empty version information.
+    wrc_stream.resources[0x10] = TestVersionResource()
+
+    message_resource_file._wrc_stream = wrc_stream
+
+    message_resource_file._GetVersionInformation()
+    self.assertEqual(message_resource_file.file_version, u'0.0.0.0')
+    self.assertEqual(message_resource_file.product_version, u'2.0.0.0')
 
   # TODO: test file_version property.
   # TODO: test product_version property.
@@ -110,7 +199,20 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  # TODO: add test for GetMUILanguage
+  def testGetMUILanguage(self):
+    """Tests the GetMUILanguage function."""
+    # TODO: implement.
+
+    message_resource_file = resource_file.MessageResourceFile(
+        u'C:\\Windows\\System32\\test.dll')
+
+    # Test with an empty WRC stream.
+    wrc_stream = TestWrcStream()
+
+    message_resource_file._wrc_stream = wrc_stream
+
+    mui_language = message_resource_file.GetMUILanguage()
+    self.assertIsNone(mui_language)
 
   @shared_test_lib.skipUnlessHasTestFile([u'nowrc_test.dll'])
   def testGetStringResourceNoWrc(self):
