@@ -6,8 +6,6 @@ from __future__ import print_function
 import os
 import sys
 
-import run_tests
-
 try:
   from setuptools import find_packages, setup, Command
 except ImportError:
@@ -95,20 +93,6 @@ class BdistRPMCommand(bdist_rpm):
     return python_spec_file
 
 
-class TestCommand(Command):
-  """Run tests, implementing an interface."""
-  user_options = []
-
-  def initialize_options(self):
-    self._dir = os.getcwd()
-
-  def finalize_options(self):
-    pass
-
-  def run(self):
-    test_results = run_tests.RunTests(os.path.join('.', 'winevtrc'))
-
-
 winevtrc_version = winevtrc.__version__
 
 # Command bdist_msi does not support the library version, neither a date
@@ -139,8 +123,7 @@ setup(
         'Programming Language :: Python',
     ],
     cmdclass={
-        'bdist_rpm': BdistRPMCommand,
-        'test': TestCommand},
+        'bdist_rpm': BdistRPMCommand},
     packages=find_packages('.', exclude=[
         'tests', 'tests.*', 'utils']),
     package_dir={
