@@ -11,6 +11,7 @@ except ImportError:
   import sqlite3
 
 from winevtrc import definitions
+from winevtrc import errors
 from winevtrc import py2to3
 from winevtrc import resources
 
@@ -56,6 +57,7 @@ class SQLite3DatabaseFile(object):
       column_definitions (list[str]): column definitions.
 
     Raises:
+      BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened or
           if the database is in read-only mode.
     """
@@ -68,7 +70,10 @@ class SQLite3DatabaseFile(object):
     sql_query = u'CREATE TABLE {0:s} ( {1:s} )'.format(
         table_name, u', '.join(column_definitions))
 
-    self._cursor.execute(sql_query)
+    try:
+      self._cursor.execute(sql_query)
+    except sqlite3.OperationalError as exception:
+      raise errors.BackendError(exception)
 
   def GetValues(self, table_names, column_names, condition):
     """Retrieves values from a table.
@@ -82,6 +87,7 @@ class SQLite3DatabaseFile(object):
       generator: values generator.
 
     Raises:
+      BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened.
     """
     def _GetValues(cursor, table_names, column_names, condition):
@@ -102,7 +108,10 @@ class SQLite3DatabaseFile(object):
       sql_query = u'SELECT {1:s} FROM {0:s}{2:s}'.format(
           u', '.join(table_names), u', '.join(column_names), condition)
 
-      cursor.execute(sql_query)
+      try:
+        cursor.execute(sql_query)
+      except sqlite3.OperationalError as exception:
+        raise errors.BackendError(exception)
 
       for row in cursor:
         values = {}
@@ -126,6 +135,7 @@ class SQLite3DatabaseFile(object):
       bool: True if the table exists, false otheriwse.
 
     Raises:
+      BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened.
     """
     if not self._connection:
@@ -133,11 +143,17 @@ class SQLite3DatabaseFile(object):
 
     sql_query = self._HAS_TABLE_QUERY.format(table_name)
 
-    self._cursor.execute(sql_query)
-    if self._cursor.fetchone():
-      has_table = True
-    else:
-      has_table = False
+    try:
+      self._cursor.execute(sql_query)
+
+      if self._cursor.fetchone():
+        has_table = True
+      else:
+        has_table = False
+
+    except sqlite3.OperationalError as exception:
+      raise errors.BackendError(exception)
+
     return has_table
 
   def InsertValues(self, table_name, column_names, values):
@@ -149,6 +165,7 @@ class SQLite3DatabaseFile(object):
       values (list[str]): values formatted as a string.
 
     Raises:
+      BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened or
           if the database is in read-only mode or
           if an unsupported value type is encountered.
@@ -181,7 +198,10 @@ class SQLite3DatabaseFile(object):
     sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
         table_name, u', '.join(column_names), u', '.join(sql_values))
 
-    self._cursor.execute(sql_query)
+    try:
+      self._cursor.execute(sql_query)
+    except sqlite3.OperationalError as exception:
+      raise errors.BackendError(exception)
 
   def Open(self, filename, read_only=False):
     """Opens the database file.
@@ -196,6 +216,7 @@ class SQLite3DatabaseFile(object):
       bool: True if successful or False if not.
 
     Raises:
+      BackendError: if the database back-end raises an exception.
       IOError: if the database is already opened.
     """
     if self._connection:
@@ -208,7 +229,11 @@ class SQLite3DatabaseFile(object):
     if not self._connection:
       return False
 
-    self._cursor = self._connection.cursor()
+    try:
+      self._cursor = self._connection.cursor()
+    except sqlite3.OperationalError as exception:
+      raise errors.BackendError(exception)
+
     if not self._cursor:
       return False
 

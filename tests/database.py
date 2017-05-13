@@ -5,9 +5,8 @@
 import os
 import unittest
 
-import sqlite3
-
 from winevtrc import database
+from winevtrc import errors
 from winevtrc import resource_file
 from winevtrc import resources
 
@@ -82,7 +81,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     generator = database_file.GetValues(
         [u'bogus'], [u'name', u'value'], u'')
 
-    with self.assertRaises(sqlite3.OperationalError):
+    with self.assertRaises(errors.BackendError):
       next(generator)
 
     database_file.Close()
@@ -328,7 +327,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
     generator = database_reader.GetMessages(u'0x00000413', u'1.0.0.0')
 
-    with self.assertRaises(sqlite3.OperationalError):
+    with self.assertRaises(errors.BackendError):
       list(generator)
 
     database_reader.Close()
@@ -344,7 +343,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetStringTables()
 
     # TODO: string tables currently not written.
-    with self.assertRaises(sqlite3.OperationalError):
+    with self.assertRaises(errors.BackendError):
       list(generator)
 
     database_reader.Close()
@@ -360,7 +359,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetStrings(u'0x00000409', u'1.0.0.0')
 
     # TODO: string tables currently not written.
-    with self.assertRaises(sqlite3.OperationalError):
+    with self.assertRaises(errors.BackendError):
       list(generator)
 
     database_reader.Close()
