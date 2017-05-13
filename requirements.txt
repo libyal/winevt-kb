@@ -1,8 +1,9 @@
 pip >= 7.0.0
 pytest
 mock
+backports.lzma
 construct >= 2.5.2,<= 2.5.3
-dfdatetime >= 20160319
+dfdatetime >= 20160814
 dfvfs >= 20160803
 dfwinreg >= 20170301
 libbde-python >= 20140531
