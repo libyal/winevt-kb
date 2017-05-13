@@ -6,12 +6,6 @@ import logging
 import pyexe
 import pywrc
 
-from winevtrc import dependencies
-
-
-dependencies.CheckModuleVersion(u'pyexe')
-dependencies.CheckModuleVersion(u'pywrc')
-
 
 # pylint: disable=logging-format-interpolation
 

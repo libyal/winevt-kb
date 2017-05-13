@@ -421,6 +421,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
         # database_writer._WriteMessage(
         #    message_resource_file, message_table_resource, 0x00000409, 0,
         #    u'message_table_0x00000409', False)
+        _ = message_table_resource
 
         database_writer.Close()
 

@@ -5,12 +5,14 @@
 import sys
 import unittest
 
+# pylint: disable=no-name-in-module
 if sys.version_info[0] < 3:
   from mock import MagicMock
 else:
-  from unittest.mock import MagicMock
-  from importlib import reload
+  from unittest.mock import MagicMock  # pylint: disable=import-error
+  from importlib import reload  # pylint: disable=redefined-builtin
 
+# pylint: disable=wrong-import-position
 from winevtrc import py2to3
 
 from tests import test_lib as shared_test_lib

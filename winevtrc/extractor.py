@@ -3,23 +3,15 @@
 
 import logging
 
-import dfvfs
-import dfwinreg
-
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.resolver import resolver as dfvfs_resolver
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
-from winevtrc import dependencies
 from winevtrc import definitions
 from winevtrc import resource_file
 from winevtrc import resources
-
-
-dependencies.CheckModuleVersion(u'dfvfs')
-dependencies.CheckModuleVersion(u'dfwinreg')
 
 
 class EventMessageStringRegistryFileReader(
@@ -372,7 +364,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Opens the message resource file specificed by the Windows path.
 
     Args:
-      windows_path (str): Windows path containing the messagge resource filename.
+      windows_path (str): Windows path containing the messagge resource
+          filename.
 
     Returns:
       MessageResourceFile: message resource file or None.

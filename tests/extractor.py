@@ -79,6 +79,8 @@ class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
     # file_reader.Open(test_file_path)
 
     # file_reader.Open(u'bogus')
+    _ = file_reader
+    _ = test_file_path
 
 
 @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])

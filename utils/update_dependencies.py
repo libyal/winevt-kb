@@ -149,7 +149,8 @@ class DPKGControlWriter(DependencyFileWriter):
 
   _PYTHON_PACKAGE_FOOTER = [
       u'Description: Windows Event Log resources (winevtrc)',
-      u' winevtrc is a Python module to access Windows Event Log resources.',
+      u' winevtrc is a Python module part of winevt-kb to allow easy reuse of',
+      u' the Windows Event Log resource extraction and database functionality.',
       u'']
 
   def Write(self):
