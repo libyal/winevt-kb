@@ -122,7 +122,7 @@ class DPKGControlWriter(DependencyFileWriter):
 
   _PATH = os.path.join(u'config', u'dpkg', u'control')
 
-  _PROJECT_NAME = u'winevtrc'
+  _PROJECT_NAME = u'winevt-kb'
 
   _MAINTAINER = u'Joachim Metz <joachim.metz@gmail.com>'
 
@@ -140,7 +140,7 @@ class DPKGControlWriter(DependencyFileWriter):
       u'']
 
   _PYTHON2_PACKAGE_HEADER = [
-      u'Package: python-{0:s}'.format(_PROJECT_NAME),
+      u'Package: python-winevtrc',
       u'Architecture: all']
 
   _PYTHON2_PACKAGE_FOOTER = [
@@ -150,13 +150,22 @@ class DPKGControlWriter(DependencyFileWriter):
       u'']
 
   _PYTHON3_PACKAGE_HEADER = [
-      u'Package: python3-{0:s}'.format(_PROJECT_NAME),
+      u'Package: python3-winevtrc',
       u'Architecture: all']
 
   _PYTHON3_PACKAGE_FOOTER = [
       u'Description: Python 3 module for Windows Event Log resources (winevtrc)',
       u' winevtrc is a Python module part of winevt-kb to allow easy reuse of',
       u' the Windows Event Log resource extraction and database functionality.',
+      u'']
+
+  _FILE_FOOTER = [
+      u'Package: winevt-kb-tools',
+      u'Architecture: all',
+      (u'Depends: python-winevtrc, python (>= 2.7~), ${python:Depends}, '
+       u'${misc:Depends}'),
+      u'Description: Tools for Windows Event Log knowledge base (winevt-kb)',
+      u' Winevt-kb is a project to build a Windows Event Log knowledge base.',
       u'']
 
   def Write(self):
@@ -179,6 +188,7 @@ class DPKGControlWriter(DependencyFileWriter):
     file_content.append(u'Depends: {0:s}'.format(dependencies))
 
     file_content.extend(self._PYTHON3_PACKAGE_FOOTER)
+    file_content.extend(self._FILE_FOOTER)
 
     file_content = u'\n'.join(file_content)
     file_content = file_content.encode(u'utf-8')
