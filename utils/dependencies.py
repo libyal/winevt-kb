@@ -387,11 +387,6 @@ class DependencyHelper(object):
         self._dependencies.values(), key=lambda dependency: dependency.name):
       module_name = dependency.pypi_name or dependency.name
 
-      # Use the backports.lzma instead of pyliblzma.
-      if module_name == u'pyliblzma':
-        install_requires.append(u'backports.lzma')
-        continue
-
       # Use the sqlite3 module provided by the standard library.
       if module_name == u'pysqlite':
         continue
