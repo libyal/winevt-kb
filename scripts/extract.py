@@ -14,7 +14,7 @@ from winevtrc import extractor
 
 
 class Sqlite3OutputWriter(object):
-  """Class that defines a sqlite3 output writer."""
+  """SQLite3 output writer."""
 
   EVENT_PROVIDERS_DATABASE_FILENAME = u'winevt-kb.db'
 
@@ -88,7 +88,7 @@ class Sqlite3OutputWriter(object):
 
 
 class StdoutOutputWriter(object):
-  """Class that defines a stdout output writer."""
+  """Stdout output writer."""
 
   def _WriteMessageTable(self, message_table):
     """Writes the Windows Message Resource file message table.
