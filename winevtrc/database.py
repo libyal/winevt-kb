@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Classes to read from and write to SQLite databases."""
 
+from __future__ import unicode_literals
+
 import difflib
 import logging
 import re
@@ -20,8 +22,8 @@ class SQLite3DatabaseFile(object):
   """Class that defines a sqlite3 database file."""
 
   _HAS_TABLE_QUERY = (
-      u'SELECT name FROM sqlite_master '
-      u'WHERE type = "table" AND name = "{0:s}"')
+      'SELECT name FROM sqlite_master '
+      'WHERE type = "table" AND name = "{0:s}"')
 
   def __init__(self):
     """Initializes the database file."""
@@ -38,7 +40,7 @@ class SQLite3DatabaseFile(object):
       IOError: if the database is not opened.
     """
     if not self._connection:
-      raise IOError(u'Cannot close database not opened.')
+      raise IOError('Cannot close database not opened.')
 
     # We need to run commit or not all data is stored in the database.
     self._connection.commit()
@@ -62,13 +64,13 @@ class SQLite3DatabaseFile(object):
           if the database is in read-only mode.
     """
     if not self._connection:
-      raise IOError(u'Cannot create table database not opened.')
+      raise IOError('Cannot create table database not opened.')
 
     if self.read_only:
-      raise IOError(u'Cannot create table database in read-only mode.')
+      raise IOError('Cannot create table database in read-only mode.')
 
-    sql_query = u'CREATE TABLE {0:s} ( {1:s} )'.format(
-        table_name, u', '.join(column_definitions))
+    sql_query = 'CREATE TABLE {0:s} ( {1:s} )'.format(
+        table_name, ', '.join(column_definitions))
 
     try:
       self._cursor.execute(sql_query)
@@ -103,10 +105,10 @@ class SQLite3DatabaseFile(object):
         dict[str, object]: value.
       """
       if condition:
-        condition = u' WHERE {0:s}'.format(condition)
+        condition = ' WHERE {0:s}'.format(condition)
 
-      sql_query = u'SELECT {1:s} FROM {0:s}{2:s}'.format(
-          u', '.join(table_names), u', '.join(column_names), condition)
+      sql_query = 'SELECT {1:s} FROM {0:s}{2:s}'.format(
+          ', '.join(table_names), ', '.join(column_names), condition)
 
       try:
         cursor.execute(sql_query)
@@ -121,7 +123,7 @@ class SQLite3DatabaseFile(object):
         yield values
 
     if not self._connection:
-      raise IOError(u'Cannot retrieve values database not opened.')
+      raise IOError('Cannot retrieve values database not opened.')
 
     return _GetValues(self._cursor, table_names, column_names, condition)
 
@@ -139,7 +141,7 @@ class SQLite3DatabaseFile(object):
       IOError: if the database is not opened.
     """
     if not self._connection:
-      raise IOError(u'Cannot determine if table exists database not opened.')
+      raise IOError('Cannot determine if table exists database not opened.')
 
     sql_query = self._HAS_TABLE_QUERY.format(table_name)
 
@@ -171,10 +173,10 @@ class SQLite3DatabaseFile(object):
           if an unsupported value type is encountered.
     """
     if not self._connection:
-      raise IOError(u'Cannot insert values database not opened.')
+      raise IOError('Cannot insert values database not opened.')
 
     if self.read_only:
-      raise IOError(u'Cannot insert values database in read-only mode.')
+      raise IOError('Cannot insert values database in read-only mode.')
 
     if not values:
       return
@@ -184,19 +186,19 @@ class SQLite3DatabaseFile(object):
       # TODO: handle bool.
       if isinstance(value, py2to3.STRING_TYPES):
         # In sqlite3 the double quote is escaped with a second double quote.
-        value = u'"{0:s}"'.format(re.sub('"', '""', value))
+        value = '"{0:s}"'.format(re.sub('"', '""', value))
       elif isinstance(value, py2to3.INTEGER_TYPES):
-        value = u'{0:d}'.format(value)
+        value = '{0:d}'.format(value)
       elif isinstance(value, float):
-        value = u'{0:f}'.format(value)
+        value = '{0:f}'.format(value)
       elif value is None:
-        value = u'NULL'
+        value = 'NULL'
       else:
-        raise IOError(u'Unsupported value type: {0!s}.'.format(type(value)))
+        raise IOError('Unsupported value type: {0!s}.'.format(type(value)))
       sql_values.append(value)
 
-    sql_query = u'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
-        table_name, u', '.join(column_names), u', '.join(sql_values))
+    sql_query = 'INSERT INTO {0:s} ( {1:s} ) VALUES ( {2:s} )'.format(
+        table_name, ', '.join(column_names), ', '.join(sql_values))
 
     try:
       self._cursor.execute(sql_query)
@@ -220,7 +222,7 @@ class SQLite3DatabaseFile(object):
       IOError: if the database is already opened.
     """
     if self._connection:
-      raise IOError(u'Cannot open database already opened.')
+      raise IOError('Cannot open database already opened.')
 
     self.filename = filename
     self.read_only = read_only
@@ -302,21 +304,21 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
       list[str]: message filenames.
     """
     table_names = [
-        u'event_log_providers', u'message_file_per_event_log_provider',
-        u'message_files']
-    column_names = [u'message_files.message_filename']
+        'event_log_providers', 'message_file_per_event_log_provider',
+        'message_files']
+    column_names = ['message_files.message_filename']
     condition = (
-        u'{0:s}.log_source == "{3:s}" AND '
-        u'{1:s}.message_file_type == "{4:s}" AND '
-        u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
-        u'{1:s}.message_file_key == {2:s}.message_file_key').format(
-            u'event_log_providers', u'message_file_per_event_log_provider',
-            u'message_files', log_source, message_file_type)
+        '{0:s}.log_source == "{3:s}" AND '
+        '{1:s}.message_file_type == "{4:s}" AND '
+        '{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
+        '{1:s}.message_file_key == {2:s}.message_file_key').format(
+            'event_log_providers', 'message_file_per_event_log_provider',
+            'message_files', log_source, message_file_type)
 
     message_filenames = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      message_filename = values[u'message_files.message_filename']
+      message_filename = values['message_files.message_filename']
       message_filenames.append(message_filename)
 
     return message_filenames
@@ -327,15 +329,15 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       EventLogProvider: event log provider.
     """
-    table_names = [u'event_log_providers']
-    column_names = [u'log_source', u'log_type', u'provider_guid']
-    condition = u''
+    table_names = ['event_log_providers']
+    column_names = ['log_source', 'log_type', 'provider_guid']
+    condition = ''
 
     event_log_providers = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
       event_log_provider = resources.EventLogProvider(
-          values[u'log_type'], values[u'log_source'], values[u'provider_guid'])
+          values['log_type'], values['log_source'], values['provider_guid'])
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:
@@ -361,13 +363,13 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       tuple[str, str]: message filename and corresponding database filename.
     """
-    table_names = [u'message_files']
-    column_names = [u'message_filename', u'database_filename']
-    condition = u''
+    table_names = ['message_files']
+    column_names = ['message_filename', 'database_filename']
+    condition = ''
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      yield values[u'message_filename'], values[u'database_filename']
+      yield values['message_filename'], values['database_filename']
 
 
 class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
@@ -385,9 +387,9 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'event_log_providers']
-    column_names = [u'event_log_provider_key']
-    condition = u'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+    table_names = ['event_log_providers']
+    column_names = ['event_log_provider_key']
+    condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
         event_log_provider.log_source, event_log_provider.log_type)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
@@ -398,9 +400,9 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if number_of_values == 1:
       values = values_list[0]
-      return values[u'event_log_provider_key']
+      return values['event_log_provider_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _GetMessageFileKey(self, message_filename):
     """Retrieves the key of a message file.
@@ -414,9 +416,9 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'message_files']
-    column_names = [u'message_file_key']
-    condition = u'LOWER(message_filename) = LOWER("{0:s}")'.format(
+    table_names = ['message_files']
+    column_names = ['message_file_key']
+    condition = 'LOWER(message_filename) = LOWER("{0:s}")'.format(
         message_filename)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
@@ -427,9 +429,9 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if number_of_values == 1:
       values = values_list[0]
-      return values[u'message_file_key']
+      return values['message_file_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_filename, message_file_type):
@@ -440,32 +442,32 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
-    table_name = u'message_file_per_event_log_provider'
+    table_name = 'message_file_per_event_log_provider'
     column_names = [
-        u'message_file_key', u'message_file_type', u'event_log_provider_key']
+        'message_file_key', 'message_file_type', 'event_log_provider_key']
 
     event_log_provider_key = self._GetEventLogProviderKey(event_log_provider)
     if event_log_provider_key is None:
-      logging.warning(u'Missing event log provider key for: {0:s}'.format(
+      logging.warning('Missing event log provider key for: {0:s}'.format(
           event_log_provider.log_source))
 
     message_file_key = self._GetMessageFileKey(message_filename)
     if message_file_key is None:
-      logging.warning(u'Missing message file key for: {0:s}'.format(
+      logging.warning('Missing message file key for: {0:s}'.format(
           message_filename))
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER', u'message_file_type TEXT',
-          u'event_log_provider_key INTEGER']
+          'message_file_key INTEGER', 'message_file_type TEXT',
+          'event_log_provider_key INTEGER']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
       condition = (
-          u'message_file_key = {0:d} AND message_file_type = "{1:s}" AND '
-          u'event_log_provider_key = {2:d}').format(
+          'message_file_key = {0:d} AND message_file_type = "{1:s}" AND '
+          'event_log_provider_key = {2:d}').format(
               message_file_key, message_file_type, event_log_provider_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -487,19 +489,19 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Args:
       event_log_provider (EventLogProvider): event log provider.
     """
-    table_name = u'event_log_providers'
-    column_names = [u'log_source', u'log_type', u'provider_guid']
+    table_name = 'event_log_providers'
+    column_names = ['log_source', 'log_type', 'provider_guid']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'log_source TEXT', u'log_type TEXT', u'provider_guid TEXT']
+          'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'log_source TEXT', 'log_type TEXT', 'provider_guid TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      condition = u'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
+      condition = 'log_source = "{0:s}" AND log_type = "{1:s}"'.format(
           event_log_provider.log_source, event_log_provider.log_type)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -524,19 +526,19 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_filename (str): message filename.
       database_filename (str): database filename.
     """
-    table_name = u'message_files'
-    column_names = [u'message_filename', u'database_filename']
+    table_name = 'message_files'
+    column_names = ['message_filename', 'database_filename']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'message_filename TEXT', u'database_filename TEXT']
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'message_filename TEXT', 'database_filename TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      condition = u'LOWER(message_filename) = LOWER("{0:s}")'.format(
+      condition = 'LOWER(message_filename) = LOWER("{0:s}")'.format(
           message_filename)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -563,15 +565,15 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
       tuple[int, str]: language code identifier (LCID) and the message file
           version.
     """
-    table_names = [u'message_files', u'message_table_languages']
-    column_names = [u'file_version', u'lcid', u'identifier']
+    table_names = ['message_files', 'message_table_languages']
+    column_names = ['file_version', 'lcid', 'identifier']
     condition = (
-        u'message_files.message_file_key = '
-        u'message_table_languages.message_file_key')
+        'message_files.message_file_key = '
+        'message_table_languages.message_file_key')
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      yield values[u'lcid'], values[u'file_version']
+      yield values['lcid'], values['file_version']
 
   def GetMessages(self, lcid, file_version):
     """Retrieves the messages of a specific message table.
@@ -583,17 +585,17 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       tuple[int, str]: message identifier and message string.
     """
-    table_name = u'message_table_{0:s}'.format(lcid)
+    table_name = 'message_table_{0:s}'.format(lcid)
     if file_version:
-      table_name = u'{0:s}_{1:s}'.format(table_name, file_version)
+      table_name = '{0:s}_{1:s}'.format(table_name, file_version)
       table_name = re.sub(r'\.', r'_', table_name)
 
-    column_names = [u'message_identifier', u'message_string']
-    condition = u''
+    column_names = ['message_identifier', 'message_string']
+    condition = ''
 
     for values in self._database_file.GetValues(
         [table_name], column_names, condition):
-      yield values[u'message_identifier'], values[u'message_string']
+      yield values['message_identifier'], values['message_string']
 
   def GetStringTables(self):
     """Retrieves the string tables.
@@ -602,15 +604,15 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
       tuple[int, str]: language code identifier (LCID) and the message file
           version.
     """
-    table_names = [u'message_files', u'string_table_languages']
-    column_names = [u'file_version', u'lcid', u'identifier']
+    table_names = ['message_files', 'string_table_languages']
+    column_names = ['file_version', 'lcid', 'identifier']
     condition = (
-        u'message_files.message_file_key = '
-        u'string_table_languages.message_file_key')
+        'message_files.message_file_key = '
+        'string_table_languages.message_file_key')
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      yield values[u'lcid'], values[u'file_version']
+      yield values['lcid'], values['file_version']
 
   def GetStrings(self, lcid, file_version):
     """Retrieves the strings of a specific string table.
@@ -622,14 +624,14 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       tuple[int, str]: string identifier and string.
     """
-    table_name = u'string_table_{0:s}_{1:s}'.format(
+    table_name = 'string_table_{0:s}_{1:s}'.format(
         lcid, re.sub(r'\.', '_', file_version))
-    column_names = [u'string_identifier', u'string']
-    condition = u''
+    column_names = ['string_identifier', 'string']
+    condition = ''
 
     for values in self._database_file.GetValues(
         [table_name], column_names, condition):
-      yield values[u'string_identifier'], values[u'string']
+      yield values['string_identifier'], values['string']
 
 
 class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
@@ -656,17 +658,17 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'message_files']
-    column_names = [u'message_file_key']
-    condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+    table_names = ['message_files']
+    column_names = ['message_file_key']
+    condition = 'LOWER(path) = LOWER("{0:s}")'.format(
         message_resource_file.windows_path)
 
     if message_resource_file.file_version:
-      condition = u'{0:s} AND file_version = "{1:s}"'.format(
+      condition = '{0:s} AND file_version = "{1:s}"'.format(
           condition, message_resource_file.file_version)
 
     if message_resource_file.product_version:
-      condition = u'{0:s} AND product_version = "{1:s}"'.format(
+      condition = '{0:s} AND product_version = "{1:s}"'.format(
           condition, message_resource_file.product_version)
 
     values_list = list(self._database_file.GetValues(
@@ -678,9 +680,9 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if number_of_values == 1:
       values = values_list[0]
-      return values[u'message_file_key']
+      return values['message_file_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _WriteMessage(
       self, message_resource_file, message_table, language_identifier,
@@ -695,11 +697,11 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       table_name (str): name of the table.
       has_table (bool): True if the table previously existed in the database.
     """
-    column_names = [u'message_identifier', u'message_string']
+    column_names = ['message_identifier', 'message_string']
 
     message_identifier = message_table.get_message_identifier(
         language_identifier, message_index)
-    message_identifier = u'0x{0:08x}'.format(message_identifier)
+    message_identifier = '0x{0:08x}'.format(message_identifier)
 
     message_string = message_table.get_string(
         language_identifier, message_index)
@@ -708,28 +710,28 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = True
 
     else:
-      condition = u'message_identifier = "{0:s}"'.format(message_identifier)
+      condition = 'message_identifier = "{0:s}"'.format(message_identifier)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
       if number_of_values == 1:
         values = values_list[0]
-        if message_string != values[u'message_string']:
+        if message_string != values['message_string']:
           differ = difflib.Differ()
           diff_list = list(differ.compare(
-              [values[u'message_string']], [message_string]))
+              [values['message_string']], [message_string]))
           logging.warning((
-              u'Message string mismatch for LCID: 0x{0:08x}, '
-              u'file version: {1:s}, message identifier: {2:s}.\n'
-              u'{3:s}\n').format(
+              'Message string mismatch for LCID: 0x{0:08x}, '
+              'file version: {1:s}, message identifier: {2:s}.\n'
+              '{3:s}\n').format(
                   language_identifier, message_resource_file.file_version,
-                  message_identifier, u'\n'.join(diff_list)))
+                  message_identifier, '\n'.join(diff_list)))
 
       elif number_of_values != 0:
         logging.warning((
-            u'More than one message string found for LCID: 0x{0:08x}, '
-            u'file version: {1:s}, message identifier: {2:s}.').format(
+            'More than one message string found for LCID: 0x{0:08x}, '
+            'file version: {1:s}, message identifier: {2:s}.').format(
                 language_identifier, message_resource_file.file_version,
                 message_identifier))
 
@@ -746,29 +748,29 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Args:
       message_resource_file (MessageResourceFile): message resource file.
     """
-    table_name = u'message_files'
-    column_names = [u'path', u'file_version', u'product_version']
+    table_name = 'message_files'
+    column_names = ['path', 'file_version', 'product_version']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'path TEXT', u'file_version TEXT', u'product_version TEXT']
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'path TEXT', 'file_version TEXT', 'product_version TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+      condition = 'LOWER(path) = LOWER("{0:s}")'.format(
           message_resource_file.windows_path)
 
       if message_resource_file.file_version:
-        condition = u'{0:s} AND file_version = "{1:s}"'.format(
+        condition = '{0:s} AND file_version = "{1:s}"'.format(
             condition, message_resource_file.file_version)
 
       if message_resource_file.product_version:
-        condition = u'{0:s} AND product_version = "{1:s}"'.format(
+        condition = '{0:s} AND product_version = "{1:s}"'.format(
             condition, message_resource_file.product_version)
 
       values_list = list(self._database_file.GetValues(
@@ -802,21 +804,21 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if number_of_messages > 0:
       message_file_key = self._GetMessageFileKey(message_resource_file)
       if message_file_key is None:
-        logging.warning(u'Missing message file key for: {0:s}'.format(
+        logging.warning('Missing message file key for: {0:s}'.format(
             message_resource_file.windows_path))
       else:
         self._WriteMessageTableLanguage(message_file_key, language_identifier)
 
-      table_name = u'message_table_0x{0:08x}'.format(language_identifier)
+      table_name = 'message_table_0x{0:08x}'.format(language_identifier)
       if message_resource_file.file_version:
-        table_name = u'{0:s}_{1:s}'.format(
+        table_name = '{0:s}_{1:s}'.format(
             table_name, message_resource_file.file_version)
         table_name = re.sub(r'\.', r'_', table_name)
 
       has_table = self._database_file.HasTable(table_name)
       if not has_table:
         column_definitions = [
-            u'message_identifier TEXT', u'message_string TEXT']
+            'message_identifier TEXT', 'message_string TEXT']
         self._database_file.CreateTable(table_name, column_definitions)
 
       for message_index in range(0, number_of_messages):
@@ -831,20 +833,20 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_file_key (int): message file key.
       language_identifier (int): language identifier (LCID).
     """
-    table_name = u'message_table_languages'
-    column_names = [u'lcid', u'message_file_key', u'identifier']
+    table_name = 'message_table_languages'
+    column_names = ['lcid', 'message_file_key', 'identifier']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'lcid TEXT', u'message_file_key INT', u'identifier TEXT']
+          'lcid TEXT', 'message_file_key INT', 'identifier TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = u'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
+      condition = 'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
           language_identifier, message_file_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -857,8 +859,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if insert_values:
       values = [
-          u'0x{0:08x}'.format(language_identifier), message_file_key,
-          definitions.LANGUAGES.get(language_identifier, [u'', u''])[0]]
+          '0x{0:08x}'.format(language_identifier), message_file_key,
+          definitions.LANGUAGES.get(language_identifier, ['', ''])[0]]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteMessageTables(self):
@@ -869,8 +871,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     except IOError as exception:
       number_of_languages = 0
       logging.warning((
-          u'Unable to retrieve number of languages from: {0:s} '
-          u'with error: {1:s}.').format(self._message_resource_file, exception))
+          'Unable to retrieve number of languages from: {0:s} '
+          'with error: {1:s}.').format(self._message_resource_file, exception))
 
     if number_of_languages > 0:
       for language_identifier in message_table.language_identifiers:
@@ -890,11 +892,11 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       table_name (str): name of the table.
       has_table (bool): True if the table previously existed in the database.
     """
-    column_names = [u'string_identifier', u'string']
+    column_names = ['string_identifier', 'string']
 
     string_identifier = string_table.get_string_identifier(
         language_identifier, string_index)
-    string_identifier = u'0x{0:08x}'.format(string_identifier)
+    string_identifier = '0x{0:08x}'.format(string_identifier)
 
     string = string_table.get_string(language_identifier, string_index)
 
@@ -902,25 +904,25 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = True
 
     else:
-      condition = u'string_identifier = "{0:s}"'.format(string_identifier)
+      condition = 'string_identifier = "{0:s}"'.format(string_identifier)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
       if number_of_values == 1:
         values = values_list[0]
-        if string != values[u'string']:
+        if string != values['string']:
           logging.warning((
-              u'String mismatch for LCID: 0x{0:08x}, '
-              u'file version: {1:s}, string identifier: {2:s}.\n'
-              u'Found: {3:s}\nStored: {4:s}\n').format(
+              'String mismatch for LCID: 0x{0:08x}, '
+              'file version: {1:s}, string identifier: {2:s}.\n'
+              'Found: {3:s}\nStored: {4:s}\n').format(
                   language_identifier, message_resource_file.file_version,
-                  string_identifier, string, values[u'string']))
+                  string_identifier, string, values['string']))
 
       elif number_of_values != 0:
         logging.warning((
-            u'More than one string found for LCID: 0x{0:08x}, '
-            u'file version: {1:s}, string identifier: {2:s}.').format(
+            'More than one string found for LCID: 0x{0:08x}, '
+            'file version: {1:s}, string identifier: {2:s}.').format(
                 language_identifier, message_resource_file.file_version,
                 string_identifier))
 
@@ -946,20 +948,20 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if number_of_strings > 0:
       message_file_key = self._GetMessageFileKey(message_resource_file)
       if message_file_key is None:
-        logging.warning(u'Missing message file key for: {0:s}'.format(
+        logging.warning('Missing message file key for: {0:s}'.format(
             message_resource_file.windows_path))
 
       self._WriteStringTableLanguage(message_file_key, language_identifier)
 
-      table_name = u'message_table_0x{0:08x}'.format(language_identifier)
+      table_name = 'message_table_0x{0:08x}'.format(language_identifier)
       if message_resource_file.file_version:
-        table_name = u'{0:s}_{1:s}'.format(
+        table_name = '{0:s}_{1:s}'.format(
             table_name, message_resource_file.file_version)
         table_name = re.sub(r'\.', r'_', table_name)
 
       has_table = self._database_file.HasTable(table_name)
       if not has_table:
-        column_definitions = [u'string_identifier TEXT', u'string TEXT']
+        column_definitions = ['string_identifier TEXT', 'string TEXT']
         self._database_file.CreateTable(table_name, column_definitions)
 
       for string_index in range(0, number_of_strings):
@@ -974,20 +976,20 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_file_key (int): message file key.
       language_identifier (int): language identifier (LCID).
     """
-    table_name = u'string_table_languages'
-    column_names = [u'lcid', u'message_file_key', u'identifier']
+    table_name = 'string_table_languages'
+    column_names = ['lcid', 'message_file_key', 'identifier']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'lcid TEXT', u'message_file_key INT', u'identifier TEXT']
+          'lcid TEXT', 'message_file_key INT', 'identifier TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = u'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
+      condition = 'lcid = "0x{0:08x}" AND message_file_key = "{1:d}"'.format(
           language_identifier, message_file_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -1000,8 +1002,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if insert_values:
       values = [
-          u'0x{0:08x}'.format(language_identifier), message_file_key,
-          definitions.LANGUAGES.get(language_identifier, [u'', u''])[0]]
+          '0x{0:08x}'.format(language_identifier), message_file_key,
+          definitions.LANGUAGES.get(language_identifier, ['', ''])[0]]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteStringTables(self):
@@ -1015,8 +1017,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     except IOError as exception:
       number_of_languages = 0
       logging.warning((
-          u'Unable to retrieve number of languages from: {0:s} '
-          u'with error: {1:s}.').format(self._message_resource_file, exception))
+          'Unable to retrieve number of languages from: {0:s} '
+          'with error: {1:s}.').format(self._message_resource_file, exception))
 
     if number_of_languages > 0:
       for language_identifier in string_table.language_identifiers:
@@ -1046,9 +1048,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'event_log_providers']
-    column_names = [u'event_log_provider_key']
-    condition = u'log_source == "{0:s}"'.format(log_source)
+    table_names = ['event_log_providers']
+    column_names = ['event_log_provider_key']
+    condition = 'log_source == "{0:s}"'.format(log_source)
 
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
@@ -1059,9 +1061,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     elif number_of_values == 1:
       values = values_list[0]
-      return values[u'event_log_provider_key']
+      return values['event_log_provider_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _GetMessage(self, message_file_key, lcid, message_identifier):
     """Retrieves a specific message from a specific message table.
@@ -1077,14 +1079,14 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_name = u'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
+    table_name = 'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       return
 
-    column_names = [u'message_string']
-    condition = u'message_identifier == "0x{0:08x}"'.format(message_identifier)
+    column_names = ['message_string']
+    condition = 'message_identifier == "0x{0:08x}"'.format(message_identifier)
 
     values = list(self._database_file.GetValues(
         [table_name], column_names, condition))
@@ -1094,9 +1096,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       return
 
     elif number_of_values == 1:
-      return values[0][u'message_string']
+      return values[0]['message_string']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _GetMessageFileKeys(self, event_log_provider_key):
     """Retrieves the message file keys.
@@ -1107,9 +1109,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       A message file key.
     """
-    table_names = [u'message_file_per_event_log_provider']
-    column_names = [u'message_file_key']
-    condition = u'event_log_provider_key == {0:d}'.format(
+    table_names = ['message_file_per_event_log_provider']
+    column_names = ['message_file_key']
+    condition = 'event_log_provider_key == {0:d}'.format(
         event_log_provider_key)
 
     generator = self._database_file.GetValues(
@@ -1117,7 +1119,7 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     # pylint: disable=not-an-iterable
     for values in generator:
-      yield values[u'message_file_key']
+      yield values['message_file_key']
 
   def _GetMessageFilenames(self, log_source, message_file_type):
     """Retrieves the message filenames of a specific Event Log provider.
@@ -1130,21 +1132,21 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       list[str]: message filenames.
     """
     table_names = [
-        u'event_log_providers', u'message_file_per_event_log_provider',
-        u'message_files']
-    column_names = [u'message_files.path']
+        'event_log_providers', 'message_file_per_event_log_provider',
+        'message_files']
+    column_names = ['message_files.path']
     condition = (
-        u'{0:s}.log_source == "{3:s}" AND '
-        u'{1:s}.message_file_type == "{4:s}" AND '
-        u'{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
-        u'{1:s}.message_file_key == {2:s}.message_file_key').format(
-            u'event_log_providers', u'message_file_per_event_log_provider',
-            u'message_files', log_source, message_file_type)
+        '{0:s}.log_source == "{3:s}" AND '
+        '{1:s}.message_file_type == "{4:s}" AND '
+        '{0:s}.event_log_provider_key == {1:s}.event_log_provider_key AND '
+        '{1:s}.message_file_key == {2:s}.message_file_key').format(
+            'event_log_providers', 'message_file_per_event_log_provider',
+            'message_files', log_source, message_file_type)
 
     message_filenames = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      message_filename = values[u'message_files.path']
+      message_filename = values['message_files.path']
       message_filenames.append(message_filename)
 
     return message_filenames
@@ -1159,18 +1161,18 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       A tuple of a message identifier and string.
     """
-    table_name = u'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
+    table_name = 'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       return
 
-    column_names = [u'message_identifier', u'message_string']
-    condition = u''
+    column_names = ['message_identifier', 'message_string']
+    condition = ''
 
     for values in self._database_file.GetValues(
         [table_name], column_names, condition):
-      yield values[u'message_identifier'], values[u'message_string']
+      yield values['message_identifier'], values['message_string']
 
   def GetEventLogProviders(self):
     """Retrieves the Event Log providers.
@@ -1178,15 +1180,15 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Yields:
       An Event Log provider (instance of EventLogProvider).
     """
-    table_names = [u'event_log_providers']
-    column_names = [u'log_source', u'provider_guid']
-    condition = u''
+    table_names = ['event_log_providers']
+    column_names = ['log_source', 'provider_guid']
+    condition = ''
 
     event_log_providers = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
       event_log_provider = resources.EventLogProvider(
-          None, values[u'log_source'], values[u'provider_guid'])
+          None, values['log_source'], values['provider_guid'])
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:
@@ -1270,14 +1272,14 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_name = u'metadata'
+    table_name = 'metadata'
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       return
 
-    column_names = [u'value']
-    condition = u'name == "{0:s}"'.format(attribute_name)
+    column_names = ['value']
+    condition = 'name == "{0:s}"'.format(attribute_name)
 
     values = list(self._database_file.GetValues(
         [table_name], column_names, condition))
@@ -1287,9 +1289,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       return
 
     elif number_of_values == 1:
-      return values[0][u'value']
+      return values[0]['value']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
 
 class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
@@ -1304,7 +1306,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
   # Message string specifiers that expand to a variable place holder.
   _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
 
-  def __init__(self, string_format=u'wrc'):
+  def __init__(self, string_format='wrc'):
     """Initializes the database writer.
 
     Args:
@@ -1326,9 +1328,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'event_log_providers']
-    column_names = [u'event_log_provider_key']
-    condition = u'log_source = "{0:s}"'.format(
+    table_names = ['event_log_providers']
+    column_names = ['event_log_provider_key']
+    condition = 'log_source = "{0:s}"'.format(
         event_log_provider.log_source)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
@@ -1339,9 +1341,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if number_of_values == 1:
       values = values_list[0]
-      return values[u'event_log_provider_key']
+      return values['event_log_provider_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _GetMessageFileKey(self, message_file):
     """Retrieves the key of a message file.
@@ -1355,9 +1357,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'message_files']
-    column_names = [u'message_file_key']
-    condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+    table_names = ['message_files']
+    column_names = ['message_file_key']
+    condition = 'LOWER(path) = LOWER("{0:s}")'.format(
         message_file.windows_path)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
@@ -1368,9 +1370,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if number_of_values == 1:
       values = values_list[0]
-      return values[u'message_file_key']
+      return values['message_file_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _GetMessageFileKeyByPath(self, message_filename):
     """Retrieves the key of a message file for a specific path.
@@ -1384,9 +1386,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Raises:
       IOError: if more than one value is found in the database.
     """
-    table_names = [u'message_files']
-    column_names = [u'message_file_key']
-    condition = u'LOWER(path) = LOWER("{0:s}")'.format(message_filename)
+    table_names = ['message_files']
+    column_names = ['message_file_key']
+    condition = 'LOWER(path) = LOWER("{0:s}")'.format(message_filename)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -1396,9 +1398,9 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if number_of_values == 1:
       values = values_list[0]
-      return values[u'message_file_key']
+      return values['message_file_key']
 
-    raise IOError(u'More than one value found in database.')
+    raise IOError('More than one value found in database.')
 
   def _ReformatMessageString(self, message_string):
     """Reformats the message string.
@@ -1415,13 +1417,13 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       for group in match_object.groups():
         try:
           place_holder_number = int(group, 10) - 1
-          expanded_group = u'{{{0:d}:s}}'.format(place_holder_number)
+          expanded_group = '{{{0:d}:s}}'.format(place_holder_number)
         except ValueError:
           expanded_group = group
 
         expanded_groups.append(expanded_group)
 
-      return u''.join(expanded_groups)
+      return ''.join(expanded_groups)
 
     if not message_string:
       return
@@ -1445,32 +1447,32 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       table_name (str): name of the table.
       has_table (bool): True if the table previously existed in the database.
     """
-    column_names = [u'message_identifier', u'message_string']
+    column_names = ['message_identifier', 'message_string']
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = u'message_identifier = "{0:s}"'.format(message_identifier)
+      condition = 'message_identifier = "{0:s}"'.format(message_identifier)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
       if number_of_values == 1:
         values = values_list[0]
-        if message_string != values[u'message_string']:
+        if message_string != values['message_string']:
           logging.warning((
-              u'Message string mismatch for LCID: {0:s}, '
-              u'file version: {1:s}, message identifier: {2:s}.\n'
-              u'Found: {3:s}\nStored: {4:s}\n').format(
+              'Message string mismatch for LCID: {0:s}, '
+              'file version: {1:s}, message identifier: {2:s}.\n'
+              'Found: {3:s}\nStored: {4:s}\n').format(
                   language_identifier, message_file.file_version,
                   message_identifier, message_string,
-                  values[u'message_string']))
+                  values['message_string']))
 
       elif number_of_values != 0:
         logging.warning((
-            u'More than one message string found for LCID: {0:s}, '
-            u'file version: {1:s}, message identifier: {2:s}.').format(
+            'More than one message string found for LCID: {0:s}, '
+            'file version: {1:s}, message identifier: {2:s}.').format(
                 language_identifier, message_file.file_version,
                 message_identifier))
 
@@ -1478,7 +1480,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       insert_values = False
 
     if insert_values:
-      if self._string_format == u'pep3101':
+      if self._string_format == 'pep3101':
         message_string = self._ReformatMessageString(message_string)
 
       values = [message_identifier, message_string]
@@ -1490,20 +1492,20 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Args:
       message_file (MessageFile): message file.
     """
-    table_name = u'message_files'
-    column_names = [u'path']
+    table_name = 'message_files'
+    column_names = ['path']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT', u'path TEXT']
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT', 'path TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = u'LOWER(path) = LOWER("{0:s}")'.format(
+      condition = 'LOWER(path) = LOWER("{0:s}")'.format(
           message_file.windows_path)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -1528,16 +1530,16 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if message_table.message_strings:
       message_file_key = self._GetMessageFileKey(message_file)
       if message_file_key is None:
-        logging.warning(u'Missing message file key for: {0:s}'.format(
+        logging.warning('Missing message file key for: {0:s}'.format(
             message_file.windows_path))
 
-      table_name = u'message_table_{0:d}_{1:s}'.format(
+      table_name = 'message_table_{0:d}_{1:s}'.format(
           message_file_key, message_table.lcid)
 
       has_table = self._database_file.HasTable(table_name)
       if not has_table:
         column_definitions = [
-            u'message_identifier TEXT', u'message_string TEXT']
+            'message_identifier TEXT', 'message_string TEXT']
         self._database_file.CreateTable(table_name, column_definitions)
 
       message_strings = message_table.message_strings
@@ -1555,19 +1557,19 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_file_key (int): message file key.
       language_identifier (int): language identifier (LCID).
     """
-    table_name = u'message_table_languages'
-    column_names = [u'lcid', u'message_file_key']
+    table_name = 'message_table_languages'
+    column_names = ['lcid', 'message_file_key']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      column_definitions = [u'lcid TEXT', u'message_file_key INT']
+      column_definitions = ['lcid TEXT', 'message_file_key INT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     if not has_table:
       insert_values = True
 
     else:
-      condition = u'lcid = "{0:s}" AND message_file_key = "{1:d}"'.format(
+      condition = 'lcid = "{0:s}" AND message_file_key = "{1:d}"'.format(
           language_identifier, message_file_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -1588,19 +1590,19 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Args:
       event_log_provider (EventLogProvider): event log provider.
     """
-    table_name = u'event_log_providers'
-    column_names = [u'log_source', u'provider_guid']
+    table_name = 'event_log_providers'
+    column_names = ['log_source', 'provider_guid']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          u'log_source TEXT', u'provider_guid TEXT']
+          'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
+          'log_source TEXT', 'provider_guid TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      condition = u'log_source = "{0:s}"'.format(event_log_provider.log_source)
+      condition = 'log_source = "{0:s}"'.format(event_log_provider.log_source)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -1636,32 +1638,32 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       event_log_provider (EventLogProvider): event log provider.
       message_filename (str): message filename.
     """
-    table_name = u'message_file_per_event_log_provider'
+    table_name = 'message_file_per_event_log_provider'
     column_names = [
-        u'message_file_key', u'message_file_type', u'event_log_provider_key']
+        'message_file_key', 'message_file_type', 'event_log_provider_key']
 
     event_log_provider_key = self._GetEventLogProviderKey(event_log_provider)
     if event_log_provider_key is None:
-      logging.warning(u'Missing event log provider key for: {0:s}'.format(
+      logging.warning('Missing event log provider key for: {0:s}'.format(
           event_log_provider.log_source))
 
     message_file_key = self._GetMessageFileKeyByPath(message_filename)
     if message_file_key is None:
-      logging.warning(u'Missing message file key for: {0:s}'.format(
+      logging.warning('Missing message file key for: {0:s}'.format(
           message_filename))
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
       column_definitions = [
-          u'message_file_key INTEGER', u'message_file_type TEXT',
-          u'event_log_provider_key INTEGER']
+          'message_file_key INTEGER', 'message_file_type TEXT',
+          'event_log_provider_key INTEGER']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
       condition = (
-          u'message_file_key = {0:d} AND message_file_type = "{1:s}" AND '
-          u'event_log_provider_key = {2:d}').format(
+          'message_file_key = {0:d} AND message_file_type = "{1:s}" AND '
+          'event_log_provider_key = {2:d}').format(
               message_file_key, message_file_type, event_log_provider_key)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -1684,17 +1686,17 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       attribute_name (str): name of the metadata attribute.
       attribute_value (str): value of the metadata attribute.
     """
-    table_name = u'metadata'
-    column_names = [u'name', u'value']
+    table_name = 'metadata'
+    column_names = ['name', 'value']
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      column_definitions = [u'name TEXT', u'value TEXT']
+      column_definitions = ['name TEXT', 'value TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
       insert_values = True
 
     else:
-      condition = u'name = "{0:s}"'.format(attribute_name)
+      condition = 'name = "{0:s}"'.format(attribute_name)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 

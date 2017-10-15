@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Event Log message resource extractor class."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -73,18 +75,18 @@ class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
     file_reader = extractor.EventMessageStringRegistryFileReader(
         volume_scanner)
 
-    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
 
     # TODO: implement tests.
     # file_reader.Open(test_file_path)
 
-    # file_reader.Open(u'bogus')
+    # file_reader.Open('bogus')
     _ = file_reader
     _ = test_file_path
 
 
-@shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
-@shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+@shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
+@shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
 class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Event Log message resource extractor."""
 
@@ -98,16 +100,16 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     """
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
 
-    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
     file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SOFTWARE', test_file_path)
+        '/Windows/System32/config/SOFTWARE', test_file_path)
 
-    test_file_path = self._GetTestFilePath([u'SYSTEM'])
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
     file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SYSTEM', test_file_path)
+        '/Windows/System32/config/SYSTEM', test_file_path)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     extractor_object = extractor.EventMessageStringExtractor()
 
@@ -115,12 +117,12 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     extractor_object._path_resolver = (
         windows_path_resolver.WindowsPathResolver(
             file_system_builder.file_system, mount_point))
-    extractor_object._windows_directory = u'C:\\Windows'
+    extractor_object._windows_directory = 'C:\\Windows'
 
     extractor_object._path_resolver.SetEnvironmentVariable(
-        u'SystemRoot', extractor_object._windows_directory)
+        'SystemRoot', extractor_object._windows_directory)
     extractor_object._path_resolver.SetEnvironmentVariable(
-        u'WinDir', extractor_object._windows_directory)
+        'WinDir', extractor_object._windows_directory)
 
     return extractor_object
 
@@ -138,17 +140,17 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
 
     event_log_types = extractor_object._CollectEventLogTypes()
     self.assertEqual(len(event_log_types), 3)
-    self.assertEqual(len(event_log_types[u'Application']), 65)
-    self.assertEqual(len(event_log_types[u'Security']), 7)
-    self.assertEqual(len(event_log_types[u'System']), 186)
+    self.assertEqual(len(event_log_types['Application']), 65)
+    self.assertEqual(len(event_log_types['Security']), 7)
+    self.assertEqual(len(event_log_types['System']), 186)
 
     # TODO: hide duplication warnings.
     event_log_types = extractor_object._CollectEventLogTypes(
         all_control_sets=True)
     self.assertEqual(len(event_log_types), 3)
-    self.assertEqual(len(event_log_types[u'Application']), 65)
-    self.assertEqual(len(event_log_types[u'Security']), 7)
-    self.assertEqual(len(event_log_types[u'System']), 186)
+    self.assertEqual(len(event_log_types['Application']), 65)
+    self.assertEqual(len(event_log_types['Security']), 7)
+    self.assertEqual(len(event_log_types['System']), 186)
 
   def testCollectEventLogProvidersFromKey(self):
     """Tests the _CollectEventLogProvidersFromKey function."""
@@ -166,9 +168,9 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     output_writer = TestOutputWriter()
     processed_message_filenames = []
     event_log_provider = resources.EventLogProvider(
-        u'log_type', u'log_source', u'provider_guid')
-    message_filename = u''
-    message_file_type = u''
+        'log_type', 'log_source', 'provider_guid')
+    message_filename = ''
+    message_file_type = ''
 
     extractor_object._ExtractMessageFile(
         output_writer, processed_message_filenames, event_log_provider,
@@ -193,7 +195,7 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
     system_root = extractor_object._GetSystemRoot()
-    self.assertEqual(system_root, u'C:\\WINDOWS')
+    self.assertEqual(system_root, 'C:\\WINDOWS')
 
   def testGetWindowsVersion(self):
     """Tests the _GetWindowsVersion function."""
@@ -210,7 +212,7 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     # TODO: improve test.
 
     message_resource_file = extractor_object._OpenMessageResourceFile(
-        u'C:\\Windows\\System32\\wrc_test.dll')
+        'C:\\Windows\\System32\\wrc_test.dll')
     self.assertIsNone(message_resource_file)
 
   # TODO: test _OpenMessageResourceFileByPathSpec

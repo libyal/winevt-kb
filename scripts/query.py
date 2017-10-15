@@ -3,6 +3,8 @@
 """Script to query a winevt-kb SQLite database."""
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import sys
@@ -17,42 +19,42 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
-      u'Export strings extracted from message files.'))
+      'Export strings extracted from message files.'))
 
   argument_parser.add_argument(
-      u'database', nargs=u'?', action=u'store', metavar=u'DATABASE',
-      default=None, help=u'filename of the sqlite3 database to read from.')
+      'database', nargs='?', action='store', metavar='DATABASE',
+      default=None, help='filename of the sqlite3 database to read from.')
 
   argument_parser.add_argument(
-      u'event_provider', nargs=u'?', action=u'store', metavar=u'EVENT_PROVIDER',
-      default=None, help=u'specific event provider to query.')
+      'event_provider', nargs='?', action='store', metavar='EVENT_PROVIDER',
+      default=None, help='specific event provider to query.')
 
   argument_parser.add_argument(
-      u'message_identifier', nargs=u'?', action=u'store',
-      metavar=u'MESSAGE_IDENTIFIER', default=None,
-      help=u'specific message identifier to query.')
+      'message_identifier', nargs='?', action='store',
+      metavar='MESSAGE_IDENTIFIER', default=None,
+      help='specific message identifier to query.')
 
   argument_parser.add_argument(
-      u'--lcid', dest=u'lcid', action=u'store', metavar=u'LCID',
-      default=0x00000409, help=u'the preferred LCID.')
+      '--lcid', dest='lcid', action='store', metavar='LCID',
+      default=0x00000409, help='the preferred LCID.')
 
   options = argument_parser.parse_args()
 
   if not options.database:
-    print(u'Database value is missing.')
-    print(u'')
+    print('Database value is missing.')
+    print('')
     argument_parser.print_help()
-    print(u'')
+    print('')
     return False
 
   logging.basicConfig(
-      level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+      level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   database_reader = database.ResourcesSqlite3DatabaseReader()
   database_reader.Open(options.database)
 
   message_identifier = None
-  if getattr(options, u'message_identifier', None):
+  if getattr(options, 'message_identifier', None):
     try:
       message_identifier = int(options.message_identifier, 10)
     except ValueError:
@@ -65,28 +67,28 @@ def Main():
         pass
 
     if message_identifier is None:
-      print(u'Unsupported message identifier: {0:s}'.format(
+      print('Unsupported message identifier: {0:s}'.format(
           options.message_identifier))
       return False
 
-  if not getattr(options, u'event_provider', None):
-    print(u'Event Log providers:')
+  if not getattr(options, 'event_provider', None):
+    print('Event Log providers:')
     for event_log_provider in database_reader.GetEventLogProviders():
       print(event_log_provider.log_source)
 
   elif message_identifier is None:
-    print(u'Message strings:')
+    print('Message strings:')
     for message_identifier, message_string in database_reader.GetMessages(
         options.event_provider, options.lcid):
-      print(u'{0:s}:\t{1:s}'.format(message_identifier, message_string))
+      print('{0:s}:\t{1:s}'.format(message_identifier, message_string))
 
   else:
     message_string = database_reader.GetMessage(
         options.event_provider, options.lcid, message_identifier)
 
-    print(u'Message string:')
+    print('Message string:')
     if message_string:
-      print(u'0x{0:08x}:\t{1:s}'.format(message_identifier, message_string))
+      print('0x{0:08x}:\t{1:s}'.format(message_identifier, message_string))
 
   database_reader.Close()
 

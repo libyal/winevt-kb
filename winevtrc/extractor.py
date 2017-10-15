@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Classes to represent a Windows Event Log message resource extractor."""
+"""Windows Event Log message resource extractor."""
+
+from __future__ import unicode_literals
 
 import logging
 
@@ -27,7 +29,7 @@ class EventMessageStringRegistryFileReader(
     super(EventMessageStringRegistryFileReader, self).__init__()
     self._volume_scanner = volume_scanner
 
-  def Open(self, path, ascii_codepage=u'cp1252'):
+  def Open(self, path, ascii_codepage='cp1252'):
     """Opens the Windows Registry file specificed by the path.
 
     Args:
@@ -82,7 +84,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
         registry_file_reader=registry_file_reader)
     self._windows_version = None
 
-    self.ascii_codepage = u'cp1252'
+    self.ascii_codepage = 'cp1252'
     self.invalid_message_filenames = []
     self.missing_table_message_filenames = []
     self.preferred_language_identifier = 0x0409
@@ -119,7 +121,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       event_log_sources = event_log_types[event_log_provider.log_type]
       if event_log_provider.log_source in event_log_sources:
         logging.warning((
-            u'Found duplicate Event Log source: {0:s} in type: {1:s}.').format(
+            'Found duplicate Event Log source: {0:s} in type: {1:s}.').format(
                 event_log_provider.log_source, event_log_provider.log_type))
 
       event_log_sources[event_log_provider.log_source] = event_log_provider
@@ -144,7 +146,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       for log_source_key in log_type_key.GetSubkeys():
         log_source = log_source_key.name
 
-        provider_guid_value = log_source_key.GetValueByName(u'ProviderGuid')
+        provider_guid_value = log_source_key.GetValueByName('ProviderGuid')
 
         if provider_guid_value:
           provider_guid = provider_guid_value.GetDataAsObject()
@@ -155,21 +157,21 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
             log_type, log_source, provider_guid)
 
         category_message_file_value = log_source_key.GetValueByName(
-            u'CategoryMessageFile')
+            'CategoryMessageFile')
 
         if category_message_file_value:
           event_log_provider.SetCategoryMessageFilenames(
               category_message_file_value.GetDataAsObject())
 
         event_message_file_value = log_source_key.GetValueByName(
-            u'EventMessageFile')
+            'EventMessageFile')
 
         if event_message_file_value:
           event_log_provider.SetEventMessageFilenames(
               event_message_file_value.GetDataAsObject())
 
         parameter_message_file_value = log_source_key.GetValueByName(
-            u'ParameterMessageFile')
+            'ParameterMessageFile')
 
         if parameter_message_file_value:
           event_log_provider.SetParameterMessageFilenames(
@@ -199,7 +201,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       # If message_filename points to a directory try appending the Event Log
       # provider log source as the file name.
       if file_entry.IsDirectory():
-        message_filename = u'\\'.join([
+        message_filename = '\\'.join([
             message_filename, event_log_provider.log_source])
         path_spec = self._path_resolver.ResolvePath(message_filename)
 
@@ -227,16 +229,16 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
       if mui_language:
         message_filename_path, _, message_filename_name = (
-            message_filename.rpartition(u'\\'))
+            message_filename.rpartition('\\'))
 
-        mui_message_filename = u'{0:s}\\{1:s}\\{2:s}.mui'.format(
+        mui_message_filename = '{0:s}\\{1:s}\\{2:s}.mui'.format(
             message_filename_path, mui_language, message_filename_name)
 
         mui_message_file = self._OpenMessageResourceFile(
             mui_message_filename)
 
         if not mui_message_file:
-          mui_message_filename = u'{0:s}\\{1:s}.mui'.format(
+          mui_message_filename = '{0:s}\\{1:s}.mui'.format(
               message_filename_path, message_filename_name)
 
           mui_message_file = self._OpenMessageResourceFile(
@@ -257,18 +259,18 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
       if normalized_message_filename.startswith(
           self._windows_directory.lower()):
-        normalized_message_filename = u'%SystemRoot%{0:s}'.format(
+        normalized_message_filename = '%SystemRoot%{0:s}'.format(
             message_filename[len(self._windows_directory):])
 
       elif normalized_message_filename.startswith(
-          u'%SystemRoot%'.lower()):
-        normalized_message_filename = u'%SystemRoot%{0:s}'.format(
-            message_filename[len(u'%SystemRoot%'):])
+          '%SystemRoot%'.lower()):
+        normalized_message_filename = '%SystemRoot%{0:s}'.format(
+            message_filename[len('%SystemRoot%'):])
 
       else:
         normalized_message_filename = message_filename
 
-      logging.info(u'Processing: {0:s}'.format(normalized_message_filename))
+      logging.info('Processing: {0:s}'.format(normalized_message_filename))
 
       message_file.windows_path = normalized_message_filename
 
@@ -293,25 +295,25 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       EventLogProvider: Event Log provider.
     """
     if all_control_sets:
-      system_key = self._registry.GetKeyByPath(u'HKEY_LOCAL_MACHINE\\System\\')
+      system_key = self._registry.GetKeyByPath('HKEY_LOCAL_MACHINE\\System\\')
       if not system_key:
         return
 
       for control_set_key in system_key.GetSubkeys():
-        if control_set_key.name.startswith(u'ControlSet'):
+        if control_set_key.name.startswith('ControlSet'):
           eventlog_key = control_set_key.GetSubkeyByPath(
-              u'Services\\EventLog')
+              'Services\\EventLog')
           if eventlog_key:
-            logging.info(u'Control set: {0:s}'.format(control_set_key.name))
+            logging.info('Control set: {0:s}'.format(control_set_key.name))
             for event_log_provider in self._CollectEventLogProvidersFromKey(
                 eventlog_key):
               yield event_log_provider
 
     else:
       eventlog_key = self._registry.GetKeyByPath(
-          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog')
+          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog')
       if eventlog_key:
-        logging.info(u'Current control set')
+        logging.info('Current control set')
         for event_log_provider in self._CollectEventLogProvidersFromKey(
             eventlog_key):
           yield event_log_provider
@@ -323,11 +325,11 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       str: value of SystemRoot or None if the value cannot be determined.
     """
     current_version_key = self._registry.GetKeyByPath(
-        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
 
     system_root = None
     if current_version_key:
-      system_root_value = current_version_key.GetValueByName(u'SystemRoot')
+      system_root_value = current_version_key.GetValueByName('SystemRoot')
       if system_root_value:
         system_root = system_root_value.GetDataAsObject()
 
@@ -345,14 +347,14 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     system_root = self._GetSystemRoot()
 
     # Window NT variants.
-    kernel_executable_path = u'\\'.join([
-        system_root, u'System32', u'ntoskrnl.exe'])
+    kernel_executable_path = '\\'.join([
+        system_root, 'System32', 'ntoskrnl.exe'])
     message_file = self._OpenMessageResourceFile(kernel_executable_path)
 
     if not message_file:
       # Window 9x variants.
-      kernel_executable_path = u'\\'.join([
-          system_root, u'System32', u'\\kernel32.dll'])
+      kernel_executable_path = '\\'.join([
+          system_root, 'System32', '\\kernel32.dll'])
       message_file = self._OpenMessageResourceFile(kernel_executable_path)
 
     if not message_file:
@@ -387,12 +389,12 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """
     windows_path = self._path_resolver.GetWindowsPath(path_spec)
     if windows_path is None:
-      logging.warning(u'Unable to retrieve Windows path.')
+      logging.warning('Unable to retrieve Windows path.')
 
     try:
       file_object = dfvfs_resolver.Resolver.OpenFileObject(path_spec)
     except IOError as exception:
-      logging.warning(u'Unable to open: {0:s} with error: {1:s}'.format(
+      logging.warning('Unable to open: {0:s} with error: {1:s}'.format(
           path_spec.comparable, exception))
       file_object = None
 

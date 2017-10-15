@@ -3,6 +3,8 @@
 """Script to represent process start and stop events as a process tree."""
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import os
@@ -204,16 +206,16 @@ class ProcessTree(object):
         try:
           xml = ElementTree.fromstring(line)
         except ElementTree.ParseError:
-          logging.error(u'Unable to parse line: {0:d} "{1:s}"'.format(
+          logging.error('Unable to parse line: {0:d} "{1:s}"'.format(
               line_index, line))
           continue
 
         xml_system = xml.find(
-            u'{http://schemas.microsoft.com/win/2004/08/events/event}System')
+            '{http://schemas.microsoft.com/win/2004/08/events/event}System')
         xml_event_id = xml_system.find(
-            u'{http://schemas.microsoft.com/win/2004/08/events/event}EventID')
+            '{http://schemas.microsoft.com/win/2004/08/events/event}EventID')
         xml_event_data = xml.find(
-            u'{http://schemas.microsoft.com/win/2004/08/events/event}EventData')
+            '{http://schemas.microsoft.com/win/2004/08/events/event}EventData')
 
         event_log_record = EventLogRecord()
 
@@ -243,7 +245,7 @@ class ProcessTree(object):
     active_processes = {}
     for process_event in record_generator(source):
       if isinstance(process_event, ProcessStartEvent):
-        print(u'Process started: (PID: {0:d}, PPID: {1:d}) {2:s} {3:s}'.format(
+        print('Process started: (PID: {0:d}, PPID: {1:d}) {2:s} {3:s}'.format(
             process_event.new_process_id, process_event.process_id,
             process_event.new_process_name, process_event.command_line))
 
@@ -254,7 +256,7 @@ class ProcessTree(object):
         if active_process:
           active_process.stop_time = process_event.written_time
 
-        print(u'Process stopped: (PID: {0:d}) {1:s}'.format(
+        print('Process stopped: (PID: {0:d}) {1:s}'.format(
             process_event.process_id, process_event.process_name))
 
   def Output(self, source):
@@ -288,35 +290,35 @@ def Main():
     A boolean containing True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
-      u'Represents process start and stop events as a process tree.'))
+      'Represents process start and stop events as a process tree.'))
 
   args_parser.add_argument(
-      u'source', nargs=u'?', action=u'store', metavar=u'EVENT_LOG',
+      'source', nargs='?', action='store', metavar='EVENT_LOG',
       default=None, help=(
-          u'EventLog file that contains the start and stop events.'))
+          'EventLog file that contains the start and stop events.'))
 
   options = args_parser.parse_args()
 
   if not options.source:
-    print(u'Source value is missing.')
-    print(u'')
+    print('Source value is missing.')
+    print('')
     args_parser.print_help()
-    print(u'')
+    print('')
     return False
 
   if not os.path.isfile(options.source):
-    print(u'Invalid source.')
-    print(u'')
+    print('Invalid source.')
+    print('')
     return False
 
   logging.basicConfig(
-      level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+      level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   output_writer = StdoutOutputWriter()
 
   if not output_writer.Open():
-    print(u'Unable to open output writer.')
-    print(u'')
+    print('Unable to open output writer.')
+    print('')
     return False
 
   process_tree = ProcessTree()

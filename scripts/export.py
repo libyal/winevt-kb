@@ -3,6 +3,8 @@
 """Script to export strings extracted from message files."""
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import argparse
 import difflib
 import logging
@@ -17,7 +19,7 @@ from winevtrc import resources
 class Exporter(object):
   """Class that exports the strings extracted from message files."""
 
-  EVENT_PROVIDERS_DATABASE_FILENAME = u'winevt-kb.db'
+  EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
 
   def __init__(self):
     """Initializes the exporter object."""
@@ -43,32 +45,32 @@ class Exporter(object):
         if event_log_provider.provider_guid != provider_guid:
           if event_log_provider.provider_guid:
             logging.warning((
-                u'Found duplicate alternating event log provider: {0:s}. '
-                u'GUID mismatch').format(log_source))
+                'Found duplicate alternating event log provider: {0:s}. '
+                'GUID mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.category_message_files
         if event_log_provider.category_message_files != message_files:
           if event_log_provider.category_message_files:
             logging.warning((
-                u'Found duplicate alternating event log provider: {0:s}. '
-                u'Category message files mismatch').format(log_source))
+                'Found duplicate alternating event log provider: {0:s}. '
+                'Category message files mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.event_message_files
         if event_log_provider.event_message_files != message_files:
           if event_log_provider.event_message_files:
             logging.warning((
-                u'Found duplicate alternating event log provider: {0:s}. '
-                u'Event message files mismatch').format(log_source))
+                'Found duplicate alternating event log provider: {0:s}. '
+                'Event message files mismatch').format(log_source))
           continue
 
         message_files = existing_event_log_provider.parameter_message_files
         if event_log_provider.parameter_message_files != message_files:
           if event_log_provider.parameter_message_files:
             logging.warning((
-                u'Found duplicate alternating event log provider: {0:s}. '
-                u'Parameter message files mismatch').format(log_source))
+                'Found duplicate alternating event log provider: {0:s}. '
+                'Parameter message files mismatch').format(log_source))
           continue
 
       self._event_log_providers[log_source] = event_log_provider
@@ -104,10 +106,10 @@ class Exporter(object):
       message_file_database_path = os.path.join(source_path, database_filename)
       if not os.path.exists(message_file_database_path):
         logging.warning(
-            u'Missing message file database: {0:s}.'.format(database_filename))
+            'Missing message file database: {0:s}.'.format(database_filename))
         continue
 
-      logging.info(u'Processing: {0:s}'.format(database_filename))
+      logging.info('Processing: {0:s}'.format(database_filename))
 
       message_file = resources.MessageFile(database_filename[:-3])
       message_file.windows_path = windows_path
@@ -153,10 +155,10 @@ class Exporter(object):
             diff_list = list(differ.compare(
                 [stored_message_string], [message_string]))
             logging.warning((
-                u'Found duplicate alternating message string: {0:s} '
-                u'in LCID: {1:s} and version: {2:s}.\n{3:s}\n').format(
+                'Found duplicate alternating message string: {0:s} '
+                'in LCID: {1:s} and version: {2:s}.\n{3:s}\n').format(
                     message_identifier, message_table.lcid, file_version,
-                    u'\n'.join(diff_list)))
+                    '\n'.join(diff_list)))
 
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
@@ -183,8 +185,8 @@ class Exporter(object):
 
           elif string != stored_string:
             logging.warning((
-                u'Found duplicate alternating string: {0:s} in LCID: {1:s} '
-                u'and version: {2:s}.\nPrevious: {3:s}\nNew:{4:s}\n').format(
+                'Found duplicate alternating string: {0:s} in LCID: {1:s} '
+                'and version: {2:s}.\nPrevious: {3:s}\nNew:{4:s}\n').format(
                     string_identifier, string_table.lcid, file_version,
                     stored_string, string))
 
@@ -217,7 +219,7 @@ class Exporter(object):
 class Sqlite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
 
-  def __init__(self, database_path, string_format=u'wrc'):
+  def __init__(self, database_path, string_format='wrc'):
     """Initializes an output writer object.
 
     Args:
@@ -232,9 +234,9 @@ class Sqlite3OutputWriter(object):
   def _WriteMetadata(self):
     """Writes the metadata."""
     self._database_writer.WriteMetadataAttribute(
-        u'version', u'20150315')
+        'version', '20150315')
     self._database_writer.WriteMetadataAttribute(
-        u'string_format', self._string_format)
+        'string_format', self._string_format)
 
   def Close(self):
     """Closes the output writer object."""
@@ -295,21 +297,21 @@ class StdoutOutputWriter(object):
     Args:
       message_table (MessageTable): message table.
     """
-    print(u'{0:s} (LCID: {1:s})'.format(
+    print('{0:s} (LCID: {1:s})'.format(
         message_table.language, message_table.lcid))
-    print(u'')
-    print(u'Message identifier\tMessage string')
+    print('')
+    print('Message identifier\tMessage string')
 
     for identifier, string in message_table.message_strings.iteritems():
-      string = re.sub(r'\n', u'\\\\n', string)
-      string = re.sub(r'\r', u'\\\\r', string)
-      string = re.sub(r'\t', u'\\\\t', string)
+      string = re.sub(r'\n', '\\\\n', string)
+      string = re.sub(r'\r', '\\\\r', string)
+      string = re.sub(r'\t', '\\\\t', string)
 
-      ouput_string = u'{0:s}\t{1:s}'.format(identifier, string)
+      ouput_string = '{0:s}\t{1:s}'.format(identifier, string)
 
-      print(ouput_string.encode(u'utf8'))
+      print(ouput_string.encode('utf8'))
 
-    print(u'')
+    print('')
 
   def Open(self):
     """Opens the file.
@@ -328,8 +330,8 @@ class StdoutOutputWriter(object):
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
     """
-    print(u'Log type:\t{0:s}'.format(event_log_provider.log_type))
-    print(u'Log source:\t{0:s}'.format(event_log_provider.log_source))
+    print('Log type:\t{0:s}'.format(event_log_provider.log_type))
+    print('Log source:\t{0:s}'.format(event_log_provider.log_source))
 
     # TODO: print more details.
 
@@ -339,8 +341,8 @@ class StdoutOutputWriter(object):
     Args:
       message_file (MessageFile): message file.
     """
-    print(u'{0:s}'.format(message_file.name))
-    print(u'Path:\t{0:s}'.format(message_file.windows_path))
+    print('{0:s}'.format(message_file.name))
+    print('Path:\t{0:s}'.format(message_file.windows_path))
 
     for message_table in message_file.GetMessageTables():
       self._WriteMessageTable(message_table)
@@ -385,7 +387,7 @@ class AsciidocFileWriter(object):
 
   def WriteLine(self, line):
     """Writes a line."""
-    self._file.write(u'{0:s}\n'.format(line).encode(u'utf8'))
+    self._file.write('{0:s}\n'.format(line).encode('utf8'))
 
   def WriteLines(self, lines):
     """Writes lines."""
@@ -413,25 +415,25 @@ class AsciidocOutputWriter(object):
       file_writer (AsciidocFileWriter): file writer.
     """
     file_writer.WriteLines([
-        u'=== {0:s} (LCID: {1:s})'.format(
+        '=== {0:s} (LCID: {1:s})'.format(
             message_table.language, message_table.lcid),
-        u'',
-        u'[cols="1,5",options="header"]',
-        u'|===',
-        u'| Message identifier | Message string'])
+        '',
+        '[cols="1,5",options="header"]',
+        '|===',
+        '| Message identifier | Message string'])
 
     for identifier, string in message_table.message_strings.iteritems():
-      string = re.sub(r'\n', u'\\\\n', string)
-      string = re.sub(r'\r', u'\\\\r', string)
-      string = re.sub(r'\t', u'\\\\t', string)
+      string = re.sub(r'\n', '\\\\n', string)
+      string = re.sub(r'\r', '\\\\r', string)
+      string = re.sub(r'\t', '\\\\t', string)
 
-      ouput_string = u'| {0:s} | {1:s}'.format(identifier, string)
+      ouput_string = '| {0:s} | {1:s}'.format(identifier, string)
 
-      file_writer.WriteLine(ouput_string.encode(u'utf8'))
+      file_writer.WriteLine(ouput_string.encode('utf8'))
 
     file_writer.WriteLines([
-        u'|===',
-        u''])
+        '|===',
+        ''])
 
   def Close(self):
     """Closes the output writer object."""
@@ -464,16 +466,16 @@ class AsciidocOutputWriter(object):
     """
     file_writer = AsciidocFileWriter()
     path = os.path.join(
-        self._path, u'{0:s}.asciidoc'.format(message_file.name))
+        self._path, '{0:s}.asciidoc'.format(message_file.name))
 
     if file_writer.Open(path):
 
       file_writer.WriteLines([
-          u'== {0:s}'.format(message_file.name),
-          u'|===',
-          u'| Path: | {0:s}'.format(message_file.windows_path),
-          u'|===',
-          u''])
+          '== {0:s}'.format(message_file.name),
+          '|===',
+          '| Path: | {0:s}'.format(message_file.windows_path),
+          '|===',
+          ''])
 
       for message_table in message_file.GetMessageTables():
         self._WriteMessageTable(message_table, file_writer)
@@ -498,45 +500,45 @@ def Main():
     bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
-      u'Export strings extracted from message files.'))
+      'Export strings extracted from message files.'))
 
   argument_parser.add_argument(
-      u'source', nargs=u'?', action=u'store', metavar=u'./winevt-db/',
+      'source', nargs='?', action='store', metavar='./winevt-db/',
       default=None, help=(
-          u'directory that contains the sqlite3 with the extracted strings.'))
+          'directory that contains the sqlite3 with the extracted strings.'))
 
   argument_parser.add_argument(
-      u'--db', u'--database', dest=u'database', action=u'store',
-      metavar=u'winevt-rc.db', default=None, help=(
-          u'filename of the sqlite3 database to write to.'))
+      '--db', '--database', dest='database', action='store',
+      metavar='winevt-rc.db', default=None, help=(
+          'filename of the sqlite3 database to write to.'))
 
   argument_parser.add_argument(
-      u'--string_format', u'--string-format', dest=u'string_format',
-      action=u'store', metavar=u'FORMAT', default=u'wrc',
-      choices=[u'pep3101', u'wrc'], help=u'the message string format.')
+      '--string_format', '--string-format', dest='string_format',
+      action='store', metavar='FORMAT', default='wrc',
+      choices=['pep3101', 'wrc'], help='the message string format.')
 
   argument_parser.add_argument(
-      u'--wiki', dest=u'wiki', action=u'store', metavar=u'./winevt-kb.wiki/',
-      default=None, help=u'path to write the wiki pages to.')
+      '--wiki', dest='wiki', action='store', metavar='./winevt-kb.wiki/',
+      default=None, help='path to write the wiki pages to.')
 
   # TODO: allow to set preferred language.
 
   options = argument_parser.parse_args()
 
   if not options.source:
-    print(u'Source value is missing.')
-    print(u'')
+    print('Source value is missing.')
+    print('')
     argument_parser.print_help()
-    print(u'')
+    print('')
     return False
 
   if not os.path.isdir(options.source):
-    print(u'Invalid source.')
-    print(u'')
+    print('Invalid source.')
+    print('')
     return False
 
   logging.basicConfig(
-      level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+      level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   if options.database:
     output_writer = Sqlite3OutputWriter(
@@ -547,8 +549,8 @@ def Main():
     output_writer = StdoutOutputWriter()
 
   if not output_writer.Open():
-    print(u'Unable to open output writer.')
-    print(u'')
+    print('Unable to open output writer.')
+    print('')
     return False
 
   exporter = Exporter()

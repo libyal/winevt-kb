@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Classes to represent a Windows Message Resource file."""
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyexe
@@ -17,7 +19,7 @@ class MessageResourceFile(object):
   _RESOURCE_IDENTIFIER_VERSION = 0x10
 
   def __init__(
-      self, windows_path, ascii_codepage=u'cp1252',
+      self, windows_path, ascii_codepage='cp1252',
       preferred_language_identifier=0x0409):
     """Initializes the Windows Message Resource file.
 
@@ -64,18 +66,18 @@ class MessageResourceFile(object):
         if file_version and product_version:
           break
 
-    self._file_version = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+    self._file_version = '{0:d}.{1:d}.{2:d}.{3:d}'.format(
         (file_version >> 48) & 0xffff, (file_version >> 32) & 0xffff,
         (file_version >> 16) & 0xffff, file_version & 0xffff)
 
-    self._product_version = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+    self._product_version = '{0:d}.{1:d}.{2:d}.{3:d}'.format(
         (product_version >> 48) & 0xffff, (product_version >> 32) & 0xffff,
         (product_version >> 16) & 0xffff, product_version & 0xffff)
 
     if file_version != product_version:
       logging.warning((
-          u'Mismatch between file version: {0:s} and product version: '
-          u'{1:s} in message file: {2:s}.').format(
+          'Mismatch between file version: {0:s} and product version: '
+          '{1:s} in message file: {2:s}.').format(
               self._file_version, self._product_version, self.windows_path))
 
   @property
@@ -99,7 +101,7 @@ class MessageResourceFile(object):
       IOError: if not open.
     """
     if not self._is_open:
-      raise IOError(u'Not opened.')
+      raise IOError('Not opened.')
 
     self._wrc_stream.close()
     self._exe_file.close()
@@ -122,7 +124,7 @@ class MessageResourceFile(object):
     Returns:
       str: MUI language or None if not available.
     """
-    mui_resource = self._wrc_stream.get_resource_by_name(u'MUI')
+    mui_resource = self._wrc_stream.get_resource_by_name('MUI')
     if not mui_resource:
       return
 
@@ -161,10 +163,10 @@ class MessageResourceFile(object):
       IOError: if already open.
     """
     if self._is_open:
-      raise IOError(u'Already open.')
+      raise IOError('Already open.')
 
     self._exe_file.open_file_object(file_object)
-    exe_section = self._exe_file.get_section_by_name(u'.rsrc')
+    exe_section = self._exe_file.get_section_by_name('.rsrc')
 
     if not exe_section:
       self._exe_file.close()

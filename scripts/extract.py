@@ -3,6 +3,8 @@
 """Script to extract the strings from Event Log message resource files."""
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import os
@@ -16,7 +18,7 @@ from winevtrc import extractor
 class Sqlite3OutputWriter(object):
   """SQLite3 output writer."""
 
-  EVENT_PROVIDERS_DATABASE_FILENAME = u'winevt-kb.db'
+  EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
 
   def __init__(self, databases_path):
     """Initializes an output writer object.
@@ -68,8 +70,8 @@ class Sqlite3OutputWriter(object):
       message_file_type (str): message file type.
     """
     database_filename = message_resource_file.windows_path
-    _, _, database_filename = database_filename.rpartition(u'\\')
-    database_filename = u'{0:s}.db'.format(database_filename.lower())
+    _, _, database_filename = database_filename.rpartition('\\')
+    database_filename = '{0:s}.db'.format(database_filename.lower())
     database_filename = re.sub(r'\.mui', '', database_filename)
 
     database_writer = database.MessageFileSqlite3DatabaseWriter(
@@ -101,7 +103,7 @@ class StdoutOutputWriter(object):
     except IOError as exception:
       number_of_languages = 0
       logging.warning(
-          u'Unable to retrieve number of languages with error: {0:s}.'.format(
+          'Unable to retrieve number of languages with error: {0:s}.'.format(
               exception))
 
     if number_of_languages > 0:
@@ -110,20 +112,20 @@ class StdoutOutputWriter(object):
             language_identifier)
 
         if number_of_messages > 0:
-          print(u'Message table:')
-          print(u'LCID\t\t: 0x{0:08x}'.format(language_identifier))
+          print('Message table:')
+          print('LCID\t\t: 0x{0:08x}'.format(language_identifier))
           for message_index in range(0, number_of_messages):
             message_identifier = message_table.get_message_identifier(
                 language_identifier, message_index)
             message_string = message_table.get_string(
                 language_identifier, message_index)
 
-            ouput_string = u'0x{0:08x}\t: {1:s}'.format(
+            ouput_string = '0x{0:08x}\t: {1:s}'.format(
                 message_identifier, message_string)
 
-            print(ouput_string.encode(u'utf8'))
+            print(ouput_string.encode('utf8'))
 
-          print(u'')
+          print('')
 
   def Close(self):
     """Closes the output writer object."""
@@ -143,22 +145,22 @@ class StdoutOutputWriter(object):
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
     """
-    print(u'Source\t\t: {0:s}'.format(
+    print('Source\t\t: {0:s}'.format(
         event_log_provider.log_source))
 
-    print(u'Event Log type\t: {0:s}'.format(
+    print('Event Log type\t: {0:s}'.format(
         event_log_provider.log_type))
 
-    print(u'Categories\t: {0:s}'.format(
+    print('Categories\t: {0:s}'.format(
         event_log_provider.category_message_files))
 
-    print(u'Messages\t: {0:s}'.format(
+    print('Messages\t: {0:s}'.format(
         event_log_provider.event_message_files))
 
-    print(u'Parameters\t: {0:s}'.format(
+    print('Parameters\t: {0:s}'.format(
         event_log_provider.parameter_message_files))
 
-    print(u'')
+    print('')
 
   def WriteMessageFile(
       self, unused_event_log_provider, message_file, unused_message_filename,
@@ -171,13 +173,13 @@ class StdoutOutputWriter(object):
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
-    file_version = getattr(message_file, u'file_version', u'')
-    product_version = getattr(message_file, u'product_version', u'')
+    file_version = getattr(message_file, 'file_version', '')
+    product_version = getattr(message_file, 'product_version', '')
 
-    print(u'Message file:')
-    print(u'Path\t\t: {0:s}'.format(message_file.windows_path))
-    print(u'File version\t: {0:s}'.format(file_version))
-    print(u'Product version\t: {0:s}'.format(product_version))
+    print('Message file:')
+    print('Path\t\t: {0:s}'.format(message_file.windows_path))
+    print('File version\t: {0:s}'.format(file_version))
+    print('Product version\t: {0:s}'.format(product_version))
 
     message_table = message_file.GetMessageTableResource()
     self._WriteMessageTable(message_table)
@@ -190,47 +192,47 @@ def Main():
     bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(description=(
-      u'Extract strings from message resource files for Event Log sources.'))
+      'Extract strings from message resource files for Event Log sources.'))
 
   argument_parser.add_argument(
-      u'-d', u'--debug', dest=u'debug', action=u'store_true', default=False,
-      help=u'enable debug output.')
+      '-d', '--debug', dest='debug', action='store_true', default=False,
+      help='enable debug output.')
 
   argument_parser.add_argument(
-      u'--db', u'--database', dest=u'database', action=u'store',
-      metavar=u'./winevt-kb/', default=None, help=(
-          u'directory to write the sqlite3 databases to.'))
+      '--db', '--database', dest='database', action='store',
+      metavar='./winevt-kb/', default=None, help=(
+          'directory to write the sqlite3 databases to.'))
 
   argument_parser.add_argument(
-      u'--winver', dest=u'windows_version', action=u'store', metavar=u'xp',
+      '--winver', dest='windows_version', action='store', metavar='xp',
       default=None, help=(
-          u'string that identifies the Windows version in the database.'))
+          'string that identifies the Windows version in the database.'))
 
   argument_parser.add_argument(
-      u'source', nargs=u'?', action=u'store', metavar=u'/mnt/c/',
+      'source', nargs='?', action='store', metavar='/mnt/c/',
       default=None, help=(
-          u'path of the volume containing C:\\Windows or the filename of '
-          u'a storage media image containing the C:\\Windows directory.'))
+          'path of the volume containing C:\\Windows or the filename of '
+          'a storage media image containing the C:\\Windows directory.'))
 
   options = argument_parser.parse_args()
 
   if not options.source:
-    print(u'Source value is missing.')
-    print(u'')
+    print('Source value is missing.')
+    print('')
     argument_parser.print_help()
-    print(u'')
+    print('')
     return False
 
   logging.basicConfig(
-      level=logging.INFO, format=u'[%(levelname)s] %(message)s')
+      level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   if options.database:
     if not os.path.exists(options.database):
       os.mkdir(options.database)
 
     if not os.path.isdir(options.database):
-      print(u'{0:s} must be a directory'.format(options.database))
-      print(u'')
+      print('{0:s} must be a directory'.format(options.database))
+      print('')
       return False
 
     output_writer = Sqlite3OutputWriter(options.database)
@@ -238,53 +240,53 @@ def Main():
     output_writer = StdoutOutputWriter()
 
   if not output_writer.Open():
-    print(u'Unable to open output writer.')
-    print(u'')
+    print('Unable to open output writer.')
+    print('')
     return False
 
   # TODO: pass mediator.
   extractor_object = extractor.EventMessageStringExtractor(debug=options.debug)
 
   if not extractor_object.ScanForWindowsVolume(options.source):
-    print((u'Unable to retrieve the volume with the Windows directory from: '
-           u'{0:s}.').format(options.source))
-    print(u'')
+    print(('Unable to retrieve the volume with the Windows directory from: '
+           '{0:s}.').format(options.source))
+    print('')
     return False
 
   if not extractor_object.windows_version:
     if not options.windows_version:
-      print(u'Unable to determine Windows version.')
+      print('Unable to determine Windows version.')
 
       if options.database:
-        print(u'Database output requires a Windows version, specify one with '
-              u'--winver.')
-        print(u'')
+        print('Database output requires a Windows version, specify one with '
+              '--winver.')
+        print('')
         return False
 
     extractor_object.windows_version = options.windows_version
 
-  print(u'Windows version: {0:s}.'.format(extractor_object.windows_version))
-  print(u'')
+  print('Windows version: {0:s}.'.format(extractor_object.windows_version))
+  print('')
 
   extractor_object.ExtractEventLogMessageStrings(output_writer)
   output_writer.Close()
 
   if extractor_object.invalid_message_filenames:
-    print(u'Message resource files not found or without resource section:')
+    print('Message resource files not found or without resource section:')
     for message_filename in extractor_object.invalid_message_filenames:
-      print(u'{0:s}'.format(message_filename))
-    print(u'')
+      print('{0:s}'.format(message_filename))
+    print('')
 
   if extractor_object.missing_table_message_filenames:
-    print(u'Message resource files without a message table resource:')
+    print('Message resource files without a message table resource:')
     for message_filename in extractor_object.missing_table_message_filenames:
-      print(u'{0:s}'.format(message_filename))
-    print(u'')
+      print('{0:s}'.format(message_filename))
+    print('')
 
   return True
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
   if not Main():
     sys.exit(1)
   else:
