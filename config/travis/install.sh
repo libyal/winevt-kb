@@ -8,7 +8,7 @@ L2TBINARIES_DEPENDENCIES="construct dfdatetime dfvfs dfwinreg libbde libewf libe
 
 L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr";
 
-PYTHON2_DEPENDENCIES="libbde-python libewf-python libexe-python libfsntfs-python libfvde-python libfwnt-python libqcow-python libregf-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python libwrc-python python-backports.lzma python-construct python-crypto python-dfdatetime python-dfvfs python-dfwinreg python-pysqlite python-pytsk3 python-six";
+PYTHON2_DEPENDENCIES="libbde-python libewf-python libexe-python libfsntfs-python libfvde-python libfwnt-python libqcow-python libregf-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python libwrc-python python-backports.lzma python-construct python-crypto python-dfdatetime python-dfvfs python-dfwinreg python-pysqlite2 python-pytsk3 python-six";
 
 PYTHON2_TEST_DEPENDENCIES="python-mock python-tox";
 
