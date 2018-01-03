@@ -1,6 +1,9 @@
 environment:
   matrix:
-    - PYTHON: "C:\\Python27"
+  - TARGET: python27
+    PYTHON: "C:\\Python27"
+  - TARGET: python36
+    PYTHON: "C:\\Python36"
 
 install:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
