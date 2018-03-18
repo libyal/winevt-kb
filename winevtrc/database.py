@@ -148,10 +148,7 @@ class SQLite3DatabaseFile(object):
     try:
       self._cursor.execute(sql_query)
 
-      if self._cursor.fetchone():
-        has_table = True
-      else:
-        has_table = False
+      has_table = bool(self._cursor.fetchone())
 
     except sqlite3.OperationalError as exception:
       raise errors.BackendError(exception)
@@ -473,11 +470,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        # TODO: check if more than 1 result.
-        insert_values = False
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [message_file_key, message_file_type, event_log_provider_key]
@@ -507,11 +501,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        # TODO: check if more than 1 result.
-        insert_values = False
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [
@@ -544,11 +535,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        # TODO: check if more than 1 result.
-        insert_values = False
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [message_filename, database_filename]
@@ -777,10 +765,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        insert_values = False
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [
@@ -852,10 +837,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        insert_values = False
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [
@@ -995,10 +977,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        insert_values = False
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [
@@ -1411,7 +1390,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Returns:
       The message string in Python format() (PEP 3103) style.
     """
-    def place_holder_specifier_replacer(match_object):
+    def PlaceHolderSpecifierReplacer(match_object):
       """Replaces message string place holders into Python format() style."""
       expanded_groups = []
       for group in match_object.groups():
@@ -1432,7 +1411,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
     message_string = self._CURLY_BRACKETS.sub(r'\1\1', message_string)
     return self._PLACE_HOLDER_SPECIFIER_RE.sub(
-        place_holder_specifier_replacer, message_string)
+        PlaceHolderSpecifierReplacer, message_string)
 
   def _WriteMessage(
       self, message_file, language_identifier, message_identifier,
@@ -1511,10 +1490,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        insert_values = False
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [message_file.windows_path]
@@ -1575,10 +1551,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        insert_values = False
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [language_identifier, message_file_key]
@@ -1607,11 +1580,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        # TODO: check if more than 1 result.
-        insert_values = False
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [
@@ -1669,11 +1639,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        # TODO: check if more than 1 result.
-        insert_values = False
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [message_file_key, message_file_type, event_log_provider_key]
@@ -1701,11 +1668,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
           [table_name], column_names, condition))
 
       number_of_values = len(values_list)
-      if number_of_values == 0:
-        insert_values = True
-      else:
-        # TODO: check if more than 1 result.
-        insert_values = False
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
 
     if insert_values:
       values = [attribute_name, attribute_value]

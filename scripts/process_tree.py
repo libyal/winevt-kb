@@ -17,7 +17,7 @@ import pyevtx
 
 
 class EventLogRecord(object):
-  """Class to represent an EventLog record.
+  """An EventLog record.
 
   Attributes:
     event_identifier (int): event identifier.
@@ -30,7 +30,7 @@ class EventLogRecord(object):
     self.event_identifier = None
     self.strings = []
 
-  def get_string(self, string_index):
+  def GetStringValue(self, string_index):
     """Retrieves a specific string value.
 
     Args:
@@ -105,10 +105,6 @@ class ProcessTree(object):
 
   event identifiers: 592, 593
   """
-
-  def __init__(self):
-    """Initializes a process tree."""
-    super(ProcessTree, self).__init__()
 
   def _ReadEVT(self, source):
     """Read an EventLog file.

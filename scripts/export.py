@@ -13,6 +13,7 @@ import re
 import sys
 
 from winevtrc import database
+from winevtrc import definitions
 from winevtrc import resources
 
 
@@ -124,7 +125,7 @@ class Exporter(object):
     Args:
       output_writer (OutputWriter): output writer.
     """
-    for event_log_provider in self._event_log_providers.itervalues():
+    for event_log_provider in self._event_log_providers.values():
       for message_filename in event_log_provider.event_message_files:
         output_writer.WriteMessageFilesPerEventLogProvider(
             event_log_provider, message_filename)
@@ -285,7 +286,7 @@ class Sqlite3OutputWriter(object):
       message_file (MessageFile): message file.
     """
     self._database_writer.WriteMessageFilesPerEventLogProvider(
-        event_log_provider, message_file, database.MESSAGE_FILE_TYPE_EVENT)
+        event_log_provider, message_file, definitions.MESSAGE_FILE_TYPE_EVENT)
 
 
 class StdoutOutputWriter(object):

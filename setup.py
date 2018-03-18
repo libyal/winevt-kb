@@ -7,9 +7,9 @@ import os
 import sys
 
 try:
-  from setuptools import find_packages, setup, Command
+  from setuptools import find_packages, setup
 except ImportError:
-  from distutils.core import find_packages, setup, Command
+  from distutils.core import find_packages, setup
 
 try:
   from distutils.command.bdist_msi import bdist_msi

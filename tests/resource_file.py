@@ -26,6 +26,8 @@ class TestVersionResource(object):
     self.language_identifiers = [0x0409]
     self.product_versions = {0x0409: 2 << 48}
 
+  # pylint: disable=invalid-name
+
   def get_file_version(self, language_identifier):
     """Retrieves the file version.
 
@@ -60,6 +62,8 @@ class TestWrcStream(object):
     """Initializes a version resource."""
     super(TestWrcStream, self).__init__()
     self.resources = {}
+
+  # pylint: disable=invalid-name
 
   def get_resource_by_identifier(self, identifier):
     """Retrieves a specific resource by identifier.
