@@ -3,6 +3,9 @@
 """Installation and deployment script."""
 
 from __future__ import print_function
+
+import glob
+import locale
 import os
 import sys
 
@@ -21,9 +24,21 @@ try:
 except ImportError:
   bdist_rpm = None
 
-if sys.version < '2.7':
+version_tuple = (sys.version_info[0], sys.version_info[1])
+if version_tuple[0] not in (2, 3):
   print('Unsupported Python version: {0:s}.'.format(sys.version))
-  print('Supported Python versions are 2.7 or a later 2.x version.')
+  sys.exit(1)
+
+elif version_tuple[0] == 2 and version_tuple < (2, 7):
+  print((
+      'Unsupported Python 2 version: {0:s}, version 2.7 or higher '
+      'required.').format(sys.version))
+  sys.exit(1)
+
+elif version_tuple[0] == 3 and version_tuple < (3, 4):
+  print((
+      'Unsupported Python 3 version: {0:s}, version 3.4 or higher '
+      'required.').format(sys.version))
   sys.exit(1)
 
 # Change PYTHONPATH to include winevtrc so that we can get the version.
@@ -66,7 +81,7 @@ else:
         spec_file = bdist_rpm._make_spec_file(self)
 
       if sys.version_info[0] < 3:
-        python_package = 'python'
+        python_package = 'python2'
       else:
         python_package = 'python3'
 
@@ -80,24 +95,66 @@ else:
           summary = line
 
         elif line.startswith('BuildRequires: '):
-          line = 'BuildRequires: {0:s}-setuptools'.format(python_package)
+          line = 'BuildRequires: {0:s}-setuptools, {0:s}-devel'.format(
+              python_package)
 
         elif line.startswith('Requires: '):
           if python_package == 'python3':
-            line = line.replace('python', 'python3')
+            line = line.replace('python-', 'python3-')
+            line = line.replace('python2-', 'python3-')
 
         elif line.startswith('%description'):
           in_description = True
 
+        elif line.startswith('python setup.py build'):
+          if python_package == 'python3':
+            line = '%py3_build'
+          else:
+            line = '%py2_build'
+
+        elif line.startswith('python setup.py install'):
+          if python_package == 'python3':
+            line = '%py3_install'
+          else:
+            line = '%py2_install'
+
         elif line.startswith('%files'):
-          line = '%files -f INSTALLED_FILES -n {0:s}-%{{name}}'.format(
-              python_package)
+          lines = [
+              '%files -n {0:s}-%{{name}}'.format(python_package),
+              '%defattr(644,root,root,755)',
+              '%doc ACKNOWLEDGEMENTS AUTHORS LICENSE README']
+
+          if python_package == 'python3':
+            lines.extend([
+                '%{python3_sitelib}/winevtrc/*.py',
+                '%{python3_sitelib}/winevtrc*.egg-info/*',
+                '',
+                '%exclude %{_prefix}/share/doc/*',
+                '%exclude %{python3_sitelib}/winevtrc/__pycache__/*'])
+
+          else:
+            lines.extend([
+                '%{python2_sitelib}/winevtrc/*.py',
+                '%{python2_sitelib}/winevtrc*.egg-info/*',
+                '',
+                '%exclude %{_prefix}/share/doc/*',
+                '%exclude %{python2_sitelib}/winevtrc/*.pyc',
+                '%exclude %{python2_sitelib}/winevtrc/*.pyo'])
+
+          python_spec_file.extend(lines)
+          break
 
         elif line.startswith('%prep'):
           in_description = False
 
           python_spec_file.append(
               '%package -n {0:s}-%{{name}}'.format(python_package))
+          if python_package == 'python2':
+            python_spec_file.append(
+                'Obsoletes: python-winevtrc < %{version}')
+            python_spec_file.append(
+                'Provides: python-winevtrc = %{version}')
+
           python_spec_file.append('{0:s}'.format(summary))
           python_spec_file.append('')
           python_spec_file.append(
@@ -116,12 +173,26 @@ else:
       return python_spec_file
 
 
+if version_tuple[0] == 2:
+  encoding = sys.stdin.encoding  # pylint: disable=invalid-name
+
+  # Note that sys.stdin.encoding can be None.
+  if not encoding:
+    encoding = locale.getpreferredencoding()
+
+  # Make sure the default encoding is set correctly otherwise on Python 2
+  # setup.py sdist will fail to include filenames with Unicode characters.
+  reload(sys)  # pylint: disable=undefined-variable
+
+  sys.setdefaultencoding(encoding)  # pylint: disable=no-member
+
+
 winevtrc_description = (
-    'Windows Event Log resources (winevtrc).')
+    'Windows Event Log resources (winevtrc)')
 
 winevtrc_long_description = (
-    'winevtrc is a Python module part of winevt-kb to allow easy reuse of '
-    'the Windows Event Log resource extraction and database functionality.')
+    'winevtrc is a Python module part of winevt-kb to allow easy reuse of the '
+    'Windows Event Log resource extraction and database functionality.')
 
 setup(
     name='winevtrc',
@@ -132,24 +203,21 @@ setup(
     url='https://github.com/libyal/winevt-kb',
     maintainer='Joachim Metz',
     maintainer_email='joachim.metz@gmail.com',
+    cmdclass={
+        'bdist_msi': BdistMSICommand,
+        'bdist_rpm': BdistRPMCommand},
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        '',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    cmdclass={
-        'bdist_msi': BdistMSICommand,
-        'bdist_rpm': BdistRPMCommand},
     packages=find_packages('.', exclude=[
-        'tests', 'tests.*', 'utils']),
+        'scripts', 'tests', 'tests.*', 'utils']),
     package_dir={
         'winevtrc': 'winevtrc'
     },
-    scripts=[
-        os.path.join('scripts', 'export.py'),
-        os.path.join('scripts', 'extract.py'),
-        os.path.join('scripts', 'query.py')],
+    scripts=glob.glob(os.path.join('scripts', '[a-z]*.py')),
     data_files=[
         ('share/doc/winevtrc', [
             'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
