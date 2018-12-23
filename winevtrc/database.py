@@ -38,6 +38,7 @@ class SQLite3DatabaseFile(object):
 
     Raises:
       IOError: if the database is not opened.
+      OSError: if the database is not opened.
     """
     if not self._connection:
       raise IOError('Cannot close database not opened.')
@@ -61,6 +62,8 @@ class SQLite3DatabaseFile(object):
     Raises:
       BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened or
+          if the database is in read-only mode.
+      OSError: if the database is not opened or
           if the database is in read-only mode.
     """
     if not self._connection:
@@ -91,6 +94,7 @@ class SQLite3DatabaseFile(object):
     Raises:
       BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened.
+      OSError: if the database is not opened.
     """
     def _GetValues(cursor, table_names, column_names, condition):
       """Values generator function.
@@ -117,8 +121,7 @@ class SQLite3DatabaseFile(object):
 
       for row in cursor:
         values = {}
-        for column_index in range(0, len(column_names)):
-          column_name = column_names[column_index]
+        for column_index, column_name in enumerate(column_names):
           values[column_name] = row[column_index]
         yield values
 
@@ -134,11 +137,12 @@ class SQLite3DatabaseFile(object):
       table_name (str): table name.
 
     Returns:
-      bool: True if the table exists, false otheriwse.
+      bool: True if the table exists, false otherwise.
 
     Raises:
       BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened.
+      OSError: if the database is not opened.
     """
     if not self._connection:
       raise IOError('Cannot determine if table exists database not opened.')
@@ -166,6 +170,9 @@ class SQLite3DatabaseFile(object):
     Raises:
       BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened or
+          if the database is in read-only mode or
+          if an unsupported value type is encountered.
+      OSError: if the database is not opened or
           if the database is in read-only mode or
           if an unsupported value type is encountered.
     """
@@ -217,6 +224,7 @@ class SQLite3DatabaseFile(object):
     Raises:
       BackendError: if the database back-end raises an exception.
       IOError: if the database is already opened.
+      OSError: if the database is already opened.
     """
     if self._connection:
       raise IOError('Cannot open database already opened.')
@@ -284,7 +292,7 @@ class Sqlite3DatabaseWriter(object):
     Returns:
       bool: True if successful or False if not.
     """
-    self._database_file.Open(filename)
+    return self._database_file.Open(filename)
 
 
 class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
@@ -383,6 +391,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
@@ -393,7 +402,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     if number_of_values == 1:
       values = values_list[0]
@@ -412,6 +421,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['message_files']
     column_names = ['message_file_key']
@@ -422,7 +432,7 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     if number_of_values == 1:
       values = values_list[0]
@@ -645,6 +655,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['message_files']
     column_names = ['message_file_key']
@@ -664,7 +675,7 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     if number_of_values == 1:
       values = values_list[0]
@@ -1022,10 +1033,11 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       log_source (str): Event Log source.
 
     Returns:
-      int: An Event Log provider key or None if not available.
+      int: an Event Log provider key or None if not available.
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
@@ -1036,9 +1048,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
-    elif number_of_values == 1:
+    if number_of_values == 1:
       values = values_list[0]
       return values['event_log_provider_key']
 
@@ -1053,16 +1065,17 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       message_identifier (int): message identifier.
 
     Returns:
-      The message string or None if not available.
+      str: the message string or None if not available.
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_name = 'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      return
+      return None
 
     column_names = ['message_string']
     condition = 'message_identifier == "0x{0:08x}"'.format(message_identifier)
@@ -1072,9 +1085,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     number_of_values = len(values)
     if number_of_values == 0:
-      return
+      return None
 
-    elif number_of_values == 1:
+    if number_of_values == 1:
       return values[0]['message_string']
 
     raise IOError('More than one value found in database.')
@@ -1083,10 +1096,10 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message file keys.
 
     Args:
-      event_log_provider_key: the Event Log provider key.
+      event_log_provider_key (int): the Event Log provider key.
 
     Yields:
-      A message file key.
+      int: a message file key.
     """
     table_names = ['message_file_per_event_log_provider']
     column_names = ['message_file_key']
@@ -1138,26 +1151,24 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       lcid (int): language code identifier (LCID).
 
     Yields:
-      A tuple of a message identifier and string.
+      tuple[int, str]: message identifier and message string.
     """
     table_name = 'message_table_{0:d}_0x{1:08x}'.format(message_file_key, lcid)
 
     has_table = self._database_file.HasTable(table_name)
-    if not has_table:
-      return
+    if has_table:
+      column_names = ['message_identifier', 'message_string']
+      condition = ''
 
-    column_names = ['message_identifier', 'message_string']
-    condition = ''
-
-    for values in self._database_file.GetValues(
-        [table_name], column_names, condition):
-      yield values['message_identifier'], values['message_string']
+      for values in self._database_file.GetValues(
+          [table_name], column_names, condition):
+        yield values['message_identifier'], values['message_string']
 
   def GetEventLogProviders(self):
     """Retrieves the Event Log providers.
 
     Yields:
-      An Event Log provider (instance of EventLogProvider).
+      EventLogProvider: an Event Log provider.
     """
     table_names = ['event_log_providers']
     column_names = ['log_source', 'provider_guid']
@@ -1196,15 +1207,15 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       message_identifier (int): message identifier.
 
     Returns:
-      The message string or None if not available.
+      str: the message string or None if not available.
     """
     event_log_provider_key = self._GetEventLogProviderKey(log_source)
     if not event_log_provider_key:
-      return
+      return None
 
     generator = self._GetMessageFileKeys(event_log_provider_key)
     if not generator:
-      return
+      return None
 
     message_string = None
     for message_file_key in generator:
@@ -1224,20 +1235,14 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       lcid (int): language code identifier (LCID).
 
     Yields:
-      A tuple of a message identifier and string.
+      tuple[int, str]: message identifier and message string.
     """
     event_log_provider_key = self._GetEventLogProviderKey(log_source)
-    if not event_log_provider_key:
-      return
-
-    generator = self._GetMessageFileKeys(event_log_provider_key)
-    if not generator:
-      return
-
-    for message_file_key in generator:
-      for message_identifier, message_string in self._GetMessages(
-          message_file_key, lcid):
-        yield message_identifier, message_string
+    if event_log_provider_key:
+      for message_file_key in self._GetMessageFileKeys(event_log_provider_key):
+        for message_identifier, message_string in self._GetMessages(
+            message_file_key, lcid):
+          yield message_identifier, message_string
 
   def GetMetadataAttribute(self, attribute_name):
     """Retrieves the metadata attribute.
@@ -1250,12 +1255,13 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_name = 'metadata'
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      return
+      return None
 
     column_names = ['value']
     condition = 'name == "{0:s}"'.format(attribute_name)
@@ -1265,9 +1271,9 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     number_of_values = len(values)
     if number_of_values == 0:
-      return
+      return None
 
-    elif number_of_values == 1:
+    if number_of_values == 1:
       return values[0]['value']
 
     raise IOError('More than one value found in database.')
@@ -1289,7 +1295,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     """Initializes the database writer.
 
     Args:
-      string_format: optional string format. The default is the Windows
+      string_format (Optional[str]): string format. The default is the Windows
           Resource (wrc) format.
     """
     super(ResourcesSqlite3DatabaseWriter, self).__init__()
@@ -1302,10 +1308,11 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       event_log_provider (EventLogProvider): event log provider.
 
     Returns:
-      An integer containing the Event Log provider key or None if no such value.
+      int: the Event Log provider key or None if no such value.
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
@@ -1316,7 +1323,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     if number_of_values == 1:
       values = values_list[0]
@@ -1331,10 +1338,11 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_file (MessageFile): message file.
 
     Returns:
-      An integer containing the message file key or None if no such value.
+      int: the message file key or None if no such value.
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['message_files']
     column_names = ['message_file_key']
@@ -1345,7 +1353,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     if number_of_values == 1:
       values = values_list[0]
@@ -1360,10 +1368,11 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_filename (str): message filename.
 
     Returns:
-      An integer containing the message file key or None if no such value.
+      int: the message file key or None if no such value.
 
     Raises:
       IOError: if more than one value is found in the database.
+      OSError: if more than one value is found in the database.
     """
     table_names = ['message_files']
     column_names = ['message_file_key']
@@ -1373,7 +1382,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     if number_of_values == 1:
       values = values_list[0]
@@ -1388,7 +1397,8 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       message_string (str): message string.
 
     Returns:
-      The message string in Python format() (PEP 3103) style.
+      str: message string in Python format() (PEP 3103) style or None
+          if not available.
     """
     def PlaceHolderSpecifierReplacer(match_object):
       """Replaces message string place holders into Python format() style."""
@@ -1405,7 +1415,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       return ''.join(expanded_groups)
 
     if not message_string:
-      return
+      return None
 
     message_string = self._WHITE_SPACE_SPECIFIER_RE.sub(r'', message_string)
     message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
@@ -1607,6 +1617,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     Args:
       event_log_provider (EventLogProvider): event log provider.
       message_filename (str): message filename.
+      message_file_type (str): message file type.
     """
     table_name = 'message_file_per_event_log_provider'
     column_names = [

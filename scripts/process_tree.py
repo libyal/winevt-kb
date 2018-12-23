@@ -110,7 +110,8 @@ class ProcessTree(object):
     """Read an EventLog file.
 
     Args:
-      source (str): EventLog file that contains the start and stop events.
+      source (str): name of the EventLog file that contains the process start
+          and stop events.
 
     Yields:
       pyevt.record: EventLog record.
@@ -128,7 +129,8 @@ class ProcessTree(object):
     """Read a XML EventLog file.
 
     Args:
-      source (str): EventLog file that contains the start and stop events.
+      source (str): name of the EventLog file that contains the process start
+          and stop events.
 
     Yields:
       pyevtx.record: XML EventLog record.
@@ -190,7 +192,8 @@ class ProcessTree(object):
     """Read an export of the EventLog messages in XML.
 
     Args:
-      source (str): EventLog file that contains the start and stop events.
+      source (str): name of the EventLog file that contains the process start
+          and stop events.
 
     Yields:
       EventLogRecord: EventLog record.
@@ -229,7 +232,8 @@ class ProcessTree(object):
     """Generates a process tree from the source.
 
     Args:
-      source (str): EventLog file that contains the start and stop events.
+      source (str): name of the EventLog file that contains the process start
+          and stop events.
     """
     if pyevt.check_file_signature(source):
       record_generator = self._ReadEVT
@@ -259,7 +263,8 @@ class ProcessTree(object):
     """Outputs a process tree.
 
     Args:
-      output_writer (OutputWriter): output writer.
+      source (str): name of the EventLog file that contains the process start
+          and stop events.
     """
     # TODO: implement.
 
@@ -283,7 +288,7 @@ def Main():
   """The main program function.
 
   Returns:
-    A boolean containing True if successful or False if not.
+    bool: True if successful or False if not.
   """
   args_parser = argparse.ArgumentParser(description=(
       'Represents process start and stop events as a process tree.'))

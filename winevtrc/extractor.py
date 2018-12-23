@@ -30,11 +30,11 @@ class EventMessageStringRegistryFileReader(
     self._volume_scanner = volume_scanner
 
   def Open(self, path, ascii_codepage='cp1252'):
-    """Opens the Windows Registry file specificed by the path.
+    """Opens the Windows Registry file specified by the path.
 
     Args:
       path (str): path of the Windows Registry file. The path is a Windows path
-          relative to the root of the file system that contains the specfic
+          relative to the root of the file system that contains the specific
           Windows Registry file. E.g.  C:\\Windows\\System32\\config\\SYSTEM
       ascii_codepage (Optional[str]): ASCII string codepage.
 
@@ -44,7 +44,7 @@ class EventMessageStringRegistryFileReader(
     """
     file_object = self._volume_scanner.OpenFile(path)
     if file_object is None:
-      return
+      return None
 
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
         ascii_codepage=ascii_codepage)
@@ -53,7 +53,7 @@ class EventMessageStringRegistryFileReader(
       registry_file.Open(file_object)
     except IOError:
       file_object.close()
-      return
+      return None
 
     return registry_file
 
@@ -137,47 +137,45 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     Yields:
       EventLogProvider: Event Log provider.
     """
-    if not eventlog_key:
-      return
+    if eventlog_key:
+      for log_type_key in eventlog_key.GetSubkeys():
+        log_type = log_type_key.name
 
-    for log_type_key in eventlog_key.GetSubkeys():
-      log_type = log_type_key.name
+        for log_source_key in log_type_key.GetSubkeys():
+          log_source = log_source_key.name
 
-      for log_source_key in log_type_key.GetSubkeys():
-        log_source = log_source_key.name
+          provider_guid_value = log_source_key.GetValueByName('ProviderGuid')
 
-        provider_guid_value = log_source_key.GetValueByName('ProviderGuid')
+          if provider_guid_value:
+            provider_guid = provider_guid_value.GetDataAsObject()
+          else:
+            provider_guid = None
 
-        if provider_guid_value:
-          provider_guid = provider_guid_value.GetDataAsObject()
-        else:
-          provider_guid = None
+          event_log_provider = resources.EventLogProvider(
+              log_type, log_source, provider_guid)
 
-        event_log_provider = resources.EventLogProvider(
-            log_type, log_source, provider_guid)
+          category_message_file_value = log_source_key.GetValueByName(
+              'CategoryMessageFile')
 
-        category_message_file_value = log_source_key.GetValueByName(
-            'CategoryMessageFile')
+          if category_message_file_value:
+            event_log_provider.SetCategoryMessageFilenames(
+                category_message_file_value.GetDataAsObject())
 
-        if category_message_file_value:
-          event_log_provider.SetCategoryMessageFilenames(
-              category_message_file_value.GetDataAsObject())
+          event_message_file_value = log_source_key.GetValueByName(
+              'EventMessageFile')
 
-        event_message_file_value = log_source_key.GetValueByName(
-            'EventMessageFile')
+          if event_message_file_value:
+            event_log_provider.SetEventMessageFilenames(
+                event_message_file_value.GetDataAsObject())
 
-        if event_message_file_value:
-          event_log_provider.SetEventMessageFilenames(
-              event_message_file_value.GetDataAsObject())
+          parameter_message_file_value = log_source_key.GetValueByName(
+              'ParameterMessageFile')
 
-        parameter_message_file_value = log_source_key.GetValueByName(
-            'ParameterMessageFile')
+          if parameter_message_file_value:
+            event_log_provider.SetParameterMessageFilenames(
+                parameter_message_file_value.GetDataAsObject())
 
-        if parameter_message_file_value:
-          event_log_provider.SetParameterMessageFilenames(
-              parameter_message_file_value.GetDataAsObject())
-
-        yield event_log_provider
+          yield event_log_provider
 
   def _ExtractMessageFile(
       self, output_writer, processed_message_filenames, event_log_provider,
@@ -296,18 +294,16 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """
     if all_control_sets:
       system_key = self._registry.GetKeyByPath('HKEY_LOCAL_MACHINE\\System\\')
-      if not system_key:
-        return
-
-      for control_set_key in system_key.GetSubkeys():
-        if control_set_key.name.startswith('ControlSet'):
-          eventlog_key = control_set_key.GetSubkeyByPath(
-              'Services\\EventLog')
-          if eventlog_key:
-            logging.info('Control set: {0:s}'.format(control_set_key.name))
-            for event_log_provider in self._CollectEventLogProvidersFromKey(
-                eventlog_key):
-              yield event_log_provider
+      if system_key:
+        for control_set_key in system_key.GetSubkeys():
+          if control_set_key.name.startswith('ControlSet'):
+            eventlog_key = control_set_key.GetSubkeyByPath(
+                'Services\\EventLog')
+            if eventlog_key:
+              logging.info('Control set: {0:s}'.format(control_set_key.name))
+              for event_log_provider in self._CollectEventLogProvidersFromKey(
+                  eventlog_key):
+                yield event_log_provider
 
     else:
       eventlog_key = self._registry.GetKeyByPath(
@@ -358,15 +354,15 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       message_file = self._OpenMessageResourceFile(kernel_executable_path)
 
     if not message_file:
-      return
+      return None
 
     return message_file.file_version
 
   def _OpenMessageResourceFile(self, windows_path):
-    """Opens the message resource file specificed by the Windows path.
+    """Opens the message resource file specified by the Windows path.
 
     Args:
-      windows_path (str): Windows path containing the messagge resource
+      windows_path (str): Windows path containing the message resource
           filename.
 
     Returns:
@@ -374,12 +370,12 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """
     path_spec = self._path_resolver.ResolvePath(windows_path)
     if path_spec is None:
-      return
+      return None
 
     return self._OpenMessageResourceFileByPathSpec(path_spec)
 
   def _OpenMessageResourceFileByPathSpec(self, path_spec):
-    """Opens the message resource file specificed by the path specification.
+    """Opens the message resource file specified by the path specification.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
@@ -399,13 +395,13 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       file_object = None
 
     if file_object is None:
-      return
+      return None
 
     message_file = resource_file.MessageResourceFile(
         windows_path, ascii_codepage=self.ascii_codepage,
         preferred_language_identifier=self.preferred_language_identifier)
     if not message_file.OpenFileObject(file_object):
-      return
+      return None
 
     return message_file
 

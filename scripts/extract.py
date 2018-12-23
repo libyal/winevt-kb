@@ -162,9 +162,10 @@ class StdoutOutputWriter(object):
 
     print('')
 
+  # pylint: disable=unused-argument
   def WriteMessageFile(
-      self, unused_event_log_provider, message_file, unused_message_filename,
-      unused_message_type):
+      self, event_log_provider, message_resource_file, message_filename,
+      message_file_type):
     """Writes the Windows Message Resource file.
 
     Args:
@@ -173,15 +174,15 @@ class StdoutOutputWriter(object):
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
-    file_version = getattr(message_file, 'file_version', '')
-    product_version = getattr(message_file, 'product_version', '')
+    file_version = getattr(message_resource_file, 'file_version', '')
+    product_version = getattr(message_resource_file, 'product_version', '')
 
     print('Message file:')
-    print('Path\t\t: {0:s}'.format(message_file.windows_path))
+    print('Path\t\t: {0:s}'.format(message_resource_file.windows_path))
     print('File version\t: {0:s}'.format(file_version))
     print('Product version\t: {0:s}'.format(product_version))
 
-    message_table = message_file.GetMessageTableResource()
+    message_table = message_resource_file.GetMessageTableResource()
     self._WriteMessageTable(message_table)
 
 

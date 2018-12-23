@@ -361,7 +361,7 @@ class StdoutOutputWriter(object):
 
 class AsciidocFileWriter(object):
   """Class to represent an asciidoc file writer."""
-  # TODO: aparantly the filename should only contain 1 dot and
+  # TODO: apparently the filename should only contain 1 dot and
   # end with .asciidoc
 
   def __init__(self):
@@ -450,7 +450,8 @@ class AsciidocOutputWriter(object):
       return False
     return True
 
-  def WriteEventLogProvider(self, unused_event_log_provider):
+  # pylint: disable=unused-argument
+  def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
 
     Args:

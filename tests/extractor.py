@@ -51,18 +51,19 @@ class TestOutputWriter(object):
     """
     self.event_log_providers.append(event_log_provider)
 
+  # pylint: disable=unused-argument
   def WriteMessageFile(
-      self, unused_event_log_provider, message_file, unused_message_filename,
-      unused_message_type):
+      self, event_log_provider, message_resource_file, message_filename,
+      message_file_type):
     """Writes the Windows Message Resource file.
 
     Args:
       event_log_provider (EventLogProvider): event log provider.
-      message_file (MessageResourceFile): message resource file.
+      message_resource_file (MessageResourceFile): message resource file.
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
-    self.message_files.append(message_file)
+    self.message_files.append(message_resource_file)
 
 
 class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):

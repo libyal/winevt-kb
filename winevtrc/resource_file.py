@@ -99,6 +99,7 @@ class MessageResourceFile(object):
 
     Raises:
       IOError: if not open.
+      OSError: if not open.
     """
     if not self._is_open:
       raise IOError('Not opened.')
@@ -126,7 +127,7 @@ class MessageResourceFile(object):
     """
     mui_resource = self._wrc_stream.get_resource_by_name('MUI')
     if not mui_resource:
-      return
+      return None
 
     mui_language = None
     language_identifier = self._preferred_language_identifier
@@ -161,6 +162,7 @@ class MessageResourceFile(object):
 
     Raises:
       IOError: if already open.
+      OSError: if already open.
     """
     if self._is_open:
       raise IOError('Already open.')
