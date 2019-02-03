@@ -33,7 +33,7 @@ class TestOutputWriter(object):
 
   def Close(self):
     """Closes the output writer."""
-    pass
+    return
 
   def Open(self):
     """Opens the output writer.

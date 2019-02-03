@@ -348,6 +348,7 @@ class StdoutOutputWriter(object):
     for message_table in message_file.GetMessageTables():
       self._WriteMessageTable(message_table)
 
+  # pylint: disable=unused-argument
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_file):
     """Writes the Windows Message Resource file per Event Log provider.
@@ -356,7 +357,7 @@ class StdoutOutputWriter(object):
       event_log_provider (EventLogProvider): Event Log provider.
       message_file (MessageFile): message file.
     """
-    pass
+    return
 
 
 class AsciidocFileWriter(object):
@@ -438,7 +439,7 @@ class AsciidocOutputWriter(object):
 
   def Close(self):
     """Closes the output writer object."""
-    pass
+    return
 
   def Open(self):
     """Opens the output writer object.
@@ -492,7 +493,7 @@ class AsciidocOutputWriter(object):
       event_log_provider (EventLogProvider): Event Log provider.
       message_file (MessageFile): message file.
     """
-    pass
+    return
 
 
 def Main():

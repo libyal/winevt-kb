@@ -9,13 +9,21 @@ L2TBINARIES_DEPENDENCIES="backports.lzma dfdatetime dfvfs dfwinreg dtfabric libb
 
 L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr six";
 
-PYTHON2_DEPENDENCIES="libbde-python libevt-python libevtx-python libewf-python libexe-python libfsapfs-python libfsntfs-python libfvde-python libfwnt-python libqcow-python libregf-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python libwrc-python python-backports.lzma python-crypto python-dfdatetime python-dfvfs python-dfwinreg python-dtfabric python-pysqlite2 python-pytsk3 python-six";
+DPKG_PYTHON2_DEPENDENCIES="libbde-python libevt-python libevtx-python libewf-python libexe-python libfsapfs-python libfsntfs-python libfvde-python libfwnt-python libqcow-python libregf-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python libwrc-python python-backports.lzma python-crypto python-dfdatetime python-dfvfs python-dfwinreg python-dtfabric python-pysqlite2 python-pytsk3 python-six";
 
-PYTHON2_TEST_DEPENDENCIES="python-coverage python-funcsigs python-mock python-pbr python-six python-tox";
+DPKG_PYTHON2_TEST_DEPENDENCIES="python-coverage python-funcsigs python-mock python-pbr python-tox";
 
-PYTHON3_DEPENDENCIES="libbde-python3 libevt-python3 libevtx-python3 libewf-python3 libexe-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libqcow-python3 libregf-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 libwrc-python3 python3-crypto python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-pytsk3 python3-six";
+DPKG_PYTHON3_DEPENDENCIES="libbde-python3 libevt-python3 libevtx-python3 libewf-python3 libexe-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libqcow-python3 libregf-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 libwrc-python3 python3-crypto python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-pytsk3 python3-six";
 
-PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr python3-setuptools python3-six python3-tox";
+DPKG_PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr python3-setuptools python3-tox";
+
+RPM_PYTHON2_DEPENDENCIES="libbde-python2 libevt-python2 libevtx-python2 libewf-python2 libexe-python2 libfsapfs-python2 libfsntfs-python2 libfvde-python2 libfwnt-python2 libqcow-python2 libregf-python2 libsigscan-python2 libsmdev-python2 libsmraw-python2 libvhdi-python2 libvmdk-python2 libvshadow-python2 libvslvm-python2 libwrc-python2 python2-backports-lzma python2-crypto python2-dfdatetime python2-dfvfs python2-dfwinreg python2-dtfabric python2-pysqlite python2-pytsk3 python2-six";
+
+RPM_PYTHON2_TEST_DEPENDENCIES="python2-funcsigs python2-mock python2-pbr";
+
+RPM_PYTHON3_DEPENDENCIES="libbde-python3 libevt-python3 libevtx-python3 libewf-python3 libexe-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libqcow-python3 libregf-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 libwrc-python3 python3-crypto python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-pytsk3 python3-six";
+
+RPM_PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr";
 
 # Exit on error.
 set -e;
@@ -42,16 +50,32 @@ then
 		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
 	done
 
+elif test -n "${FEDORA_VERSION}";
+then
+	CONTAINER_NAME="fedora${FEDORA_VERSION}";
+
+	docker pull registry.fedoraproject.org/fedora:${FEDORA_VERSION};
+
+	docker run --name=${CONTAINER_NAME} --detach -i registry.fedoraproject.org/fedora:${FEDORA_VERSION};
+
+	docker exec ${CONTAINER_NAME} dnf install -y dnf-plugins-core;
+
+	docker exec ${CONTAINER_NAME} dnf copr -y enable @gift/dev;
+
+	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
+	then
+		docker exec ${CONTAINER_NAME} dnf install -y git python2 ${RPM_PYTHON2_DEPENDENCIES} ${RPM_PYTHON2_TEST_DEPENDENCIES};
+	else
+		docker exec ${CONTAINER_NAME} dnf install -y git python3 ${RPM_PYTHON3_DEPENDENCIES} ${RPM_PYTHON3_TEST_DEPENDENCIES};
+	fi
+
 elif test ${TRAVIS_OS_NAME} = "linux" && test ${TARGET} != "jenkins";
 then
 	sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;
 
 	if test ${TARGET} = "pylint";
 	then
-		if test ${TRAVIS_PYTHON_VERSION} = "2.7";
-		then
-			sudo add-apt-repository ppa:gift/pylint2 -y;
-		fi
+		sudo add-apt-repository ppa:gift/pylint3 -y;
 	fi
 
 	sudo add-apt-repository ppa:gift/dev -y;
@@ -59,9 +83,9 @@ then
 
 	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
-		sudo apt-get install -y ${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};
+		sudo apt-get install -y ${DPKG_PYTHON2_DEPENDENCIES} ${DPKG_PYTHON2_TEST_DEPENDENCIES};
 	else
-		sudo apt-get install -y ${PYTHON3_DEPENDENCIES} ${PYTHON3_TEST_DEPENDENCIES};
+		sudo apt-get install -y ${DPKG_PYTHON3_DEPENDENCIES} ${DPKG_PYTHON3_TEST_DEPENDENCIES};
 	fi
 	if test ${TARGET} = "pylint";
 	then
