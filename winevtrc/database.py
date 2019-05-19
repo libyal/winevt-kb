@@ -33,6 +33,38 @@ class SQLite3DatabaseFile(object):
     self.filename = None
     self.read_only = None
 
+  def _GetValues(self, cursor, table_names, column_names, condition):
+    """Values generator function.
+
+    Args:
+      cursor (sqlite3.Cursor): SQLite database cursor.
+      table_names (list[str]): table names.
+      column_names (list[str]): column names.
+      condition (str): condition.
+
+    Yields:
+      dict[str, object]: value.
+
+    Raises:
+      BackendError: if the database back-end raises an exception.
+    """
+    if condition:
+      condition = ' WHERE {0:s}'.format(condition)
+
+    sql_query = 'SELECT {1:s} FROM {0:s}{2:s}'.format(
+        ', '.join(table_names), ', '.join(column_names), condition)
+
+    try:
+      cursor.execute(sql_query)
+    except sqlite3.OperationalError as exception:
+      raise errors.BackendError(exception)
+
+    for row in cursor:
+      values = {}
+      for column_index, column_name in enumerate(column_names):
+        values[column_name] = row[column_index]
+      yield values
+
   def Close(self):
     """Closes the database file.
 
@@ -92,43 +124,13 @@ class SQLite3DatabaseFile(object):
       generator: values generator.
 
     Raises:
-      BackendError: if the database back-end raises an exception.
       IOError: if the database is not opened.
       OSError: if the database is not opened.
     """
-    def _GetValues(cursor, table_names, column_names, condition):
-      """Values generator function.
-
-      Args:
-        cursor (sqlite3.Cursor): SQLite database cursor.
-        table_names (list[str]): table names.
-        column_names (list[str]): column names.
-        condition (str): condition.
-
-      Yields:
-        dict[str, object]: value.
-      """
-      if condition:
-        condition = ' WHERE {0:s}'.format(condition)
-
-      sql_query = 'SELECT {1:s} FROM {0:s}{2:s}'.format(
-          ', '.join(table_names), ', '.join(column_names), condition)
-
-      try:
-        cursor.execute(sql_query)
-      except sqlite3.OperationalError as exception:
-        raise errors.BackendError(exception)
-
-      for row in cursor:
-        values = {}
-        for column_index, column_name in enumerate(column_names):
-          values[column_name] = row[column_index]
-        yield values
-
     if not self._connection:
       raise IOError('Cannot retrieve values database not opened.')
 
-    return _GetValues(self._cursor, table_names, column_names, condition)
+    return self._GetValues(self._cursor, table_names, column_names, condition)
 
   def HasTable(self, table_name):
     """Determines if a specific table exists.
