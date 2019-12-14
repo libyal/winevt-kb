@@ -24,6 +24,6 @@ Description: Python 3 module of Windows Event Log resources (winevtrc)
 
 Package: winevt-kb-tools
 Architecture: all
-Depends: python-winevtrc (>= ${binary:Version}), python (>= 2.7~), ${python:Depends}, ${misc:Depends}
+Depends: python-winevtrc (>= ${binary:Version}), ${python:Depends}, ${misc:Depends}
 Description: Tools for Windows Event Log knowledge base (winevt-kb)
  Winevt-kb is a project to build a Windows Event Log knowledge base.
