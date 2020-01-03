@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Event Log resources classes."""
+"""Tests for the Windows Event Log resources."""
 
 from __future__ import unicode_literals
 
@@ -8,11 +8,11 @@ import unittest
 
 from winevtrc import resources
 
-from tests import test_lib as shared_test_lib
+from tests import test_lib
 
 
-class EventLogProviderTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows Event Log provider object."""
+class EventLogProviderTest(test_lib.BaseTestCase):
+  """Tests for the Windows Event Log provider."""
 
   def testSetCategoryMessageFilenames(self):
     """Tests the SetCategoryMessageFilenames function."""
@@ -69,8 +69,8 @@ class EventLogProviderTest(shared_test_lib.BaseTestCase):
         expected_parameter_message_files)
 
 
-class MessageFileTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows Event Log message file  object."""
+class MessageFileTest(test_lib.BaseTestCase):
+  """Tests for the Windows Event Log message file."""
 
   def testMessageTable(self):
     """Tests the AppendMessageTable and GetMessageTable functions."""
