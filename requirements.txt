@@ -1,9 +1,11 @@
 pip >= 7.0.0
-backports.lzma ; python_version < '3.0'
+cffi >= 1.9.1
+cryptography >= 2.0.2
 dfdatetime >= 20160814
-dfvfs >= 20181202
+dfvfs >= 20200117
 dfwinreg >= 20170301
 dtfabric >= 20170524
+idna >= 2.5
 libbde-python >= 20140531
 libevt-python >= 20120410
 libevtx-python >= 20141112
@@ -23,6 +25,5 @@ libvmdk-python >= 20140421
 libvshadow-python >= 20160109
 libvslvm-python >= 20160109
 libwrc-python >= 20140128
-pycrypto >= 2.6.0
 pytsk3 >= 20160721
 six >= 1.1.0
