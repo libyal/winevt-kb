@@ -1531,7 +1531,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
         self._database_file.CreateTable(table_name, column_definitions)
 
       message_strings = message_table.message_strings
-      for message_identifier, message_string in iter(message_strings.items()):
+      for message_identifier, message_string in message_strings.items():
         self._WriteMessage(
             message_file, message_table.lcid, message_identifier,
             message_string, table_name, has_table)

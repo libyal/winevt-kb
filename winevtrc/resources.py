@@ -146,7 +146,7 @@ class MessageFile(object):
     Yields:
       MessageTable: message table.
     """
-    for message_table in iter(self._message_tables_per_language.values()):
+    for message_table in self._message_tables_per_language.values():
       yield message_table
 
   def GetStringTables(self):
@@ -155,7 +155,7 @@ class MessageFile(object):
     Yields:
       StringTable: string table.
     """
-    for string_table in iter(self._string_tables_per_language.values()):
+    for string_table in self._string_tables_per_language.values():
       yield string_table
 
 

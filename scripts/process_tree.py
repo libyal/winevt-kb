@@ -223,7 +223,7 @@ class ProcessTree(object):
         except ValueError:
           continue
 
-        for xml_data in iter(xml_event_data):
+        for xml_data in xml_event_data:
           event_log_record.strings.append(xml_data.text)
 
         yield event_log_record

@@ -420,8 +420,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     event_log_types = self._CollectEventLogTypes(
         all_control_sets=all_control_sets)
 
-    for _, event_log_sources in iter(event_log_types.items()):
-      for _, event_log_provider in iter(event_log_sources.items()):
+    for event_log_sources in event_log_types.values():
+      for event_log_provider in event_log_sources.values():
         output_writer.WriteEventLogProvider(event_log_provider)
 
         if event_log_provider.event_message_files:
