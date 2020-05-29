@@ -303,7 +303,7 @@ class StdoutOutputWriter(object):
     print('')
     print('Message identifier\tMessage string')
 
-    for identifier, string in message_table.message_strings.iteritems():
+    for identifier, string in message_table.message_strings.items():
       string = re.sub(r'\n', '\\\\n', string)
       string = re.sub(r'\r', '\\\\r', string)
       string = re.sub(r'\t', '\\\\t', string)
@@ -424,7 +424,7 @@ class AsciidocOutputWriter(object):
         '|===',
         '| Message identifier | Message string'])
 
-    for identifier, string in message_table.message_strings.iteritems():
+    for identifier, string in message_table.message_strings.items():
       string = re.sub(r'\n', '\\\\n', string)
       string = re.sub(r'\r', '\\\\r', string)
       string = re.sub(r'\t', '\\\\t', string)
