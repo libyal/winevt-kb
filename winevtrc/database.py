@@ -6,11 +6,7 @@ from __future__ import unicode_literals
 import difflib
 import logging
 import re
-
-try:
-  from pysqlite2 import dbapi2 as sqlite3
-except ImportError:
-  import sqlite3
+import sqlite3
 
 from winevtrc import definitions
 from winevtrc import errors
