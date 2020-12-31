@@ -1,4 +1,4 @@
-Source: winevtrc
+Source: winevt-kb
 Section: python
 Priority: extra
 Maintainer: Joachim Metz <joachim.metz@gmail.com>
@@ -14,9 +14,8 @@ Description: Python 3 module of Windows Event Log resources (winevtrc)
  winevtrc is a Python module part of winevt-kb to allow easy reuse of
  the Windows Event Log resource extraction and database functionality.
 
-Package: winevtrc-tools
+Package: winevt-kb-tools
 Architecture: all
 Depends: python3-winevtrc (>= ${binary:Version}), ${python3:Depends}, ${misc:Depends}
-Description: Tools of Windows Event Log resources (winevtrc)
- winevtrc is a Python module part of winevt-kb to allow easy reuse of
- the Windows Event Log resource extraction and database functionality.
+Description: Tools for Windows Event Log knowledge base (winevt-kb)
+ Winevt-kb is a project to build a Windows Event Log knowledge base.
