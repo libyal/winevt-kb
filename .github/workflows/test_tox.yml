@@ -15,8 +15,6 @@ jobs:
           toxenv: 'py38,coverage,codecov'
         - python-version: 3.8
           toxenv: 'pylint'
-        - python-version: 3.8
-          toxenv: 'docs'
     container:
       image: ubuntu:20.04
     steps:
