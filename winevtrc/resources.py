@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Event Log resources."""
 
-from __future__ import unicode_literals
-
-from winevtrc import py2to3
-
 
 class EventLogProvider(object):
   """Class that defines a Windows Event Log provider.
@@ -42,7 +38,7 @@ class EventLogProvider(object):
       category_message_filenames (str|list[str]): category message filenames,
           where multiple filenames in the same string are separated by ';'.
     """
-    if isinstance(category_message_filenames, py2to3.STRING_TYPES):
+    if isinstance(category_message_filenames, str):
       self.category_message_files = category_message_filenames.split(';')
     else:
       self.category_message_files = category_message_filenames
@@ -54,7 +50,7 @@ class EventLogProvider(object):
       event_message_filenames (str|list[str]): event message filenames,
           where multiple filenames in the same string are separated by ';'.
     """
-    if isinstance(event_message_filenames, py2to3.STRING_TYPES):
+    if isinstance(event_message_filenames, str):
       self.event_message_files = event_message_filenames.split(';')
     else:
       self.event_message_files = event_message_filenames
@@ -66,7 +62,7 @@ class EventLogProvider(object):
       parameter_message_filenames (str|list[str]): parameter message filenames,
           where multiple filenames in the same string are separated by ';'.
     """
-    if isinstance(parameter_message_filenames, py2to3.STRING_TYPES):
+    if isinstance(parameter_message_filenames, str):
       self.parameter_message_files = parameter_message_filenames.split(';')
     else:
       self.parameter_message_files = parameter_message_filenames

@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to export strings extracted from message files."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import difflib
 import logging

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Classes to represent a Windows Message Resource file."""
 
-from __future__ import unicode_literals
-
 import logging
 
 import pyexe

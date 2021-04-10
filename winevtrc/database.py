@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Classes to read from and write to SQLite databases."""
 
-from __future__ import unicode_literals
-
 import difflib
 import logging
 import re
@@ -10,7 +8,6 @@ import sqlite3
 
 from winevtrc import definitions
 from winevtrc import errors
-from winevtrc import py2to3
 from winevtrc import resources
 
 
@@ -186,10 +183,10 @@ class SQLite3DatabaseFile(object):
     sql_values = []
     for value in values:
       # TODO: handle bool.
-      if isinstance(value, py2to3.STRING_TYPES):
+      if isinstance(value, str):
         # In sqlite3 the double quote is escaped with a second double quote.
         value = '"{0:s}"'.format(re.sub('"', '""', value))
-      elif isinstance(value, py2to3.INTEGER_TYPES):
+      elif isinstance(value, int):
         value = '{0:d}'.format(value)
       elif isinstance(value, float):
         value = '{0:f}'.format(value)

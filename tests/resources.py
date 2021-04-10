@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Event Log resources."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from winevtrc import resources

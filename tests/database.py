@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests to read from and write SQLite databases."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 

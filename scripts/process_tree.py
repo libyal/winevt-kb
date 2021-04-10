@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to represent process start and stop events as a process tree."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import logging
 import os

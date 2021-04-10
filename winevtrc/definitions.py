@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """The Windows Event Log resource definitions."""
 
-from __future__ import unicode_literals
-
-
 MESSAGE_FILE_TYPE_CATEGORY = 'category'
 MESSAGE_FILE_TYPE_EVENT = 'event'
 MESSAGE_FILE_TYPE_PARAMETER = 'parameter'

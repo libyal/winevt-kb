@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Windows Event Log message resource extractor."""
 
-from __future__ import unicode_literals
-
 import logging
 
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner

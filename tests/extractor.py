@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Event Log message resource extractor class."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder

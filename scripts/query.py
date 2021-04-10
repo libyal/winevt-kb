@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script to query a winevt-kb SQLite database."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import logging
 import sys
