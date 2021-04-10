@@ -106,7 +106,6 @@ class MessageResourceFile(object):
 
     self._wrc_stream.close()
     self._exe_file.close()
-    self._file_object.close()
     self._file_object = None
     self._is_open = False
 

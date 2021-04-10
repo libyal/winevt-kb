@@ -1,12 +1,12 @@
 # Script to set up tests on AppVeyor Windows.
 
-$Dependencies = "PyYAML cffi cryptography dfdatetime dfvfs dfwinreg dtfabric idna libbde libevt libevtx libewf libexe libfsapfs libfsext libfshfs libfsntfs libfsxfs libfvde libfwnt libluksde libqcow libregf libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm libwrc mock pbr pytsk3 six"
+$Dependencies = "PyYAML cffi cryptography dfdatetime dfvfs dfwinreg dtfabric idna libbde libevt libevtx libewf libexe libfsapfs libfsext libfshfs libfsntfs libfsxfs libfvde libfwnt libluksde libqcow libregf libsigscan libsmdev libsmraw libvhdi libvmdk libvsgpt libvshadow libvslvm libwrc mock pbr pytsk3 six"
 $Dependencies = ${Dependencies} -split " "
 
 $Output = Invoke-Expression -Command "git clone https://github.com/log2timeline/l2tdevtools.git ..\l2tdevtools 2>&1"
 Write-Host (${Output} | Out-String)
 
-If ($env:APPVEYOR_REPO_BRANCH -eq "master")
+If ($env:APPVEYOR_REPO_BRANCH -eq "main")
 {
 	$Track = "stable"
 }
