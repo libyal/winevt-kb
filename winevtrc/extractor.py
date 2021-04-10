@@ -190,6 +190,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     if message_filename in processed_message_filenames:
       return
 
+    logging.info('Processing message file: {0:s}'.format(message_filename))
+
     path_spec = self._path_resolver.ResolvePath(message_filename)
     if path_spec is not None:
       file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
@@ -241,6 +243,9 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
               mui_message_filename)
 
         if mui_message_file:
+          logging.info('Processing MUI message file: {0:s}'.format(
+              mui_message_filename))
+
           message_file.Close()
           message_file = mui_message_file
 
@@ -265,8 +270,6 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
       else:
         normalized_message_filename = message_filename
-
-      logging.info('Processing: {0:s}'.format(normalized_message_filename))
 
       message_file.windows_path = normalized_message_filename
 
@@ -420,6 +423,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     for event_log_sources in event_log_types.values():
       for event_log_provider in event_log_sources.values():
+        logging.info('Processing event log provider: {0:s}'.format(
+            event_log_provider.log_source))
         output_writer.WriteEventLogProvider(event_log_provider)
 
         if event_log_provider.event_message_files:

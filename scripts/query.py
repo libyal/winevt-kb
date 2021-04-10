@@ -32,7 +32,7 @@ def Main():
       help='specific message identifier to query.')
 
   argument_parser.add_argument(
-      '--lcid', dest='lcid', action='store', metavar='LCID',
+      '--lcid', dest='lcid', action='store', metavar='LCID', type=int,
       default=0x00000409, help='the preferred LCID.')
 
   options = argument_parser.parse_args()
