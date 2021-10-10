@@ -8,8 +8,8 @@ class EventLogProvider(object):
   Attributes:
     category_message_files (list[str]): filenames of the category message files.
     event_message_files (list[str]): filenames of the event message files.
-    log_type (str): Event Log type.
-    log_source (str): Event Log source.
+    log_source (str): Windows Event Log source.
+    log_type (str): Windows Event Log type.
     parameter_message_files (list[str]): filenames of the parameter message
         files.
     provider_guid (str): Log provider GUID.

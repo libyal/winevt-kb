@@ -377,7 +377,7 @@ class AsciidocFileWriter(object):
       bool: True if successful or False if not.
     """
     # Using binary mode to make sure to write Unix end of lines.
-    self._file = open(filename, 'wb')
+    self._file = open(filename, 'wb')  # pylint: disable=consider-using-with
     return True
 
   def Close(self):
