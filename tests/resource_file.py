@@ -91,26 +91,28 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['nowrc_test.dll'])
   def testGetVersionInformationNoWrc(self):
     """Tests the _GetVersionInformation function."""
+    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
         message_resource_file._GetVersionInformation()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testGetVersionInformationWrc(self):
     """Tests the _GetVersionInformation function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -142,13 +144,14 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(message_resource_file.file_version, '0.0.0.0')
     self.assertEqual(message_resource_file.product_version, '2.0.0.0')
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testFileVersionProperty(self):
     """Tests the file_version property."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -156,13 +159,14 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testProductVersionProperty(self):
     """Tests the product_version property."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -172,26 +176,28 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
   # TODO: add open/close test on non PE/COFF file.
 
-  @shared_test_lib.skipUnlessHasTestFile(['nowrc_test.dll'])
   def testOpenFileObjectAndCloseNoWrc(self):
     """Tests the OpenFileObject and Close functions."""
+    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
         message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testOpenFileObjectAndCloseWrc(self):
     """Tests the OpenFileObject and Close functions."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -200,26 +206,28 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['nowrc_test.dll'])
   def testGetMessageTableResourceNoWrc(self):
     """Tests the GetMessageTableResource function."""
+    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
         message_resource_file.GetMessageTableResource()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testGetMessageTableResourceWrc(self):
     """Tests the GetMessageTableResource function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -230,10 +238,19 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
   def testGetMUILanguage(self):
     """Tests the GetMUILanguage function."""
-    # TODO: implement.
+    test_file_path = self._GetTestFilePath(['wrc_test.mui.dll'])
+    self._SkipIfPathNotExists(test_file_path)
 
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\test.dll')
+
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      mui_language = message_resource_file.GetMUILanguage()
+      self.assertEqual(mui_language, 'en-US')
+
+      message_resource_file.Close()
 
     # Test with an empty WRC stream.
     wrc_stream = TestWrcStream()
@@ -243,26 +260,28 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     mui_language = message_resource_file.GetMUILanguage()
     self.assertIsNone(mui_language)
 
-  @shared_test_lib.skipUnlessHasTestFile(['nowrc_test.dll'])
   def testGetStringResourceNoWrc(self):
     """Tests the GetStringResource function."""
+    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
         message_resource_file.GetStringResource()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testGetStringResourceWrc(self):
     """Tests the GetStringResource function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 

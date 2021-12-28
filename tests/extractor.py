@@ -75,6 +75,7 @@ class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
         volume_scanner)
 
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
 
     # TODO: implement tests.
     # file_reader.Open(test_file_path)
@@ -84,8 +85,6 @@ class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
     _ = test_file_path
 
 
-@shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
-@shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
 class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Event Log message resource extractor."""
 
@@ -100,10 +99,12 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
 
     test_file_path = self._GetTestFilePath(['SOFTWARE'])
+    self._SkipIfPathNotExists(test_file_path)
     file_system_builder.AddFileReadData(
         '/Windows/System32/config/SOFTWARE', test_file_path)
 
     test_file_path = self._GetTestFilePath(['SYSTEM'])
+    self._SkipIfPathNotExists(test_file_path)
     file_system_builder.AddFileReadData(
         '/Windows/System32/config/SYSTEM', test_file_path)
 

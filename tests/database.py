@@ -16,12 +16,12 @@ from tests import test_lib as shared_test_lib
 class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
   """Tests for the SQLite database file."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-rc.db'])
   def testOpenClose(self):
     """Tests the Open and Close functions."""
-    database_file = database.SQLite3DatabaseFile()
-
     test_file_path = self._GetTestFilePath(['winevt-rc.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_file = database.SQLite3DatabaseFile()
     database_file.Open(test_file_path, read_only=True)
 
     with self.assertRaises(IOError):
@@ -65,12 +65,12 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 
       database_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-rc.db'])
   def testGetValues(self):
     """Tests the GetValues function."""
-    database_file = database.SQLite3DatabaseFile()
-
     test_file_path = self._GetTestFilePath(['winevt-rc.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_file = database.SQLite3DatabaseFile()
     database_file.Open(test_file_path, read_only=True)
 
     generator = database_file.GetValues(
@@ -89,12 +89,12 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(IOError):
       database_file.GetValues(['metadata'], ['name', 'value'], '')
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-rc.db'])
   def testHasTable(self):
     """Tests the HasTable function."""
-    database_file = database.SQLite3DatabaseFile()
-
     test_file_path = self._GetTestFilePath(['winevt-rc.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_file = database.SQLite3DatabaseFile()
     database_file.Open(test_file_path, read_only=True)
 
     result = database_file.HasTable('metadata')
@@ -160,12 +160,12 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
 class Sqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the SQLite database reader."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-rc.db'])
   def testOpenClose(self):
     """Tests the Open and Close functions."""
-    database_reader = database.Sqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-rc.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.Sqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.Close()
@@ -192,12 +192,12 @@ class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   # TODO: add test for _GetMessageFilenames
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-kb.db'])
   def testGetEventLogProviders(self):
     """Tests the GetEventLogProviders function."""
-    database_reader = database.EventProvidersSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.EventProvidersSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetEventLogProviders()
@@ -207,12 +207,12 @@ class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
     database_reader.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-kb.db'])
   def testGetMessageFiles(self):
     """Tests the GetMessageFiles function."""
-    database_reader = database.EventProvidersSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.EventProvidersSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetMessageFiles()
@@ -296,12 +296,12 @@ class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the message file SQLite database reader."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['message_file.db'])
   def testGetMessageTables(self):
     """Tests the GetMessageTables function."""
-    database_reader = database.MessageFileSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['message_file.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.MessageFileSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetMessageTables()
@@ -311,12 +311,12 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
     database_reader.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['message_file.db'])
   def testGetMessages(self):
     """Tests the GetMessages function."""
-    database_reader = database.MessageFileSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['message_file.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.MessageFileSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetMessages('0x00000409', '1.0.0.0')
@@ -332,12 +332,12 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
     database_reader.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['message_file.db'])
   def testGetStringTables(self):
     """Tests the GetStringTables function."""
-    database_reader = database.MessageFileSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['message_file.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.MessageFileSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetStringTables()
@@ -348,12 +348,12 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
     database_reader.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['message_file.db'])
   def testGetStrings(self):
     """Tests the GetStrings function."""
-    database_reader = database.MessageFileSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['message_file.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.MessageFileSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetStrings('0x00000409', '1.0.0.0')
@@ -370,13 +370,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testGetMessageFileKey(self):
     """Tests the _GetMessageFileKey function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -397,13 +398,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteMessage(self):
     """Tests the _WriteMessage function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -426,13 +428,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteMessageFile(self):
     """Tests the _WriteMessageFile function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -449,13 +452,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteMessageTable(self):
     """Tests the _WriteMessageTable function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -480,13 +484,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteMessageTableLanguage(self):
     """Tests the _WriteMessageTableLanguage function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -512,13 +517,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteMessageTables(self):
     """Tests the _WriteMessageTables function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -539,13 +545,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
   # TODO: add tests for _WriteString.
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteStringTable(self):
     """Tests the _WriteStringTable function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -567,13 +574,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteStringTableLanguage(self):
     """Tests the _WriteStringTableLanguage function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -599,13 +607,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteStringTables(self):
     """Tests the _WriteStringTables function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -624,13 +633,14 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_resource_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['wrc_test.dll'])
   def testWriteResources(self):
     """Tests the WriteResources function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
     message_resource_file = resource_file.MessageResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
@@ -653,12 +663,12 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-kb.db'])
   def testGetEventLogProviderKey(self):
     """Tests the _GetEventLogProviderKey function."""
-    database_reader = database.ResourcesSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.ResourcesSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader._GetEventLogProviderKey('Security')
@@ -670,12 +680,12 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _GetMessageFilenames
   # TODO: add test for _GetMessages
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-kb.db'])
   def testGetEventLogProviders(self):
     """Tests the GetEventLogProviders function."""
-    database_reader = database.ResourcesSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.ResourcesSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.GetEventLogProviders()
@@ -684,24 +694,24 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   # TODO: add test for GetMessage
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-kb.db'])
   def testGetMessages(self):
     """Tests the GetMessages function."""
-    database_reader = database.ResourcesSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.ResourcesSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.GetMessages('bogus', 0x00000409)
 
     database_reader.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['winevt-kb.db'])
   def testGetMetadataAttribute(self):
     """Tests the GetMetadataAttribute function."""
-    database_reader = database.ResourcesSqlite3DatabaseReader()
-
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    database_reader = database.ResourcesSqlite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.GetMetadataAttribute('bogus')

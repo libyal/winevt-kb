@@ -21,5 +21,8 @@ winevt-kb (${VERSION}-1) unstable; urgency=low
  -- Joachim Metz <joachim.metz@gmail.com>  ${DPKG_DATE}
 EOT
 
+# Regenerate the API documentation.
+tox -edocs
+
 exit ${EXIT_SUCCESS};
 
