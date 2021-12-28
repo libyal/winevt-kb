@@ -323,7 +323,13 @@ def Main():
 
       if event_log_provider.event_message_files:
         for message_filename in event_log_provider.event_message_files:
-          if message_filename not in processed_message_filenames:
+          if message_filename in processed_message_filenames:
+            logging.info('Skipping event message file: {0:s}'.format(
+                message_filename))
+          else:
+            logging.info('Processing event message file: {0:s}'.format(
+                message_filename))
+
             message_file = extractor_object.GetMessageFile(
                 event_log_provider, message_filename)
             if message_file:
@@ -335,7 +341,13 @@ def Main():
 
       if event_log_provider.category_message_files:
         for message_filename in event_log_provider.category_message_files:
-          if message_filename not in processed_message_filenames:
+          if message_filename in processed_message_filenames:
+            logging.info('Skipping category message file: {0:s}'.format(
+                message_filename))
+          else:
+            logging.info('Processing category message file: {0:s}'.format(
+                message_filename))
+
             message_file = extractor_object.GetMessageFile(
                 event_log_provider, message_filename)
             if message_file:
@@ -347,7 +359,13 @@ def Main():
 
       if event_log_provider.parameter_message_files:
         for message_filename in event_log_provider.parameter_message_files:
-          if message_filename not in processed_message_filenames:
+          if message_filename in processed_message_filenames:
+            logging.info('Skipping parameter message file: {0:s}'.format(
+                message_filename))
+          else:
+            logging.info('Processing parameter message file: {0:s}'.format(
+                message_filename))
+
             message_file = extractor_object.GetMessageFile(
                 event_log_provider, message_filename)
             if message_file:

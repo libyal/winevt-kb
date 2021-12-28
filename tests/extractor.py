@@ -85,43 +85,6 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     # TODO: improve test.
     self.assertIsNone(windows_version)
 
-  def testCollectEventLogTypes(self):
-    """Tests the _CollectEventLogTypes function."""
-    extractor_object = self._CreateTestEventMessageStringExtractor()
-
-    event_log_types = extractor_object._CollectEventLogTypes()
-    self.assertEqual(len(event_log_types), 3)
-    self.assertEqual(len(event_log_types['Application']), 65)
-    self.assertEqual(len(event_log_types['Security']), 7)
-    self.assertEqual(len(event_log_types['System']), 186)
-
-    # TODO: hide duplication warnings.
-    event_log_types = extractor_object._CollectEventLogTypes(
-        all_control_sets=True)
-    self.assertEqual(len(event_log_types), 3)
-    self.assertEqual(len(event_log_types['Application']), 65)
-    self.assertEqual(len(event_log_types['Security']), 7)
-    self.assertEqual(len(event_log_types['System']), 186)
-
-  def testCollectEventLogProvidersFromKey(self):
-    """Tests the _CollectEventLogProvidersFromKey function."""
-    extractor_object = self._CreateTestEventMessageStringExtractor()
-
-    generator = extractor_object._CollectEventLogProvidersFromKey(None)
-    # TODO: fix generator method.
-    self.assertIsNotNone(generator)
-
-  def testGetEventLogProviders(self):
-    """Tests the _GetEventLogProviders function."""
-    extractor_object = self._CreateTestEventMessageStringExtractor()
-
-    event_log_providers = list(extractor_object._GetEventLogProviders())
-    self.assertEqual(len(event_log_providers), 258)
-
-    event_log_providers = list(
-        extractor_object._GetEventLogProviders(all_control_sets=True))
-    self.assertEqual(len(event_log_providers), 516)
-
   def testGetSystemRoot(self):
     """Tests the _GetSystemRoot function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
