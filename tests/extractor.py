@@ -15,55 +15,6 @@ from winevtrc import resources
 from tests import test_lib as shared_test_lib
 
 
-class TestOutputWriter(object):
-  """Class that defines a test output writer.
-
-  Attributes:
-    event_log_providers (list[EventLogProvider]): event log providers.
-    message_files (list[MessageFile]): message files.
-  """
-
-  def __init__(self):
-    """Initializes the test output writer."""
-    super(TestOutputWriter, self).__init__()
-    self.event_log_providers = []
-    self.message_files = []
-
-  def Close(self):
-    """Closes the output writer."""
-    return
-
-  def Open(self):
-    """Opens the output writer.
-
-    Returns:
-      bool: True if successful or False if not.
-    """
-    return True
-
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider.
-
-    Args:
-      event_log_provider (EventLogProvider): event log provider.
-    """
-    self.event_log_providers.append(event_log_provider)
-
-  # pylint: disable=unused-argument
-  def WriteMessageFile(
-      self, event_log_provider, message_resource_file, message_filename,
-      message_file_type):
-    """Writes the Windows Message Resource file.
-
-    Args:
-      event_log_provider (EventLogProvider): event log provider.
-      message_resource_file (MessageResourceFile): message resource file.
-      message_filename (str): message filename.
-      message_file_type (str): message file type.
-    """
-    self.message_files.append(message_resource_file)
-
-
 class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Registry file reader."""
 
@@ -160,25 +111,6 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     # TODO: fix generator method.
     self.assertIsNotNone(generator)
 
-  def testExtractMessageFile(self):
-    """Tests the _ExtractMessageFile function."""
-    extractor_object = self._CreateTestEventMessageStringExtractor()
-
-    # TODO: improve test.
-    output_writer = TestOutputWriter()
-    processed_message_filenames = []
-    event_log_provider = resources.EventLogProvider(
-        'log_type', 'log_source', 'provider_guid')
-    message_filename = ''
-    message_file_type = ''
-
-    extractor_object._ExtractMessageFile(
-        output_writer, processed_message_filenames, event_log_provider,
-        message_filename, message_file_type)
-
-    self.assertEqual(len(output_writer.event_log_providers), 0)
-    self.assertEqual(len(output_writer.message_files), 0)
-
   def testGetEventLogProviders(self):
     """Tests the _GetEventLogProviders function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
@@ -217,16 +149,27 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
 
   # TODO: test _OpenMessageResourceFileByPathSpec
 
-  def testExtractEventLogMessageStrings(self):
-    """Tests the ExtractEventLogMessageStrings function."""
+  def testExtractEventLogProviders(self):
+    """Tests the ExtractEventLogProviders function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
-    output_writer = TestOutputWriter()
+    event_log_providers = list(extractor_object.ExtractEventLogProviders())
 
-    extractor_object.ExtractEventLogMessageStrings(output_writer)
+    self.assertEqual(len(event_log_providers), 258)
 
-    self.assertEqual(len(output_writer.event_log_providers), 258)
-    self.assertEqual(len(output_writer.message_files), 0)
+  def testGetMessageFile(self):
+    """Tests the GetMessageFile function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    # TODO: improve test.
+    event_log_provider = resources.EventLogProvider(
+        'log_type', 'log_source', 'provider_guid')
+    message_filename = 'bogus'
+
+    message_file = extractor_object.GetMessageFile(
+        event_log_provider, message_filename)
+
+    self.assertIsNone(message_file)
 
 
 if __name__ == '__main__':

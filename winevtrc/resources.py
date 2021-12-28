@@ -3,7 +3,7 @@
 
 
 class EventLogProvider(object):
-  """Class that defines a Windows Event Log provider.
+  """Windows Event Log provider.
 
   Attributes:
     category_message_files (list[str]): filenames of the category message files.
@@ -85,6 +85,7 @@ class MessageFile(object):
     super(MessageFile, self).__init__()
     self._message_tables_per_language = {}
     self._string_tables_per_language = {}
+
     self.name = name
     self.windows_path = None
 

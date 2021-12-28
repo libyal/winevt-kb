@@ -8,7 +8,11 @@ import os
 import re
 import sys
 
+from dfvfs.helpers import command_line
+from dfvfs.helpers import volume_scanner
+
 from winevtrc import database
+from winevtrc import definitions
 from winevtrc import extractor
 
 
@@ -202,6 +206,33 @@ def Main():
           'directory to write the sqlite3 databases to.'))
 
   argument_parser.add_argument(
+      '--partitions', '--partition', dest='partitions', action='store',
+      type=str, default=None, help=(
+          'Define partitions to be processed. A range of partitions can be '
+          'defined as: "3..5". Multiple partitions can be defined as: "1,3,5" '
+          '(a list of comma separated values). Ranges and lists can also be '
+          'combined as: "1,3..5". The first partition is 1. All partitions '
+          'can be specified with: "all".'))
+
+  argument_parser.add_argument(
+      '--snapshots', '--snapshot', dest='snapshots', action='store', type=str,
+      default=None, help=(
+          'Define snapshots to be processed. A range of snapshots can be '
+          'defined as: "3..5". Multiple snapshots can be defined as: "1,3,5" '
+          '(a list of comma separated values). Ranges and lists can also be '
+          'combined as: "1,3..5". The first snapshot is 1. All snapshots can '
+          'be specified with: "all".'))
+
+  argument_parser.add_argument(
+      '--volumes', '--volume', dest='volumes', action='store', type=str,
+      default=None, help=(
+          'Define volumes to be processed. A range of volumes can be defined '
+          'as: "3..5". Multiple volumes can be defined as: "1,3,5" (a list '
+          'of comma separated values). Ranges and lists can also be combined '
+          'as: "1,3..5". The first volume is 1. All volumes can be specified '
+          'with: "all".'))
+
+  argument_parser.add_argument(
       '--winver', dest='windows_version', action='store', metavar='xp',
       default=None, help=(
           'string that identifies the Windows version in the database.'))
@@ -237,15 +268,26 @@ def Main():
   else:
     output_writer = StdoutOutputWriter()
 
-  if not output_writer.Open():
-    print('Unable to open output writer.')
-    print('')
-    return False
+  mediator = command_line.CLIVolumeScannerMediator()
 
-  # TODO: pass mediator.
-  extractor_object = extractor.EventMessageStringExtractor(debug=options.debug)
+  volume_scanner_options = volume_scanner.VolumeScannerOptions()
+  volume_scanner_options.partitions = mediator.ParseVolumeIdentifiersString(
+      options.partitions)
 
-  if not extractor_object.ScanForWindowsVolume(options.source):
+  if options.snapshots == 'none':
+    volume_scanner_options.snapshots = ['none']
+  else:
+    volume_scanner_options.snapshots = mediator.ParseVolumeIdentifiersString(
+        options.snapshots)
+
+  volume_scanner_options.volumes = mediator.ParseVolumeIdentifiersString(
+      options.volumes)
+
+  extractor_object = extractor.EventMessageStringExtractor(
+      debug=options.debug, mediator=mediator)
+
+  if not extractor_object.ScanForWindowsVolume(
+      options.source, options=volume_scanner_options):
     print(('Unable to retrieve the volume with the Windows directory from: '
            '{0:s}.').format(options.source))
     print('')
@@ -263,11 +305,60 @@ def Main():
 
     extractor_object.windows_version = options.windows_version
 
-  print('Windows version: {0:s}.'.format(extractor_object.windows_version))
-  print('')
+  if not output_writer.Open():
+    print('Unable to open output writer.')
+    print('')
+    return False
 
-  extractor_object.ExtractEventLogMessageStrings(output_writer)
-  output_writer.Close()
+  processed_message_filenames = []
+
+  try:
+    logging.info('Windows version: {0:s}.'.format(
+        extractor_object.windows_version))
+
+    for event_log_provider in extractor_object.ExtractEventLogProviders():
+      logging.info('Processing event log provider: {0:s}'.format(
+          event_log_provider.log_source))
+      output_writer.WriteEventLogProvider(event_log_provider)
+
+      if event_log_provider.event_message_files:
+        for message_filename in event_log_provider.event_message_files:
+          if message_filename not in processed_message_filenames:
+            message_file = extractor_object.GetMessageFile(
+                event_log_provider, message_filename)
+            if message_file:
+              processed_message_filenames.append(message_filename)
+              output_writer.WriteMessageFile(
+                  event_log_provider, message_file, message_file.windows_path,
+                  definitions.MESSAGE_FILE_TYPE_EVENT)
+              message_file.Close()
+
+      if event_log_provider.category_message_files:
+        for message_filename in event_log_provider.category_message_files:
+          if message_filename not in processed_message_filenames:
+            message_file = extractor_object.GetMessageFile(
+                event_log_provider, message_filename)
+            if message_file:
+              processed_message_filenames.append(message_filename)
+              output_writer.WriteMessageFile(
+                  event_log_provider, message_file, message_file.windows_path,
+                  definitions.MESSAGE_FILE_TYPE_CATEGORY)
+              message_file.Close()
+
+      if event_log_provider.parameter_message_files:
+        for message_filename in event_log_provider.parameter_message_files:
+          if message_filename not in processed_message_filenames:
+            message_file = extractor_object.GetMessageFile(
+                event_log_provider, message_filename)
+            if message_file:
+              processed_message_filenames.append(message_filename)
+              output_writer.WriteMessageFile(
+                  event_log_provider, message_file, message_file.windows_path,
+                  definitions.MESSAGE_FILE_TYPE_PARAMETER)
+              message_file.Close()
+
+  finally:
+    output_writer.Close()
 
   if extractor_object.invalid_message_filenames:
     print('Message resource files not found or without resource section:')

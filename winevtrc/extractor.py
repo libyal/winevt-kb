@@ -9,7 +9,6 @@ from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
-from winevtrc import definitions
 from winevtrc import resource_file
 from winevtrc import resources
 
@@ -80,6 +79,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     self._debug = debug
     self._registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
+    self._processed_message_filenames = []
     self._windows_version = None
 
     self.ascii_codepage = 'cp1252'
@@ -174,114 +174,6 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
                 parameter_message_file_value.GetDataAsObject())
 
           yield event_log_provider
-
-  def _ExtractMessageFile(
-      self, output_writer, processed_message_filenames, event_log_provider,
-      message_filename, message_file_type):
-    """Extracts the Event Log message strings from a message file.
-
-    Args:
-      output_writer (OutputWriter): output writer.
-      processed_message_filenames (list[str]): processed message filenames.
-      event_log_provider (EventLogProvider): Event Log provider.
-      message_filename (str): message filename.
-      message_file_type (str): message file type.
-    """
-    if message_filename in processed_message_filenames:
-      return
-
-    logging.info('Processing message file: {0:s}'.format(message_filename))
-
-    path_spec = self._path_resolver.ResolvePath(message_filename)
-    if path_spec is not None:
-      file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
-
-      # If message_filename points to a directory try appending the Event Log
-      # provider log source as the file name.
-      if file_entry.IsDirectory():
-        message_filename = '\\'.join([
-            message_filename, event_log_provider.log_source])
-        path_spec = self._path_resolver.ResolvePath(message_filename)
-
-    if path_spec is not None:
-      message_file = self._OpenMessageResourceFileByPathSpec(path_spec)
-    else:
-      message_file = None
-
-    mui_message_filename = None
-
-    if not message_file:
-      if message_filename in self.invalid_message_filenames:
-        self.invalid_message_filenames.append(message_filename)
-      return
-
-    if message_file.windows_path in processed_message_filenames:
-      message_file.Close()
-      return
-
-    message_table = message_file.GetMessageTableResource()
-    if not message_table:
-      # Windows Vista and later use a MUI resource to redirect to
-      # a language specific message file.
-      mui_language = message_file.GetMUILanguage()
-
-      if mui_language:
-        message_filename_path, _, message_filename_name = (
-            message_filename.rpartition('\\'))
-
-        mui_message_filename = '{0:s}\\{1:s}\\{2:s}.mui'.format(
-            message_filename_path, mui_language, message_filename_name)
-
-        mui_message_file = self._OpenMessageResourceFile(
-            mui_message_filename)
-
-        if not mui_message_file:
-          mui_message_filename = '{0:s}\\{1:s}.mui'.format(
-              message_filename_path, message_filename_name)
-
-          mui_message_file = self._OpenMessageResourceFile(
-              mui_message_filename)
-
-        if mui_message_file:
-          logging.info('Processing MUI message file: {0:s}'.format(
-              mui_message_filename))
-
-          message_file.Close()
-          message_file = mui_message_file
-
-          message_table = message_file.GetMessageTableResource()
-
-    if not message_table:
-      if message_filename not in self.missing_table_message_filenames:
-        self.missing_table_message_filenames.append(message_filename)
-
-    else:
-      normalized_message_filename = message_filename.lower()
-
-      if normalized_message_filename.startswith(
-          self._windows_directory.lower()):
-        normalized_message_filename = '%SystemRoot%{0:s}'.format(
-            message_filename[len(self._windows_directory):])
-
-      elif normalized_message_filename.startswith(
-          '%SystemRoot%'.lower()):
-        normalized_message_filename = '%SystemRoot%{0:s}'.format(
-            message_filename[len('%SystemRoot%'):])
-
-      else:
-        normalized_message_filename = message_filename
-
-      message_file.windows_path = normalized_message_filename
-
-      output_writer.WriteMessageFile(
-          event_log_provider, message_file, normalized_message_filename,
-          message_file_type)
-
-    if message_filename != message_file.windows_path:
-      processed_message_filenames.append(message_file.windows_path)
-    processed_message_filenames.append(message_filename)
-
-    message_file.Close()
 
   def _GetEventLogProviders(self, all_control_sets=False):
     """Retrieves the Event Log providers.
@@ -406,41 +298,119 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     return message_file
 
-  def ExtractEventLogMessageStrings(self, output_writer):
-    """Extracts the Event Log message strings from the message files.
+  def ExtractEventLogProviders(self):
+    """Extracts Event Log providers.
 
-    Args:
-      output_writer (OutputWriter): output writer.
+    Yields:
+      EventLogProvider: Event Log provider.
     """
     # TODO: have CLI argument control this mode.
     all_control_sets = False
 
-    self.invalid_message_filenames = []
-    self.missing_table_message_filenames = []
-    processed_message_filenames = []
     event_log_types = self._CollectEventLogTypes(
         all_control_sets=all_control_sets)
 
     for event_log_sources in event_log_types.values():
       for event_log_provider in event_log_sources.values():
-        logging.info('Processing event log provider: {0:s}'.format(
-            event_log_provider.log_source))
-        output_writer.WriteEventLogProvider(event_log_provider)
+        yield event_log_provider
 
-        if event_log_provider.event_message_files:
-          for message_filename in event_log_provider.event_message_files:
-            self._ExtractMessageFile(
-                output_writer, processed_message_filenames, event_log_provider,
-                message_filename, definitions.MESSAGE_FILE_TYPE_EVENT)
+  def GetMessageFile(self, event_log_provider, message_filename):
+    """Retrieves an Event Log message file.
 
-        if event_log_provider.category_message_files:
-          for message_filename in event_log_provider.category_message_files:
-            self._ExtractMessageFile(
-                output_writer, processed_message_filenames, event_log_provider,
-                message_filename, definitions.MESSAGE_FILE_TYPE_CATEGORY)
+    Args:
+      event_log_provider (EventLogProvider): Event Log provider.
+      message_filename (str): message filename.
 
-        if event_log_provider.parameter_message_files:
-          for message_filename in event_log_provider.parameter_message_files:
-            self._ExtractMessageFile(
-                output_writer, processed_message_filenames, event_log_provider,
-                message_filename, definitions.MESSAGE_FILE_TYPE_PARAMETER)
+    Returns:
+      MessageFile: message file.
+    """
+    logging.info('Processing message file: {0:s}'.format(message_filename))
+
+    path_spec = self._path_resolver.ResolvePath(message_filename)
+    if path_spec is not None:
+      file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
+
+      # If message_filename points to a directory try appending the Event Log
+      # provider log source as the file name.
+      if file_entry.IsDirectory():
+        message_filename = '\\'.join([
+            message_filename, event_log_provider.log_source])
+        path_spec = self._path_resolver.ResolvePath(message_filename)
+
+    if path_spec is not None:
+      message_file = self._OpenMessageResourceFileByPathSpec(path_spec)
+    else:
+      message_file = None
+
+    mui_message_filename = None
+
+    if not message_file:
+      if message_filename in self.invalid_message_filenames:
+        self.invalid_message_filenames.append(message_filename)
+      return None
+
+    if message_file.windows_path in self._processed_message_filenames:
+      message_file.Close()
+      return None
+
+    message_table = message_file.GetMessageTableResource()
+    if not message_table:
+      # Windows Vista and later use a MUI resource to redirect to
+      # a language specific message file.
+      mui_language = message_file.GetMUILanguage()
+
+      if mui_language:
+        message_filename_path, _, message_filename_name = (
+            message_filename.rpartition('\\'))
+
+        mui_message_filename = '{0:s}\\{1:s}\\{2:s}.mui'.format(
+            message_filename_path, mui_language, message_filename_name)
+
+        mui_message_file = self._OpenMessageResourceFile(
+            mui_message_filename)
+
+        if not mui_message_file:
+          mui_message_filename = '{0:s}\\{1:s}.mui'.format(
+              message_filename_path, message_filename_name)
+
+          mui_message_file = self._OpenMessageResourceFile(
+              mui_message_filename)
+
+        if mui_message_file:
+          logging.info('Processing MUI message file: {0:s}'.format(
+              mui_message_filename))
+
+          message_file.Close()
+          message_file = mui_message_file
+
+          message_table = message_file.GetMessageTableResource()
+
+    if not message_table:
+      if message_filename not in self.missing_table_message_filenames:
+        self.missing_table_message_filenames.append(message_filename)
+
+      message_file.Close()
+
+      return None
+
+    normalized_message_filename = message_filename.lower()
+
+    if normalized_message_filename.startswith(
+        self._windows_directory.lower()):
+      normalized_message_filename = '%SystemRoot%{0:s}'.format(
+          message_filename[len(self._windows_directory):])
+
+    elif normalized_message_filename.startswith(
+        '%SystemRoot%'.lower()):
+      normalized_message_filename = '%SystemRoot%{0:s}'.format(
+          message_filename[len('%SystemRoot%'):])
+
+    else:
+      normalized_message_filename = message_filename
+
+    message_file.windows_path = normalized_message_filename
+
+    if message_filename != message_file.windows_path:
+      self._processed_message_filenames.append(message_file.windows_path)
+
+    return message_file
