@@ -310,83 +310,70 @@ def Main():
     print('')
     return False
 
-  processed_message_filenames = []
-
   try:
     logging.info('Windows version: {0:s}.'.format(
         extractor_object.windows_version))
 
-    for event_log_provider in extractor_object.ExtractEventLogProviders():
+    for event_log_provider in extractor_object.CollectEventLogProviders():
       logging.info('Processing event log provider: {0:s}'.format(
           event_log_provider.log_source))
       output_writer.WriteEventLogProvider(event_log_provider)
 
       if event_log_provider.event_message_files:
         for message_filename in event_log_provider.event_message_files:
-          if message_filename in processed_message_filenames:
-            logging.info('Skipping event message file: {0:s}'.format(
-                message_filename))
-          else:
+          message_file = extractor_object.GetMessageFile(
+              event_log_provider, message_filename)
+
+          if message_file:
             logging.info('Processing event message file: {0:s}'.format(
                 message_filename))
 
-            message_file = extractor_object.GetMessageFile(
-                event_log_provider, message_filename)
-            if message_file:
-              processed_message_filenames.append(message_filename)
-              output_writer.WriteMessageFile(
-                  event_log_provider, message_file, message_file.windows_path,
-                  definitions.MESSAGE_FILE_TYPE_EVENT)
-              message_file.Close()
+            output_writer.WriteMessageFile(
+                event_log_provider, message_file, message_file.windows_path,
+                definitions.MESSAGE_FILE_TYPE_EVENT)
+            message_file.Close()
 
       if event_log_provider.category_message_files:
         for message_filename in event_log_provider.category_message_files:
-          if message_filename in processed_message_filenames:
-            logging.info('Skipping category message file: {0:s}'.format(
-                message_filename))
-          else:
+          message_file = extractor_object.GetMessageFile(
+              event_log_provider, message_filename)
+
+          if message_file:
             logging.info('Processing category message file: {0:s}'.format(
                 message_filename))
 
-            message_file = extractor_object.GetMessageFile(
-                event_log_provider, message_filename)
-            if message_file:
-              processed_message_filenames.append(message_filename)
-              output_writer.WriteMessageFile(
-                  event_log_provider, message_file, message_file.windows_path,
-                  definitions.MESSAGE_FILE_TYPE_CATEGORY)
-              message_file.Close()
+            output_writer.WriteMessageFile(
+                event_log_provider, message_file, message_file.windows_path,
+                definitions.MESSAGE_FILE_TYPE_CATEGORY)
+            message_file.Close()
 
       if event_log_provider.parameter_message_files:
         for message_filename in event_log_provider.parameter_message_files:
-          if message_filename in processed_message_filenames:
-            logging.info('Skipping parameter message file: {0:s}'.format(
-                message_filename))
-          else:
+          message_file = extractor_object.GetMessageFile(
+              event_log_provider, message_filename)
+
+          if message_file:
             logging.info('Processing parameter message file: {0:s}'.format(
                 message_filename))
 
-            message_file = extractor_object.GetMessageFile(
-                event_log_provider, message_filename)
-            if message_file:
-              processed_message_filenames.append(message_filename)
-              output_writer.WriteMessageFile(
-                  event_log_provider, message_file, message_file.windows_path,
-                  definitions.MESSAGE_FILE_TYPE_PARAMETER)
-              message_file.Close()
+            output_writer.WriteMessageFile(
+                event_log_provider, message_file, message_file.windows_path,
+                definitions.MESSAGE_FILE_TYPE_PARAMETER)
+            message_file.Close()
 
   finally:
     output_writer.Close()
 
-  if extractor_object.invalid_message_filenames:
+  if extractor_object.missing_message_filenames:
     print('Message resource files not found or without resource section:')
-    for message_filename in extractor_object.invalid_message_filenames:
+    for message_filename in extractor_object.missing_message_filenames:
       print('{0:s}'.format(message_filename))
     print('')
 
-  if extractor_object.missing_table_message_filenames:
-    print('Message resource files without a message table resource:')
-    for message_filename in extractor_object.missing_table_message_filenames:
+  if extractor_object.missing_resources_message_filenames:
+    print('Message resource files without a string and message table resource:')
+    for message_filename in (
+        extractor_object.missing_resources_message_filenames):
       print('{0:s}'.format(message_filename))
     print('')
 

@@ -112,11 +112,11 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
 
   # TODO: test _OpenMessageResourceFileByPathSpec
 
-  def testExtractEventLogProviders(self):
-    """Tests the ExtractEventLogProviders function."""
+  def testCollectEventLogProviders(self):
+    """Tests the CollectEventLogProviders function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
-    event_log_providers = list(extractor_object.ExtractEventLogProviders())
+    event_log_providers = list(extractor_object.CollectEventLogProviders())
 
     self.assertEqual(len(event_log_providers), 258)
 
