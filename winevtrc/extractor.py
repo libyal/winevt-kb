@@ -32,7 +32,7 @@ class EventMessageStringRegistryFileReader(
     Args:
       path (str): path of the Windows Registry file. The path is a Windows path
           relative to the root of the file system that contains the specific
-          Windows Registry file. E.g.  C:\\Windows\\System32\\config\\SYSTEM
+          Windows Registry file. E.g. C:\\Windows\\System32\\config\\SYSTEM
       ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:
@@ -136,31 +136,40 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           mui_message_file_path)
 
     if mui_message_resource_file:
-      logging.info('Processing MUI message file: {0:s}'.format(
-          mui_message_file_path))
+      logging.info(
+          'Message file: {0:s} references MUI message file: {1:s}'.format(
+              message_file_path, mui_message_file_path))
 
     return mui_message_resource_file
 
-  def _GetNormalizedMessageFilename(self, message_file_path):
+  def _GetNormalizedMessageFilePath(self, path):
     """Retrieves a normalized path of an Event Log message file.
 
     Args:
-      message_file_path (str): path of a message file.
+      path (str): path of a message file.
 
     Returns:
       str: normalized path of a message file.
     """
-    message_file_path_lower = message_file_path.lower()
+    path_segments = path.split('\\')
 
-    if message_file_path_lower.startswith(self._windows_directory.lower()):
-      return '%SystemRoot%{0:s}'.format(message_file_path[
-          len(self._windows_directory):])
+    # Check if the first path segment is a drive letter.
+    first_path_segment = path_segments[0]
+    if len(first_path_segment) == 2 and first_path_segment[1:] == ':':
+      path_segments.pop(0)
 
-    if message_file_path_lower.startswith('%SystemRoot%'.lower()):
-      return '%SystemRoot%{0:s}'.format(message_file_path[
-          len('%SystemRoot%'):])
+    filename = path_segments.pop()
 
-    return message_file_path
+    if not path_segments:
+      # If the path is just a filename assume the file is stored in:
+      # "%SystemRoot%\System32".
+      path_segments = ['%SystemRoot%', 'System32']
+
+    elif path_segments[0].lower() in ('%systemroot%', '%windir%', 'windows'):
+      path_segments = ['%SystemRoot%'] + path_segments[1:]
+
+    path_segments.append(filename)
+    return '\\'.join(path_segments)
 
   def _GetSystemRoot(self):
     """Determines the value of %SystemRoot%.
@@ -202,24 +211,6 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       return default_value
 
     return value.GetDataAsObject()
-
-  def _GetWindowsSystemPath(self, path):
-    """Retrieves a Windows system path.
-
-    Args:
-      path (str): Windows path with environment variables.
-
-    Returns:
-      tuple[str, str]: Windows system path and filename.
-    """
-    path, _, filename = path.rpartition('\\')
-
-    # If the path is just a filename assume the file is stored in:
-    # "%SystemRoot%\System32".
-    if not path:
-      path = '%SystemRoot%\\System32'
-
-    return '\\'.join([path, filename])
 
   def _GetWindowsVersion(self):
     """Determines the Windows version from kernel executable file.
@@ -277,7 +268,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     try:
       file_object = dfvfs_resolver.Resolver.OpenFileObject(path_spec)
     except IOError as exception:
-      logging.warning('Unable to open: {0:s} with error: {1:s}'.format(
+      logging.warning('Unable to open: {0:s} with error: {1!s}'.format(
           path_spec.comparable, exception))
       file_object = None
 
@@ -315,24 +306,27 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       MessageResourceFile: message resource file or None if not available or
           already processed.
     """
-    lookup_path = message_filename.lower()
+    normalized_message_file_path = self._GetNormalizedMessageFilePath(
+        message_filename)
+
+    # Skip message file if it was already processed.
+    lookup_path = normalized_message_file_path.lower()
     if lookup_path in self._processed_message_filenames:
       return None
 
-    message_file_path = self._GetWindowsSystemPath(message_filename)
-
-    path_spec = self._path_resolver.ResolvePath(message_file_path)
+    path_spec = self._path_resolver.ResolvePath(normalized_message_file_path)
     if path_spec:
       file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
 
-      # If message_file_path points to a directory try appending the Event Log
-      # provider log source as the file name.
+      # If normalized_message_file_path points to a directory try appending
+      # the Event Log provider log source as the file name.
       if file_entry.IsDirectory():
         logging.info('Message file: {0:s} refers to directory'.format(
             message_filename))
 
         for log_source in event_log_provider.log_sources:
-          message_file_path = '\\'.join([message_file_path, log_source])
+          message_file_path = '\\'.join([
+              normalized_message_file_path, log_source])
           path_spec = self._path_resolver.ResolvePath(message_file_path)
           if path_spec:
             break
@@ -348,24 +342,18 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       logging.warning('Missing message file: {0:s}'.format(message_filename))
       return None
 
-    # Skip message file if it was already processed but was referenced
-    # by a different path.
-    lookup_path = message_resource_file.windows_path.lower()
-    if lookup_path in self._processed_message_filenames:
-      message_resource_file.Close()
-      return None
-
     message_table_resource = message_resource_file.GetMessageTableResource()
     if not message_table_resource:
       # Windows Vista and later use a MUI resource to redirect to
       # a language specific message file.
       mui_message_resource_file = self._GetMUIMessageResourceFile(
-          message_file_path, message_resource_file)
+          normalized_message_file_path, message_resource_file)
       if mui_message_resource_file:
         message_resource_file.Close()
-        message_resource_file = mui_message_resource_file
 
-        message_table_resource = message_resource_file.GetMessageTableResource()
+        message_resource_file = mui_message_resource_file
+        message_table_resource = (
+            mui_message_resource_file.GetMessageTableResource())
 
     if not message_table_resource:
       string_resource = message_resource_file.GetStringResource()
@@ -381,13 +369,9 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
       return None
 
-    message_resource_file.windows_path = self._GetNormalizedMessageFilename(
-        message_file_path)
+    message_resource_file.windows_path = normalized_message_file_path
 
-    if message_file_path != message_resource_file.windows_path:
-      self._processed_message_filenames.append(
-          message_resource_file.windows_path.lower())
-
-    self._processed_message_filenames.append(message_filename.lower())
+    lookup_path = normalized_message_file_path.lower()
+    self._processed_message_filenames.append(lookup_path)
 
     return message_resource_file

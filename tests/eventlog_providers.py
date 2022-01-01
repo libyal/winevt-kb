@@ -25,25 +25,27 @@ class EventLogProvidersCollectorTest(shared_test_lib.BaseTestCase):
 
     registry = dfwinreg_registry.WinRegistry()
 
-    with (open(software_test_path, 'rb') as software_file_object,
-          open(system_test_path, 'rb') as system_file_object):
-      registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
-      registry_file.Open(software_file_object)
+    with open(software_test_path, 'rb') as software_file_object:
+      with open(system_test_path, 'rb') as system_file_object:
+        registry_file = dfwinreg_regf.REGFWinRegistryFile(
+            ascii_codepage='cp1252')
+        registry_file.Open(software_file_object)
 
-      key_path_prefix = registry.GetRegistryFileMapping(registry_file)
-      registry_file.SetKeyPathPrefix(key_path_prefix)
-      registry.MapFile(key_path_prefix, registry_file)
+        key_path_prefix = registry.GetRegistryFileMapping(registry_file)
+        registry_file.SetKeyPathPrefix(key_path_prefix)
+        registry.MapFile(key_path_prefix, registry_file)
 
-      registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage='cp1252')
-      registry_file.Open(system_file_object)
+        registry_file = dfwinreg_regf.REGFWinRegistryFile(
+            ascii_codepage='cp1252')
+        registry_file.Open(system_file_object)
 
-      key_path_prefix = registry.GetRegistryFileMapping(registry_file)
-      registry_file.SetKeyPathPrefix(key_path_prefix)
-      registry.MapFile(key_path_prefix, registry_file)
+        key_path_prefix = registry.GetRegistryFileMapping(registry_file)
+        registry_file.SetKeyPathPrefix(key_path_prefix)
+        registry.MapFile(key_path_prefix, registry_file)
 
-      collector_object = eventlog_providers.EventLogProvidersCollector()
+        collector_object = eventlog_providers.EventLogProvidersCollector()
 
-      test_results = list(collector_object.Collect(registry))
+        test_results = list(collector_object.Collect(registry))
 
     self.assertEqual(len(test_results), 974)
 

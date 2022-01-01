@@ -8,8 +8,8 @@ import os
 import re
 import sys
 
-from dfvfs.helpers import command_line
-from dfvfs.helpers import volume_scanner
+from dfvfs.helpers import command_line as dfvfs_command_line
+from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 
 from winevtrc import database
 from winevtrc import definitions
@@ -43,11 +43,18 @@ class SQLite3OutputWriter(object):
       bool: True if successful or False if not.
     """
     if not os.path.isdir(self._databases_path):
+      logging.warning('invalid path to the database files not a directory.')
+      return False
+
+    event_providers_database_path = os.path.join(
+        self._databases_path, self.EVENT_PROVIDERS_DATABASE_FILENAME)
+    if os.path.exists(event_providers_database_path):
+      logging.warning('event providers database: {0:s} already exists.'.format(
+          event_providers_database_path))
       return False
 
     self._database_writer = database.EventProvidersSQLite3DatabaseWriter()
-    self._database_writer.Open(os.path.join(
-        self._databases_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
+    self._database_writer.Open(event_providers_database_path)
 
     return True
 
@@ -206,33 +213,6 @@ def Main():
           'directory to write the sqlite3 databases to.'))
 
   argument_parser.add_argument(
-      '--partitions', '--partition', dest='partitions', action='store',
-      type=str, default=None, help=(
-          'Define partitions to be processed. A range of partitions can be '
-          'defined as: "3..5". Multiple partitions can be defined as: "1,3,5" '
-          '(a list of comma separated values). Ranges and lists can also be '
-          'combined as: "1,3..5". The first partition is 1. All partitions '
-          'can be specified with: "all".'))
-
-  argument_parser.add_argument(
-      '--snapshots', '--snapshot', dest='snapshots', action='store', type=str,
-      default=None, help=(
-          'Define snapshots to be processed. A range of snapshots can be '
-          'defined as: "3..5". Multiple snapshots can be defined as: "1,3,5" '
-          '(a list of comma separated values). Ranges and lists can also be '
-          'combined as: "1,3..5". The first snapshot is 1. All snapshots can '
-          'be specified with: "all".'))
-
-  argument_parser.add_argument(
-      '--volumes', '--volume', dest='volumes', action='store', type=str,
-      default=None, help=(
-          'Define volumes to be processed. A range of volumes can be defined '
-          'as: "3..5". Multiple volumes can be defined as: "1,3,5" (a list '
-          'of comma separated values). Ranges and lists can also be combined '
-          'as: "1,3..5". The first volume is 1. All volumes can be specified '
-          'with: "all".'))
-
-  argument_parser.add_argument(
       '--winver', dest='windows_version', action='store', metavar='xp',
       default=None, help=(
           'string that identifies the Windows version in the database.'))
@@ -268,23 +248,14 @@ def Main():
   else:
     output_writer = StdoutOutputWriter()
 
-  mediator = command_line.CLIVolumeScannerMediator()
-
-  volume_scanner_options = volume_scanner.VolumeScannerOptions()
-  volume_scanner_options.partitions = mediator.ParseVolumeIdentifiersString(
-      options.partitions)
-
-  if options.snapshots == 'none':
-    volume_scanner_options.snapshots = ['none']
-  else:
-    volume_scanner_options.snapshots = mediator.ParseVolumeIdentifiersString(
-        options.snapshots)
-
-  volume_scanner_options.volumes = mediator.ParseVolumeIdentifiersString(
-      options.volumes)
-
+  mediator = dfvfs_command_line.CLIVolumeScannerMediator()
   extractor_object = extractor.EventMessageStringExtractor(
       debug=options.debug, mediator=mediator)
+
+  volume_scanner_options = dfvfs_volume_scanner.VolumeScannerOptions()
+  volume_scanner_options.partitions = ['all']
+  volume_scanner_options.snapshots = ['none']
+  volume_scanner_options.volumes = ['none']
 
   if not extractor_object.ScanForWindowsVolume(
       options.source, options=volume_scanner_options):

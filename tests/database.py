@@ -203,7 +203,7 @@ class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetEventLogProviders()
     event_log_providers = list(generator)
 
-    self.assertEqual(len(event_log_providers), 388)
+    self.assertEqual(len(event_log_providers), 974)
 
     database_reader.Close()
 
@@ -218,7 +218,7 @@ class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetMessageFiles()
     message_files = list(generator)
 
-    self.assertEqual(len(message_files), 187)
+    self.assertEqual(len(message_files), 647)
 
     database_reader.Close()
 
@@ -666,7 +666,7 @@ class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   def testGetEventLogProviderKey(self):
     """Tests the _GetEventLogProviderKey function."""
-    test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    test_file_path = self._GetTestFilePath(['winevt-rc.db'])
     self._SkipIfPathNotExists(test_file_path)
 
     database_reader = database.ResourcesSQLite3DatabaseReader()
@@ -683,7 +683,7 @@ class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   def testGetEventLogProviders(self):
     """Tests the GetEventLogProviders function."""
-    test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    test_file_path = self._GetTestFilePath(['winevt-rc.db'])
     self._SkipIfPathNotExists(test_file_path)
 
     database_reader = database.ResourcesSQLite3DatabaseReader()
@@ -697,7 +697,7 @@ class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   def testGetMessages(self):
     """Tests the GetMessages function."""
-    test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    test_file_path = self._GetTestFilePath(['winevt-rc.db'])
     self._SkipIfPathNotExists(test_file_path)
 
     database_reader = database.ResourcesSQLite3DatabaseReader()
@@ -709,7 +709,7 @@ class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
 
   def testGetMetadataAttribute(self):
     """Tests the GetMetadataAttribute function."""
-    test_file_path = self._GetTestFilePath(['winevt-kb.db'])
+    test_file_path = self._GetTestFilePath(['winevt-rc.db'])
     self._SkipIfPathNotExists(test_file_path)
 
     database_reader = database.ResourcesSQLite3DatabaseReader()
