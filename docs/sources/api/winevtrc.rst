@@ -28,6 +28,14 @@ winevtrc.errors module
    :undoc-members:
    :show-inheritance:
 
+winevtrc.eventlog\_providers module
+-----------------------------------
+
+.. automodule:: winevtrc.eventlog_providers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 winevtrc.extractor module
 -------------------------
 

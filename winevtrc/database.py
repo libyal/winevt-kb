@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Classes to read from and write to SQLite databases."""
+"""Read from and write to SQLite databases."""
 
 import difflib
 import logging
@@ -12,7 +12,7 @@ from winevtrc import resources
 
 
 class SQLite3DatabaseFile(object):
-  """Class that defines a sqlite3 database file."""
+  """A SQLite database file."""
 
   _HAS_TABLE_QUERY = (
       'SELECT name FROM sqlite_master '
@@ -242,12 +242,12 @@ class SQLite3DatabaseFile(object):
     return True
 
 
-class Sqlite3DatabaseReader(object):
-  """Class to represent a sqlite3 database reader."""
+class SQLite3DatabaseReader(object):
+  """SQLite database reader."""
 
   def __init__(self):
     """Initializes the database reader."""
-    super(Sqlite3DatabaseReader, self).__init__()
+    super(SQLite3DatabaseReader, self).__init__()
     self._database_file = SQLite3DatabaseFile()
 
   def Close(self):
@@ -266,12 +266,12 @@ class Sqlite3DatabaseReader(object):
     return self._database_file.Open(filename, read_only=True)
 
 
-class Sqlite3DatabaseWriter(object):
-  """Class to represent a sqlite3 database writer."""
+class SQLite3DatabaseWriter(object):
+  """SQLite database writer."""
 
   def __init__(self):
     """Initializes the database writer."""
-    super(Sqlite3DatabaseWriter, self).__init__()
+    super(SQLite3DatabaseWriter, self).__init__()
     self._database_file = SQLite3DatabaseFile()
 
   def Close(self):
@@ -290,8 +290,8 @@ class Sqlite3DatabaseWriter(object):
     return self._database_file.Open(filename)
 
 
-class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent an Event Log providers sqlite3 database reader."""
+class EventProvidersSQLite3DatabaseReader(SQLite3DatabaseReader):
+  """Event Log providers SQLite database reader."""
 
   def _GetMessageFilenames(self, log_source, message_file_type):
     """Retrieves the message filenames of a specific Event Log provider.
@@ -372,8 +372,8 @@ class EventProvidersSqlite3DatabaseReader(Sqlite3DatabaseReader):
       yield values['message_filename'], values['database_filename']
 
 
-class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
-  """Class to represent an Event Log providers sqlite3 database writer."""
+class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
+  """Event Log providers SQLite database writer."""
 
   def _GetEventLogProviderKey(self, event_log_provider):
     """Retrieves the key of an Event Log provider.
@@ -512,11 +512,11 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     if insert_values:
       values = [
           event_log_provider.log_source, event_log_provider.log_type,
-          event_log_provider.provider_guid]
+          event_log_provider.identifier]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_filename, database_filename):
-    """Writes the Windows Message Resource file.
+    """Writes a Windows message file to the database.
 
     Args:
       message_filename (str): message filename.
@@ -548,8 +548,8 @@ class EventProvidersSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       self._database_file.InsertValues(table_name, column_names, values)
 
 
-class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent a message file sqlite3 database reader."""
+class MessageFileSQLite3DatabaseReader(SQLite3DatabaseReader):
+  """Event Log message file SQLite database reader."""
 
   def GetMessageTables(self):
     """Retrieves the message tables.
@@ -627,16 +627,16 @@ class MessageFileSqlite3DatabaseReader(Sqlite3DatabaseReader):
       yield values['string_identifier'], values['string']
 
 
-class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
-  """Class to represent a message file sqlite3 database writer."""
+class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
+  """Event Log message resource file SQLite database writer."""
 
   def __init__(self, message_resource_file):
-    """Initializes the message file database writer.
+    """Initializes an Event Log message resource file SQLite database writer.
 
     Args:
       message_resource_file (MessageResourceFile): message resource file.
     """
-    super(MessageFileSqlite3DatabaseWriter, self).__init__()
+    super(MessageResourceFileSQLite3DatabaseWriter, self).__init__()
     self._message_resource_file = message_resource_file
 
   def _GetMessageFileKey(self, message_resource_file):
@@ -1018,8 +1018,8 @@ class MessageFileSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
     # self._WriteStringTables()
 
 
-class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
-  """Class to represent an Event Log resources sqlite3 database reader."""
+class ResourcesSQLite3DatabaseReader(SQLite3DatabaseReader):
+  """Event Log resources SQLite database reader."""
 
   def _GetEventLogProviderKey(self, log_source):
     """Retrieves the Event Log provider key.
@@ -1274,8 +1274,8 @@ class ResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     raise IOError('More than one value found in database.')
 
 
-class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
-  """Class to represent a sqlite3 Event Log resources database writer."""
+class ResourcesSQLite3DatabaseWriter(SQLite3DatabaseWriter):
+  """Event Log resources SQLite database writer."""
 
   # Message string specifiers that are considered white space.
   _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
@@ -1293,7 +1293,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
       string_format (Optional[str]): string format. The default is the Windows
           Resource (wrc) format.
     """
-    super(ResourcesSqlite3DatabaseWriter, self).__init__()
+    super(ResourcesSQLite3DatabaseWriter, self).__init__()
     self._string_format = string_format
 
   def _GetEventLogProviderKey(self, event_log_provider):
@@ -1590,7 +1590,7 @@ class ResourcesSqlite3DatabaseWriter(Sqlite3DatabaseWriter):
 
     if insert_values:
       values = [
-          event_log_provider.log_source, event_log_provider.provider_guid]
+          event_log_provider.log_source, event_log_provider.identifier]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_file):

@@ -9,8 +9,8 @@ from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
+from winevtrc import eventlog_providers
 from winevtrc import resource_file
-from winevtrc import resources
 
 
 class EventMessageStringRegistryFileReader(
@@ -107,90 +107,19 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """The Windows version (setter)."""
     self._windows_version = value
 
-  def _CollectEventLogProvidersFromPublishersKeys(self, winevt_publishers_key):
-    """Retrieves Event Log providers from a WINEVT publishers key.
-
-    Args:
-      winevt_publishers_key (dfwinreg.WinRegistryKey): WINEVT publishers key.
-
-    Yield:
-      EventLogProvider: Event Log provider.
-    """
-    if winevt_publishers_key:
-      for guid_key in winevt_publishers_key.GetSubkeys():
-        log_source = self._GetValueAsStringFromKey(guid_key, '')
-
-        event_message_files = self._GetValueAsStringFromKey(
-            guid_key, 'MessageFileName', default_value='')
-        event_message_files = sorted(filter(None, [
-            path.strip().lower() for path in event_message_files.split(';')]))
-
-        provider_identifier = guid_key.name.lower()
-
-        eventlog_provider = resources.EventLogProvider(
-            '', log_source, provider_identifier)
-        eventlog_provider.category_message_files = []
-        eventlog_provider.event_message_files = event_message_files
-        eventlog_provider.parameter_message_files = []
-
-        yield eventlog_provider
-
-  def _CollectEventLogProvidersFromServicesKey(self, services_eventlog_key):
-    """Retrieves Event Log providers from a services Event Log key.
-
-    Args:
-      services_eventlog_key (dfwinreg.WinRegistryKey): services Event Log key.
-
-    Yield:
-      EventLogProvider: Event Log provider.
-    """
-    if services_eventlog_key:
-      for log_type_key in services_eventlog_key.GetSubkeys():
-        for provider_key in log_type_key.GetSubkeys():
-          log_source = provider_key.name
-          log_type = log_type_key.name
-
-          category_message_files = self._GetValueAsStringFromKey(
-              provider_key, 'CategoryMessageFile', default_value='')
-          category_message_files = sorted(filter(None, [
-              path.strip().lower()
-              for path in category_message_files.split(';')]))
-
-          event_message_files = self._GetValueAsStringFromKey(
-              provider_key, 'EventMessageFile', default_value='')
-          event_message_files = sorted(filter(None, [
-              path.strip().lower() for path in event_message_files.split(';')]))
-
-          parameter_message_files = self._GetValueAsStringFromKey(
-              provider_key, 'ParameterMessageFile', default_value='')
-          parameter_message_files = sorted(filter(None, [
-              path.strip().lower()
-              for path in parameter_message_files.split(';')]))
-
-          provider_identifier = self._GetValueAsStringFromKey(
-              provider_key, 'ProviderGuid')
-          if provider_identifier:
-            provider_identifier = provider_identifier.lower()
-
-          eventlog_provider = resources.EventLogProvider(
-              log_type, log_source, provider_identifier)
-          eventlog_provider.category_message_files = category_message_files
-          eventlog_provider.event_message_files = event_message_files
-          eventlog_provider.parameter_message_files = parameter_message_files
-
-          yield eventlog_provider
-
-  def _GetMUIMessageFile(self, message_file_path, message_file):
-    """Retrieves a MUI Event Log message file.
+  def _GetMUIMessageResourceFile(
+      self, message_file_path, message_resource_file):
+    """Retrieves a MUI Event Log message resource file.
 
     Args:
       message_file_path (str): path of the message file.
-      message_file (MessageFile): language neutral message file.
+      message_resource_file (MessageResourceFile): language neutral message
+          resource file.
 
     Returns:
-      MessageFile: MUI message file or None if not available.
+      MessageResourceFile: MUI message resource file or None if not available.
     """
-    mui_language = message_file.GetMUILanguage()
+    mui_language = message_resource_file.GetMUILanguage()
     if not mui_language:
       return None
 
@@ -198,17 +127,19 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     mui_message_file_path = '{0:s}\\{1:s}\\{2:s}.mui'.format(
         path, mui_language, name)
-    mui_message_file = self._OpenMessageResourceFile(mui_message_file_path)
+    mui_message_resource_file = self._OpenMessageResourceFile(
+        mui_message_file_path)
 
-    if not mui_message_file:
+    if not mui_message_resource_file:
       mui_message_file_path = '{0:s}\\{1:s}.mui'.format(path, name)
-      mui_message_file = self._OpenMessageResourceFile(mui_message_file_path)
+      mui_message_resource_file = self._OpenMessageResourceFile(
+          mui_message_file_path)
 
-    if mui_message_file:
+    if mui_message_resource_file:
       logging.info('Processing MUI message file: {0:s}'.format(
           mui_message_file_path))
 
-    return mui_message_file
+    return mui_message_resource_file
 
   def _GetNormalizedMessageFilename(self, message_file_path):
     """Retrieves a normalized path of an Event Log message file.
@@ -361,154 +292,28 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     return message_file
 
-  def _UpdateExistingEventLogProvider(
-      self, existing_eventlog_provider, eventlog_provider):
-    """Updates an existing Event Log provider.
-
-    Args:
-      existing_eventlog_provider (EventLogProvider): existing Event Log
-          provider.
-      eventlog_provider (EventLogProvider): Event Log provider.
-    """
-    if existing_eventlog_provider.log_source_alias not in (
-        None, eventlog_provider.log_source):
-      logging.warning('Event Log provider: {0:s} already has an alias'.format(
-          existing_eventlog_provider.log_source))
-    else:
-      existing_eventlog_provider.log_source_alias = (
-          eventlog_provider.log_source)
-
-    if not existing_eventlog_provider.category_message_files:
-      existing_eventlog_provider.category_message_files = (
-          eventlog_provider.category_message_files)
-    elif eventlog_provider.category_message_files not in (
-        [], existing_eventlog_provider.category_message_files):
-      logging.warning((
-          'Mismatch in category message files of alternate definition: '
-          '{0:s} for Event Log provider: {1:s}').format(
-              eventlog_provider.log_source,
-              existing_eventlog_provider.log_source))
-
-    if not existing_eventlog_provider.event_message_files:
-      existing_eventlog_provider.event_message_files = (
-          eventlog_provider.event_message_files)
-    elif eventlog_provider.event_message_files not in (
-        [], existing_eventlog_provider.event_message_files):
-      logging.warning((
-          'Mismatch in event message files of alternate definition: '
-          '{0:s} for Event Log provider: {1:s}').format(
-              eventlog_provider.log_source,
-              existing_eventlog_provider.log_source))
-
-    if not existing_eventlog_provider.parameter_message_files:
-      existing_eventlog_provider.parameter_message_files = (
-          eventlog_provider.parameter_message_files)
-    elif eventlog_provider.parameter_message_files not in (
-        [], existing_eventlog_provider.parameter_message_files):
-      logging.warning((
-          'Mismatch in provider message files of alternate definition: '
-          '{0:s} for Event Log provider: {1:s}').format(
-              eventlog_provider.log_source,
-              existing_eventlog_provider.log_source))
-
   def CollectEventLogProviders(self):
     """Retrieves the Event Log providers.
 
     Returns:
-      list[EventLogProvider]: Event Log providers.
+      generator[EventLogProvider]: Event Log providers generator.
     """
     # TODO: have CLI argument control this mode.
     # all_control_sets = False
 
-    services_eventlog_key = self._registry.GetKeyByPath(
-        self._SERVICES_EVENTLOG_KEY_PATH)
-    winevt_publishers_key = self._registry.GetKeyByPath(
-        self._WINEVT_PUBLISHERS_KEY_PATH)
+    collector_object = eventlog_providers.EventLogProvidersCollector()
+    return collector_object.Collect(self._registry)
 
-    if not services_eventlog_key and not winevt_publishers_key:
-      return []
-
-    eventlog_providers_per_identifier = {}
-    eventlog_providers_per_log_source = {}
-
-    for eventlog_provider in self._CollectEventLogProvidersFromServicesKey(
-        services_eventlog_key):
-      existing_eventlog_provider = eventlog_providers_per_identifier.get(
-          eventlog_provider.provider_guid, None)
-      if existing_eventlog_provider:
-        self._UpdateExistingEventLogProvider(
-            existing_eventlog_provider, eventlog_provider)
-        continue
-
-      if eventlog_provider.log_source in eventlog_providers_per_log_source:
-        logging.warning((
-            'Found multiple definitions for Event Log provider: '
-            '{0:s}').format(eventlog_provider.log_source))
-        continue
-
-      eventlog_providers_per_log_source[
-          eventlog_provider.log_source] = eventlog_provider
-
-      if eventlog_provider.provider_guid:
-        eventlog_providers_per_identifier[eventlog_provider.provider_guid] = (
-              eventlog_provider)
-
-    for eventlog_provider in self._CollectEventLogProvidersFromPublishersKeys(
-        winevt_publishers_key):
-      existing_eventlog_provider = eventlog_providers_per_log_source.get(
-          eventlog_provider.log_source, None)
-      if not existing_eventlog_provider:
-        existing_eventlog_provider = eventlog_providers_per_identifier.get(
-            eventlog_provider.provider_guid, None)
-
-        if existing_eventlog_provider:
-          existing_eventlog_provider.log_source_alias = (
-              existing_eventlog_provider.log_source)
-          existing_eventlog_provider.log_source = eventlog_provider.log_source
-
-      if existing_eventlog_provider:
-        # TODO: handle mismatches where message files don't define a path.
-
-        if not existing_eventlog_provider.event_message_files:
-          existing_eventlog_provider.event_message_files = (
-              eventlog_provider.event_message_files)
-        elif eventlog_provider.event_message_files not in (
-            [], existing_eventlog_provider.event_message_files):
-          logging.warning((
-              'Mismatch in event message files of alternate definition: '
-              '{0:s} for Event Log provider: {1:s}').format(
-                  existing_eventlog_provider.log_source_alias or '',
-                  existing_eventlog_provider.log_source))
-
-        if not existing_eventlog_provider.provider_guid:
-          existing_eventlog_provider.provider_guid = (
-              eventlog_provider.provider_guid)
-        elif existing_eventlog_provider.provider_guid != (
-            eventlog_provider.provider_guid):
-          logging.warning((
-              'Mismatch in provider identifier of alternate definition: '
-              '{0:s} for Event Log provider: {1:s}').format(
-                  existing_eventlog_provider.log_source_alias or '',
-                  existing_eventlog_provider.log_source))
-
-      else:
-        eventlog_providers_per_log_source[eventlog_provider.log_source] = (
-            eventlog_provider)
-        eventlog_providers_per_identifier[eventlog_provider.provider_guid] = (
-            eventlog_provider)
-
-    return [eventlog_provider for _, eventlog_provider in sorted(
-        eventlog_providers_per_log_source.items())]
-
-  def GetMessageFile(self, event_log_provider, message_filename):
-    """Retrieves an Event Log message file.
+  def GetMessageResourceFile(self, event_log_provider, message_filename):
+    """Retrieves an Event Log message resource file.
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
       message_filename (str): message filename.
 
     Returns:
-      MessageFile: message file or None if not available or already processed.
+      MessageResourceFile: message resource file or None if not available or
+          already processed.
     """
     lookup_path = message_filename.lower()
     if lookup_path in self._processed_message_filenames:
@@ -526,15 +331,17 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
         logging.info('Message file: {0:s} refers to directory'.format(
             message_filename))
 
-        message_file_path = '\\'.join([
-            message_file_path, event_log_provider.log_source])
-        path_spec = self._path_resolver.ResolvePath(message_file_path)
+        for log_source in event_log_provider.log_sources:
+          message_file_path = '\\'.join([message_file_path, log_source])
+          path_spec = self._path_resolver.ResolvePath(message_file_path)
+          if path_spec:
+            break
 
-    message_file = None
+    message_resource_file = None
     if path_spec:
-      message_file = self._OpenMessageResourceFileByPathSpec(path_spec)
+      message_resource_file = self._OpenMessageResourceFileByPathSpec(path_spec)
 
-    if not message_file:
+    if not message_resource_file:
       if message_filename not in self.missing_message_filenames:
         self.missing_message_filenames.append(message_filename)
 
@@ -543,25 +350,25 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     # Skip message file if it was already processed but was referenced
     # by a different path.
-    lookup_path = message_file.windows_path.lower()
+    lookup_path = message_resource_file.windows_path.lower()
     if lookup_path in self._processed_message_filenames:
-      message_file.Close()
+      message_resource_file.Close()
       return None
 
-    message_table_resource = message_file.GetMessageTableResource()
+    message_table_resource = message_resource_file.GetMessageTableResource()
     if not message_table_resource:
       # Windows Vista and later use a MUI resource to redirect to
       # a language specific message file.
-      mui_message_file = self._GetMUIMessageFile(
-          message_file_path, message_file)
-      if mui_message_file:
-        message_file.Close()
-        message_file = mui_message_file
+      mui_message_resource_file = self._GetMUIMessageResourceFile(
+          message_file_path, message_resource_file)
+      if mui_message_resource_file:
+        message_resource_file.Close()
+        message_resource_file = mui_message_resource_file
 
-        message_table_resource = message_file.GetMessageTableResource()
+        message_table_resource = message_resource_file.GetMessageTableResource()
 
     if not message_table_resource:
-      string_resource = message_file.GetStringResource()
+      string_resource = message_resource_file.GetStringResource()
       if not string_resource:
         if message_filename not in self.missing_resources_message_filenames:
           self.missing_resources_message_filenames.append(message_filename)
@@ -570,17 +377,17 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           'Message table resource missing from message file: {0:s}'.format(
               message_filename))
 
-      message_file.Close()
+      message_resource_file.Close()
 
       return None
 
-    message_file.windows_path = self._GetNormalizedMessageFilename(
+    message_resource_file.windows_path = self._GetNormalizedMessageFilename(
         message_file_path)
 
-    if message_file_path != message_file.windows_path:
+    if message_file_path != message_resource_file.windows_path:
       self._processed_message_filenames.append(
-          message_file.windows_path.lower())
+          message_resource_file.windows_path.lower())
 
     self._processed_message_filenames.append(message_filename.lower())
 
-    return message_file
+    return message_resource_file

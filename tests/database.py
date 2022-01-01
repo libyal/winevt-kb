@@ -157,7 +157,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
       database_file.Close()
 
 
-class Sqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
+class SQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the SQLite database reader."""
 
   def testOpenClose(self):
@@ -165,18 +165,18 @@ class Sqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-rc.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.Sqlite3DatabaseReader()
+    database_reader = database.SQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.Close()
 
 
-class Sqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
+class SQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the SQLite database writer."""
 
   def testOpenClose(self):
     """Tests the Open and Close functions."""
-    database_writer = database.Sqlite3DatabaseWriter()
+    database_writer = database.SQLite3DatabaseWriter()
 
     with shared_test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
@@ -185,7 +185,7 @@ class Sqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
       database_writer.Close()
 
 
-class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
+class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the event providers SQLite database reader."""
 
   # pylint: disable=protected-access
@@ -197,7 +197,7 @@ class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.EventProvidersSqlite3DatabaseReader()
+    database_reader = database.EventProvidersSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetEventLogProviders()
@@ -212,7 +212,7 @@ class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.EventProvidersSqlite3DatabaseReader()
+    database_reader = database.EventProvidersSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetMessageFiles()
@@ -223,7 +223,7 @@ class EventProvidersSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     database_reader.Close()
 
 
-class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
+class EventProvidersSQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the event providers SQLite database writer."""
 
   # pylint: disable=protected-access
@@ -238,7 +238,7 @@ class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
         'Microsoft-Windows-RPC-Events',
         '{f4aed7c7-a898-4627-b053-44a7caa12fcd}')
 
-    database_writer = database.EventProvidersSqlite3DatabaseWriter()
+    database_writer = database.EventProvidersSQLite3DatabaseWriter()
 
     with shared_test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-kb.db')
@@ -264,7 +264,7 @@ class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
         'Microsoft-Windows-RPC-Events',
         '{f4aed7c7-a898-4627-b053-44a7caa12fcd}')
 
-    database_writer = database.EventProvidersSqlite3DatabaseWriter()
+    database_writer = database.EventProvidersSQLite3DatabaseWriter()
 
     with shared_test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-kb.db')
@@ -278,7 +278,7 @@ class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
   def testWriteMessageFile(self):
     """Tests the WriteMessageFile function."""
-    database_writer = database.EventProvidersSqlite3DatabaseWriter()
+    database_writer = database.EventProvidersSQLite3DatabaseWriter()
 
     with shared_test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-kb.db')
@@ -293,7 +293,7 @@ class EventProvidersSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
       database_writer.Close()
 
 
-class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
+class MessageFileSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the message file SQLite database reader."""
 
   def testGetMessageTables(self):
@@ -301,7 +301,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['message_file.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.MessageFileSqlite3DatabaseReader()
+    database_reader = database.MessageFileSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetMessageTables()
@@ -316,7 +316,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['message_file.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.MessageFileSqlite3DatabaseReader()
+    database_reader = database.MessageFileSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetMessages('0x00000409', '1.0.0.0')
@@ -337,7 +337,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['message_file.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.MessageFileSqlite3DatabaseReader()
+    database_reader = database.MessageFileSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetStringTables()
@@ -353,7 +353,7 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['message_file.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.MessageFileSqlite3DatabaseReader()
+    database_reader = database.MessageFileSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     generator = database_reader.GetStrings('0x00000409', '1.0.0.0')
@@ -365,8 +365,9 @@ class MessageFileSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     database_reader.Close()
 
 
-class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
-  """Tests for the message file SQLite database writer."""
+class MessageResourceFileSQLite3DatabaseWriterTest(
+    shared_test_lib.BaseTestCase):
+  """Tests for the Event Log message resource file SQLite database writer."""
 
   # pylint: disable=protected-access
 
@@ -381,7 +382,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -411,7 +412,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_table_resource = message_resource_file.GetMessageTableResource()
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -439,7 +440,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -465,7 +466,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       message_table_resource = message_resource_file.GetMessageTableResource()
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -495,7 +496,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -528,7 +529,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -558,7 +559,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
       string_resource = message_resource_file.GetStringResource()
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -585,7 +586,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -618,7 +619,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -644,7 +645,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      database_writer = database.MessageFileSqlite3DatabaseWriter(
+      database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
 
       with shared_test_lib.TempDirectory() as temporary_directory:
@@ -658,7 +659,7 @@ class MessageFileSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
       message_resource_file.Close()
 
 
-class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
+class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the resources SQLite database reader."""
 
   # pylint: disable=protected-access
@@ -668,7 +669,7 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.ResourcesSqlite3DatabaseReader()
+    database_reader = database.ResourcesSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader._GetEventLogProviderKey('Security')
@@ -685,7 +686,7 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.ResourcesSqlite3DatabaseReader()
+    database_reader = database.ResourcesSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.GetEventLogProviders()
@@ -699,7 +700,7 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.ResourcesSqlite3DatabaseReader()
+    database_reader = database.ResourcesSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.GetMessages('bogus', 0x00000409)
@@ -711,7 +712,7 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['winevt-kb.db'])
     self._SkipIfPathNotExists(test_file_path)
 
-    database_reader = database.ResourcesSqlite3DatabaseReader()
+    database_reader = database.ResourcesSQLite3DatabaseReader()
     database_reader.Open(test_file_path)
 
     database_reader.GetMetadataAttribute('bogus')
@@ -719,7 +720,7 @@ class ResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     database_reader.Close()
 
 
-class ResourcesSqlite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
+class ResourcesSQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
   """Tests for the resources SQLite database writer."""
 
   # pylint: disable=protected-access

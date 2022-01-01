@@ -90,7 +90,7 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
     system_root = extractor_object._GetSystemRoot()
-    self.assertEqual(system_root, 'C:\\WINDOWS')
+    self.assertEqual(system_root, 'C:\\Windows')
 
   def testGetWindowsVersion(self):
     """Tests the _GetWindowsVersion function."""
@@ -118,10 +118,10 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
 
     event_log_providers = list(extractor_object.CollectEventLogProviders())
 
-    self.assertEqual(len(event_log_providers), 258)
+    self.assertEqual(len(event_log_providers), 974)
 
-  def testGetMessageFile(self):
-    """Tests the GetMessageFile function."""
+  def testGetMessageResourceFile(self):
+    """Tests the GetMessageResourceFile function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
     # TODO: improve test.
@@ -129,10 +129,10 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
         'log_type', 'log_source', 'provider_guid')
     message_filename = 'bogus'
 
-    message_file = extractor_object.GetMessageFile(
+    message_resource_file = extractor_object.GetMessageResourceFile(
         event_log_provider, message_filename)
 
-    self.assertIsNone(message_file)
+    self.assertIsNone(message_resource_file)
 
 
 if __name__ == '__main__':

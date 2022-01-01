@@ -28,7 +28,7 @@ class Exporter(object):
     """Exports the event log provides from an event provider database.
 
     Args:
-      database_reader (EventProvidersSqlite3DatabaseReader): event provider
+      database_reader (EventProvidersSQLite3DatabaseReader): event provider
           database reader.
       output_writer (OutputWriter): output writer.
     """
@@ -81,7 +81,7 @@ class Exporter(object):
       message_file (MessageFile): message file.
       message_file_database_path (str): path of the message file database.
     """
-    database_reader = database.MessageFileSqlite3DatabaseReader()
+    database_reader = database.MessageFileSQLite3DatabaseReader()
     database_reader.Open(message_file_database_path)
 
     self._ExportMessageStrings(message_file, database_reader)
@@ -96,7 +96,7 @@ class Exporter(object):
 
     Args:
       source_path (str): source path.
-      database_reader (EventProvidersSqlite3DatabaseReader): event provider
+      database_reader (EventProvidersSQLite3DatabaseReader): event provider
           database reader.
       output_writer (OutputWriter): output writer.
     """
@@ -132,7 +132,7 @@ class Exporter(object):
 
     Args:
       message_file (MessageFile): message file.
-      database_reader (MessageFileSqlite3DatabaseReader): message file
+      database_reader (MessageFileSQLite3DatabaseReader): message file
           database reader.
     """
     for lcid, file_version in database_reader.GetMessageTables():
@@ -166,7 +166,7 @@ class Exporter(object):
 
     Args:
       message_file (MessageFile): message file.
-      database_reader (MessageFileSqlite3DatabaseReader): message file
+      database_reader (MessageFileSQLite3DatabaseReader): message file
           database reader.
     """
     for lcid, file_version in database_reader.GetStringTables():
@@ -198,7 +198,7 @@ class Exporter(object):
       source_path (str): source path.
       output_writer (OutputWriter): output writer.
     """
-    database_reader = database.EventProvidersSqlite3DatabaseReader()
+    database_reader = database.EventProvidersSQLite3DatabaseReader()
     database_reader.Open(os.path.join(
         source_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
@@ -214,7 +214,7 @@ class Exporter(object):
     database_reader.Close()
 
 
-class Sqlite3OutputWriter(object):
+class SQLite3OutputWriter(object):
   """Class that defines a sqlite3 output writer."""
 
   def __init__(self, database_path, string_format='wrc'):
@@ -224,7 +224,7 @@ class Sqlite3OutputWriter(object):
       database_path (str): path to the database file.
       string_format (Optional[str]): string format.
     """
-    super(Sqlite3OutputWriter, self).__init__()
+    super(SQLite3OutputWriter, self).__init__()
     self._database_path = database_path
     self._database_writer = None
     self._string_format = string_format
@@ -250,7 +250,7 @@ class Sqlite3OutputWriter(object):
     if os.path.isdir(self._database_path):
       return False
 
-    self._database_writer = database.ResourcesSqlite3DatabaseWriter(
+    self._database_writer = database.ResourcesSQLite3DatabaseWriter(
         string_format=self._string_format)
     self._database_writer.Open(self._database_path)
     self._WriteMetadata()
@@ -541,7 +541,7 @@ def Main():
       level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   if options.database:
-    output_writer = Sqlite3OutputWriter(
+    output_writer = SQLite3OutputWriter(
         options.database, string_format=options.string_format)
   elif options.wiki:
     output_writer = AsciidocOutputWriter(options.wiki)

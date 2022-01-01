@@ -16,7 +16,7 @@ from winevtrc import definitions
 from winevtrc import extractor
 
 
-class Sqlite3OutputWriter(object):
+class SQLite3OutputWriter(object):
   """SQLite3 output writer."""
 
   EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
@@ -27,7 +27,7 @@ class Sqlite3OutputWriter(object):
     Args:
       databases_path (str): path to the database files.
     """
-    super(Sqlite3OutputWriter, self).__init__()
+    super(SQLite3OutputWriter, self).__init__()
     self._databases_path = databases_path
     self._database_writer = None
 
@@ -45,7 +45,7 @@ class Sqlite3OutputWriter(object):
     if not os.path.isdir(self._databases_path):
       return False
 
-    self._database_writer = database.EventProvidersSqlite3DatabaseWriter()
+    self._database_writer = database.EventProvidersSQLite3DatabaseWriter()
     self._database_writer.Open(os.path.join(
         self._databases_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
 
@@ -59,7 +59,7 @@ class Sqlite3OutputWriter(object):
     """
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
-  def WriteMessageFile(
+  def WriteMessageResourceFile(
       self, event_log_provider, message_resource_file, message_filename,
       message_file_type):
     """Writes the Windows Message Resource file.
@@ -75,7 +75,7 @@ class Sqlite3OutputWriter(object):
     database_filename = '{0:s}.db'.format(database_filename.lower())
     database_filename = re.sub(r'\.mui', '', database_filename)
 
-    database_writer = database.MessageFileSqlite3DatabaseWriter(
+    database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
         message_resource_file)
     database_writer.Open(
         os.path.join(self._databases_path, database_filename))
@@ -164,7 +164,7 @@ class StdoutOutputWriter(object):
     print('')
 
   # pylint: disable=unused-argument
-  def WriteMessageFile(
+  def WriteMessageResourceFile(
       self, event_log_provider, message_resource_file, message_filename,
       message_file_type):
     """Writes the Windows Message Resource file.
@@ -264,7 +264,7 @@ def Main():
       print('')
       return False
 
-    output_writer = Sqlite3OutputWriter(options.database)
+    output_writer = SQLite3OutputWriter(options.database)
   else:
     output_writer = StdoutOutputWriter()
 
@@ -321,62 +321,66 @@ def Main():
 
       if event_log_provider.event_message_files:
         for message_filename in event_log_provider.event_message_files:
-          message_file = extractor_object.GetMessageFile(
+          message_resource_file = extractor_object.GetMessageResourceFile(
               event_log_provider, message_filename)
 
-          if message_file:
+          if message_resource_file:
             logging.info('Processing event message file: {0:s}'.format(
                 message_filename))
 
-            output_writer.WriteMessageFile(
-                event_log_provider, message_file, message_file.windows_path,
+            output_writer.WriteMessageResourceFile(
+                event_log_provider, message_resource_file,
+                message_resource_file.windows_path,
                 definitions.MESSAGE_FILE_TYPE_EVENT)
-            message_file.Close()
+            message_resource_file.Close()
 
       if event_log_provider.category_message_files:
         for message_filename in event_log_provider.category_message_files:
-          message_file = extractor_object.GetMessageFile(
+          message_resource_file = extractor_object.GetMessageResourceFile(
               event_log_provider, message_filename)
 
-          if message_file:
+          if message_resource_file:
             logging.info('Processing category message file: {0:s}'.format(
                 message_filename))
 
-            output_writer.WriteMessageFile(
-                event_log_provider, message_file, message_file.windows_path,
+            output_writer.WriteMessageResourceFile(
+                event_log_provider, message_resource_file,
+                message_resource_file.windows_path,
                 definitions.MESSAGE_FILE_TYPE_CATEGORY)
-            message_file.Close()
+            message_resource_file.Close()
 
       if event_log_provider.parameter_message_files:
         for message_filename in event_log_provider.parameter_message_files:
-          message_file = extractor_object.GetMessageFile(
+          message_resource_file = extractor_object.GetMessageResourceFile(
               event_log_provider, message_filename)
 
-          if message_file:
+          if message_resource_file:
             logging.info('Processing parameter message file: {0:s}'.format(
                 message_filename))
 
-            output_writer.WriteMessageFile(
-                event_log_provider, message_file, message_file.windows_path,
+            output_writer.WriteMessageResourceFile(
+                event_log_provider, message_resource_file,
+                message_resource_file.windows_path,
                 definitions.MESSAGE_FILE_TYPE_PARAMETER)
-            message_file.Close()
+            message_resource_file.Close()
 
   finally:
     output_writer.Close()
 
   if extractor_object.missing_message_filenames:
+    print('')
     print('Message resource files not found or without resource section:')
     for message_filename in extractor_object.missing_message_filenames:
       print('{0:s}'.format(message_filename))
-    print('')
 
   if extractor_object.missing_resources_message_filenames:
+    print('')
     print('Message resource files without a string and message table resource:')
     for message_filename in (
         extractor_object.missing_resources_message_filenames):
       print('{0:s}'.format(message_filename))
-    print('')
 
+  print('')
   return True
 
 
