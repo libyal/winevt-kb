@@ -47,7 +47,7 @@ def Main():
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
 
-  database_reader = database.ResourcesSqlite3DatabaseReader()
+  database_reader = database.ResourcesSQLite3DatabaseReader()
   database_reader.Open(options.database)
 
   message_identifier = None

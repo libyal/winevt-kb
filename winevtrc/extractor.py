@@ -9,6 +9,7 @@ from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
+from winevtrc import environment_variables
 from winevtrc import eventlog_providers
 from winevtrc import resource_file
 
@@ -56,7 +57,7 @@ class EventMessageStringRegistryFileReader(
 
 
 class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
-  """Class that defines a Windows Event Log message string extractor.
+  """Windows Event Log message string extractor.
 
   Attributes:
     ascii_codepage (str): ASCII string codepage.
@@ -67,12 +68,16 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     preferred_language_identifier (int): preferred language identifier (LCID).
   """
 
-  _SERVICES_EVENTLOG_KEY_PATH = (
-      'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog')
-
-  _WINEVT_PUBLISHERS_KEY_PATH = (
-      'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-      'WINEVT\\Publishers')
+  # Environment variables used in Windows paths.
+  _PATH_ENVIRONMENT_VARIABLES = (
+      '%COMMONPROGRAMFILES%',
+      '%COMMONPROGRAMFILES(X86)%',
+      '%COMMONPROGRAMW6432%',
+      '%PROGRAMDATA%',
+      '%PROGRAMFILES%',
+      '%PROGRAMFILES(X86)%',
+      '%PROGRAMW6432%',
+      '%PUBLIC%')
 
   def __init__(self, debug=False, mediator=None):
     """Initializes a Windows Event Log message string extractor.
@@ -143,7 +148,46 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     return mui_message_resource_file
 
   def _GetNormalizedMessageFilePath(self, path):
-    """Retrieves a normalized path of an Event Log message file.
+    """Retrieves a normalized variant of a message file path.
+
+    Args:
+      path (str): path of a message file.
+
+    Returns:
+      str: normalized path of a message file.
+    """
+    path_segments = path.split('\\')
+    filename = path_segments.pop()
+
+    if path_segments:
+      # Check if the first path segment is a drive letter or "%SystemDrive%".
+      first_path_segment = path_segments[0].lower()
+      if ((len(first_path_segment) == 2 and first_path_segment[1:] == ':') or
+          first_path_segment == '%systemdrive%'):
+        path_segments[0] = ''
+
+    path_segments_lower = [
+        path_segment.lower() for path_segment in path_segments]
+
+    if (not path_segments_lower or
+        path_segments_lower[0] == '$(runtime.system32)'):
+      # If the path is just a filename assume the file is stored in:
+      # "%SystemRoot%\System32".
+      path_segments = ['%SystemRoot%', 'System32']
+
+    elif path_segments_lower[0] in ('%systemroot%', '%windir%', 'windows'):
+      path_segments = ['%SystemRoot%'] + path_segments[1:]
+
+    # Check if path starts with \SystemRoot\ for example:
+    # \SystemRoot\system32\drivers\SerCx.sys
+    elif not path_segments_lower[0] and path_segments_lower[1] == 'systemroot':
+      path_segments = ['%SystemRoot%'] + path_segments[2:]
+
+    path_segments.append(filename)
+    return '\\'.join(path_segments) or '\\'
+
+  def _GetNormalizedPath(self, path):
+    """Retrieves a normalized variant of a path.
 
     Args:
       path (str): path of a message file.
@@ -153,23 +197,14 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """
     path_segments = path.split('\\')
 
-    # Check if the first path segment is a drive letter.
-    first_path_segment = path_segments[0]
-    if len(first_path_segment) == 2 and first_path_segment[1:] == ':':
-      path_segments.pop(0)
+    if path_segments:
+      # Check if the first path segment is a drive letter or "%SystemDrive%".
+      first_path_segment = path_segments[0].lower()
+      if ((len(first_path_segment) == 2 and first_path_segment[1:] == ':') or
+          first_path_segment == '%systemdrive%'):
+        path_segments[0] = ''
 
-    filename = path_segments.pop()
-
-    if not path_segments:
-      # If the path is just a filename assume the file is stored in:
-      # "%SystemRoot%\System32".
-      path_segments = ['%SystemRoot%', 'System32']
-
-    elif path_segments[0].lower() in ('%systemroot%', '%windir%', 'windows'):
-      path_segments = ['%SystemRoot%'] + path_segments[1:]
-
-    path_segments.append(filename)
-    return '\\'.join(path_segments)
+    return '\\'.join(path_segments) or '\\'
 
   def _GetSystemRoot(self):
     """Determines the value of %SystemRoot%.
@@ -190,27 +225,6 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       system_root = self._windows_directory
 
     return system_root
-
-  def _GetValueAsStringFromKey(
-      self, registry_key, value_name, default_value=''):
-    """Retrieves a value as a string from a Registry value.
-
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      value_name (str): name of the value.
-      default_value (Optional[str]): default value.
-
-    Returns:
-      str: value or the default value if not available.
-    """
-    if not registry_key:
-      return default_value
-
-    value = registry_key.GetValueByName(value_name)
-    if not value:
-      return default_value
-
-    return value.GetDataAsObject()
 
   def _GetWindowsVersion(self):
     """Determines the Windows version from kernel executable file.
@@ -294,6 +308,16 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     collector_object = eventlog_providers.EventLogProvidersCollector()
     return collector_object.Collect(self._registry)
+
+  def CollectSystemEnvironmentVariables(self):
+    """Collects the system environment variables."""
+    collector_object = environment_variables.EnvironmentVariablesCollector()
+
+    for environment_variable in collector_object.Collect(self._registry):
+      if environment_variable.name.upper() in self._PATH_ENVIRONMENT_VARIABLES:
+        normalized_path = self._GetNormalizedPath(environment_variable.value)
+        self._path_resolver.SetEnvironmentVariable(
+            environment_variable.name[1:-1], normalized_path)
 
   def GetMessageResourceFile(self, event_log_provider, message_filename):
     """Retrieves an Event Log message resource file.

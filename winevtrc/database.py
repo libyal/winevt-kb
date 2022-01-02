@@ -330,18 +330,21 @@ class EventProvidersSQLite3DatabaseReader(SQLite3DatabaseReader):
     """
     table_names = ['event_log_providers']
     column_names = [
-        'event_log_provider_key', 'log_source1', 'log_source2', 'log_source3',
-        'log_type', 'identifier']
+        'event_log_provider_key', 'identifier', 'additional_identifier',
+        'log_source1', 'log_source2', 'log_source3', 'log_type']
     condition = ''
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
       event_log_provider = resources.EventLogProvider(
-          values['log_type'], values['log_source1'], values['identifier'])
+          values['identifier'], values['log_source1'], values['log_type'])
       if values['log_source2']:
         event_log_provider.log_sources.append(values['log_source2'])
       if values['log_source3']:
         event_log_provider.log_sources.append(values['log_source3'])
+      if values['additional_identifier']:
+        event_log_provider.additional_identifier = values[
+            'additional_identifier']
 
       message_filenames = self._GetMessageFilenames(
           values['event_log_provider_key'],
@@ -390,10 +393,11 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
+    log_source1 = event_log_provider.log_sources[0]
+
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
-    condition = 'log_source1 = "{0:s}"'.format(
-        event_log_provider.log_sources[0])
+    condition = 'log_source1 = "{0:s}"'.format(log_source1)
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
@@ -407,7 +411,7 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
     raise IOError(
         'More than one value found in database for log source: {0:s}.'.format(
-            event_log_provider.log_sources[0]))
+            event_log_provider.log_source1))
 
   def _GetMessageFileKey(self, message_filename):
     """Retrieves the key of a message file.
@@ -481,29 +485,22 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
     """
     table_name = 'event_log_providers'
     column_names = [
-        'log_source1', 'log_source2', 'log_source3', 'log_type', 'identifier']
+        'identifier', 'additional_identifier', 'log_source1', 'log_source2',
+        'log_source3', 'log_type']
 
     if not self._database_file.HasTable(table_name):
       column_definitions = [
           'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          'log_source1 TEXT', 'log_source2 TEXT', 'log_source3 TEXT',
-          'log_type TEXT', 'identifier TEXT']
+          'identifier TEXT', 'additional_identifier TEXT', 'log_source1 TEXT',
+          'log_source2 TEXT', 'log_source3 TEXT', 'log_type TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
-    number_of_log_sources = len(event_log_provider.log_sources)
-    log_source1 = event_log_provider.log_sources[0]
-
-    log_source2 = None
-    if number_of_log_sources > 1:
-      log_source2 = event_log_provider.log_sources[1]
-
-    log_source3 = None
-    if number_of_log_sources > 2:
-      log_source3 = event_log_provider.log_sources[2]
+    log_sources = event_log_provider.log_sources + [None, None]
+    log_source1, log_source2, log_source3 = log_sources[:3]
 
     values = [
-        log_source1, log_source2, log_source3, event_log_provider.log_type,
-        event_log_provider.identifier]
+        event_log_provider.identifier, event_log_provider.additional_identifier,
+        log_source1, log_source2, log_source3, event_log_provider.log_type]
     self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_filename, database_filename):
@@ -1153,7 +1150,7 @@ class ResourcesSQLite3DatabaseReader(SQLite3DatabaseReader):
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
       event_log_provider = resources.EventLogProvider(
-          None, values['log_source'], values['provider_guid'])
+          values['provider_guid'], values['log_source'], None)
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:

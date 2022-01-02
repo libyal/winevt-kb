@@ -218,7 +218,7 @@ class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetMessageFiles()
     message_files = list(generator)
 
-    self.assertEqual(len(message_files), 647)
+    self.assertEqual(len(message_files), 672)
 
     database_reader.Close()
 

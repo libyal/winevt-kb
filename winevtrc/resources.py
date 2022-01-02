@@ -2,34 +2,57 @@
 """Windows Event Log resources."""
 
 
+class EnvironmentVariable(object):
+  """Environment variable.
+
+  Attributes:
+    name (str): name.
+    value (str): value.
+  """
+
+  def __init__(self, name, value):
+    """Initializes an environment variable.
+
+    Args:
+      name (str): name.
+      value (str): value.
+    """
+    super(EnvironmentVariable, self).__init__()
+    self.name = name
+    self.value = value
+
+
 class EventLogProvider(object):
   """Windows Event Log provider.
 
   Attributes:
-    category_message_files (list[str]): filenames of the category message files.
-    event_message_files (list[str]): filenames of the event message files.
+    additional_identifier (str): additional identifier of the provider,
+        contains a GUID.
+    category_message_files (set[str]): filenames of the category message files.
+    event_message_files (set[str]): filenames of the event message files.
     identifier (str): identifier of the provider, contains a GUID.
     log_sources (list[str]): names of the Windows Event Log source.
     log_type (str): Windows Event Log type.
-    parameter_message_files (list[str]): filenames of the parameter message
+    parameter_message_files (set[str]): filenames of the parameter message
         files.
   """
 
-  def __init__(self, log_type, log_source, identifier):
+  def __init__(self, identifier, log_source, log_type):
     """Initializes the Windows Event Log provider.
 
     Args:
-      log_type (str): Event Log type.
-      log_source (str): Event Log source.
       identifier (str): identifier of the provider, contains a GUID.
+      log_source (str): Event Log source.
+      log_type (str): Event Log type.
     """
     super(EventLogProvider, self).__init__()
-    self.category_message_files = None
-    self.event_message_files = None
+    self.additional_identifier = None
+    self.category_message_files = set()
+    self.event_message_files = set()
     self.identifier = identifier
     self.log_sources = [log_source]
     self.log_type = log_type
-    self.parameter_message_files = None
+    self.parameter_message_files = set()
 
   @property
   def log_source(self):
@@ -44,9 +67,9 @@ class EventLogProvider(object):
           where multiple filenames in the same string are separated by ';'.
     """
     if isinstance(category_message_filenames, str):
-      self.category_message_files = category_message_filenames.split(';')
-    else:
-      self.category_message_files = category_message_filenames
+      category_message_filenames = category_message_filenames.split(';')
+
+    self.category_message_files = set(category_message_filenames)
 
   def SetEventMessageFilenames(self, event_message_filenames):
     """Sets the event message filenames.
@@ -56,9 +79,9 @@ class EventLogProvider(object):
           where multiple filenames in the same string are separated by ';'.
     """
     if isinstance(event_message_filenames, str):
-      self.event_message_files = event_message_filenames.split(';')
-    else:
-      self.event_message_files = event_message_filenames
+      event_message_filenames = event_message_filenames.split(';')
+
+    self.event_message_files = set(event_message_filenames)
 
   def SetParameterMessageFilenames(self, parameter_message_filenames):
     """Sets the parameter message filenames.
@@ -68,9 +91,9 @@ class EventLogProvider(object):
           where multiple filenames in the same string are separated by ';'.
     """
     if isinstance(parameter_message_filenames, str):
-      self.parameter_message_files = parameter_message_filenames.split(';')
-    else:
-      self.parameter_message_files = parameter_message_filenames
+      parameter_message_filenames = parameter_message_filenames.split(';')
+
+    self.parameter_message_files = set(parameter_message_filenames)
 
 
 class MessageFile(object):

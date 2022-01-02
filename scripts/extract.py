@@ -285,6 +285,10 @@ def Main():
     logging.info('Windows version: {0:s}.'.format(
         extractor_object.windows_version))
 
+    extractor_object.CollectSystemEnvironmentVariables()
+
+    # TODO: handle $(runtime.X) notation
+
     for event_log_provider in extractor_object.CollectEventLogProviders():
       logging.info('Processing event log provider: {0:s}'.format(
           event_log_provider.log_source))

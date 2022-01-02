@@ -17,7 +17,7 @@ class EventLogProviderTest(test_lib.BaseTestCase):
     event_log_provider = resources.EventLogProvider(
         'log_type', 'log_source', 'provider_guid')
 
-    expected_category_message_files = ['test1', 'test2', 'test3']
+    expected_category_message_files = set(['test1', 'test2', 'test3'])
 
     event_log_provider.SetCategoryMessageFilenames(
         expected_category_message_files)
@@ -35,7 +35,7 @@ class EventLogProviderTest(test_lib.BaseTestCase):
     event_log_provider = resources.EventLogProvider(
         'log_type', 'log_source', 'provider_guid')
 
-    expected_event_message_files = ['test1', 'test2', 'test3']
+    expected_event_message_files = set(['test1', 'test2', 'test3'])
 
     event_log_provider.SetEventMessageFilenames(
         expected_event_message_files)
@@ -53,7 +53,7 @@ class EventLogProviderTest(test_lib.BaseTestCase):
     event_log_provider = resources.EventLogProvider(
         'log_type', 'log_source', 'provider_guid')
 
-    expected_parameter_message_files = ['test1', 'test2', 'test3']
+    expected_parameter_message_files = set(['test1', 'test2', 'test3'])
 
     event_log_provider.SetParameterMessageFilenames(
         expected_parameter_message_files)

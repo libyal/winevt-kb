@@ -20,6 +20,14 @@ winevtrc.definitions module
    :undoc-members:
    :show-inheritance:
 
+winevtrc.environment\_variables module
+--------------------------------------
+
+.. automodule:: winevtrc.environment_variables
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 winevtrc.errors module
 ----------------------
 
