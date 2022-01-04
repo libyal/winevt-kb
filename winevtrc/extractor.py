@@ -292,8 +292,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     message_file = resource_file.MessageResourceFile(
         windows_path, ascii_codepage=self.ascii_codepage,
         preferred_language_identifier=self.preferred_language_identifier)
-    if not message_file.OpenFileObject(file_object):
-      return None
+    message_file.OpenFileObject(file_object)
 
     return message_file
 
@@ -360,14 +359,14 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       message_resource_file = self._OpenMessageResourceFileByPathSpec(path_spec)
 
     if not message_resource_file:
+      logging.warning('Missing message file: {0:s}'.format(message_filename))
+
       if message_filename not in self.missing_message_filenames:
         self.missing_message_filenames.append(message_filename)
 
-      logging.warning('Missing message file: {0:s}'.format(message_filename))
       return None
 
-    message_table_resource = message_resource_file.GetMessageTableResource()
-    if not message_table_resource:
+    if not message_resource_file.HasMessageTableResource():
       # Windows Vista and later use a MUI resource to redirect to
       # a language specific message file.
       mui_message_resource_file = self._GetMUIMessageResourceFile(
@@ -376,18 +375,15 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
         message_resource_file.Close()
 
         message_resource_file = mui_message_resource_file
-        message_table_resource = (
-            mui_message_resource_file.GetMessageTableResource())
 
-    if not message_table_resource:
-      string_resource = message_resource_file.GetStringResource()
-      if not string_resource:
-        if message_filename not in self.missing_resources_message_filenames:
-          self.missing_resources_message_filenames.append(message_filename)
-
+    if not message_resource_file.HasMessageTableResource():
       logging.warning(
           'Message table resource missing from message file: {0:s}'.format(
               message_filename))
+
+      if not message_resource_file.HasStringTableResource():
+        if message_filename not in self.missing_resources_message_filenames:
+          self.missing_resources_message_filenames.append(message_filename)
 
       message_resource_file.Close()
 

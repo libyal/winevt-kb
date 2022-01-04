@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Message Resource file class."""
+"""Tests for the Windows Message Resource (WRC) file class."""
 
 import unittest
 
@@ -9,44 +9,87 @@ from winevtrc import resource_file
 from tests import test_lib as shared_test_lib
 
 
-class TestVersionResource(object):
-  """Windows Resource Compiler (WRC) version resource for testing.
+class TestWrcResource(object):
+  """Windows Resource Compiler (WRC) resource for testing.
 
   Attributes:
-    language_identifiers (list[int]): language identifiers.
-    versions (dict[int, int]): versions per language identifier.
+    items (list[TestWrcResourceItem]): resources items.
   """
 
   def __init__(self):
-    """Initializes a version resource."""
-    super(TestVersionResource, self).__init__()
-    self.file_versions = {0x0409: 0}
-    self.language_identifiers = [0x0409]
-    self.product_versions = {0x0409: 2 << 48}
+    """Initializes a resource."""
+    super(TestWrcResource, self).__init__()
+    self.items = []
 
   # pylint: disable=invalid-name
 
-  def get_file_version(self, language_identifier):
-    """Retrieves the file version.
-
-    Args:
-      language_identifier (int): language identifier.
+  def get_number_of_items(self):
+    """Retrieves the number of resource items.
 
     Returns:
-      int: file version.
+      int: number of resource items.
     """
-    return self.file_versions.get(language_identifier, 0)
+    return len(self.items)
 
-  def get_product_version(self, language_identifier):
-    """Retrieves the product version.
+  def get_item_by_index(self, index):
+    """Retrieves a specific resource item.
 
     Args:
-      language_identifier (int): language identifier.
+      index (int): index.
 
     Returns:
-      int: product version.
+      TestWrcResourceItem: resource item.
     """
-    return self.product_versions.get(language_identifier, 0)
+    return self.items[index]
+
+
+class TestWrcResourceItem(object):
+  """Windows Resource Compiler (WRC) resource item for testing.
+
+  Attributes:
+    identifier (int]): identifier.
+    sub_items (list[TestWrcResourceItem]): resources sub items.
+  """
+
+  def __init__(self, identifier):
+    """Initializes a resource item.
+
+    Args:
+      identifier (int]): identifier.
+    """
+    super(TestWrcResourceItem, self).__init__()
+    self.identifier = identifier
+    self.resource_data = None
+    self.sub_items = []
+
+  # pylint: disable=invalid-name
+
+  def get_number_of_sub_items(self):
+    """Retrieves the number of resource sub items.
+
+    Returns:
+      int: number of resource sub items.
+    """
+    return len(self.sub_items)
+
+  def get_sub_item_by_index(self, index):
+    """Retrieves a specific resource sub item.
+
+    Args:
+      index (int): index.
+
+    Returns:
+      TestWrcResourceItem: resource item.
+    """
+    return self.sub_items[index]
+
+  def read(self):
+    """Reads the resource data.
+
+    Returns:
+      bytes: resource data.
+    """
+    return self.resource_data
 
 
 class TestWrcStream(object):
@@ -57,7 +100,7 @@ class TestWrcStream(object):
   """
 
   def __init__(self):
-    """Initializes a version resource."""
+    """Initializes a stream."""
     super(TestWrcStream, self).__init__()
     self.resources = {}
 
@@ -90,6 +133,72 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
   """Tests for the Windows Message Resource file object."""
 
   # pylint: disable=protected-access
+
+  _VERSION_INFORMATION_RESOURCE_DATA = bytes(bytearray([
+      0xfc, 0x02, 0x34, 0x00, 0x00, 0x00, 0x56, 0x00, 0x53, 0x00, 0x5f, 0x00,
+      0x56, 0x00, 0x45, 0x00, 0x52, 0x00, 0x53, 0x00, 0x49, 0x00, 0x4f, 0x00,
+      0x4e, 0x00, 0x5f, 0x00, 0x49, 0x00, 0x4e, 0x00, 0x46, 0x00, 0x4f, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0xbd, 0x04, 0xef, 0xfe, 0x00, 0x00, 0x01, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x04, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5c, 0x02, 0x00, 0x00,
+      0x01, 0x00, 0x53, 0x00, 0x74, 0x00, 0x72, 0x00, 0x69, 0x00, 0x6e, 0x00,
+      0x67, 0x00, 0x46, 0x00, 0x69, 0x00, 0x6c, 0x00, 0x65, 0x00, 0x49, 0x00,
+      0x6e, 0x00, 0x66, 0x00, 0x6f, 0x00, 0x00, 0x00, 0x38, 0x02, 0x00, 0x00,
+      0x01, 0x00, 0x30, 0x00, 0x34, 0x00, 0x30, 0x00, 0x39, 0x00, 0x30, 0x00,
+      0x34, 0x00, 0x65, 0x00, 0x34, 0x00, 0x00, 0x00, 0x2a, 0x00, 0x09, 0x00,
+      0x01, 0x00, 0x43, 0x00, 0x6f, 0x00, 0x6d, 0x00, 0x6d, 0x00, 0x65, 0x00,
+      0x6e, 0x00, 0x74, 0x00, 0x73, 0x00, 0x00, 0x00, 0x43, 0x00, 0x6f, 0x00,
+      0x6d, 0x00, 0x6d, 0x00, 0x65, 0x00, 0x6e, 0x00, 0x74, 0x00, 0x73, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x5e, 0x00, 0x1b, 0x00, 0x01, 0x00, 0x46, 0x00,
+      0x69, 0x00, 0x6c, 0x00, 0x65, 0x00, 0x44, 0x00, 0x65, 0x00, 0x73, 0x00,
+      0x63, 0x00, 0x72, 0x00, 0x69, 0x00, 0x70, 0x00, 0x74, 0x00, 0x69, 0x00,
+      0x6f, 0x00, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x57, 0x00, 0x69, 0x00,
+      0x6e, 0x00, 0x64, 0x00, 0x6f, 0x00, 0x77, 0x00, 0x73, 0x00, 0x20, 0x00,
+      0x52, 0x00, 0x65, 0x00, 0x73, 0x00, 0x6f, 0x00, 0x75, 0x00, 0x72, 0x00,
+      0x63, 0x00, 0x65, 0x00, 0x20, 0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00,
+      0x74, 0x00, 0x20, 0x00, 0x66, 0x00, 0x69, 0x00, 0x6c, 0x00, 0x65, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x2c, 0x00, 0x06, 0x00, 0x01, 0x00, 0x46, 0x00,
+      0x69, 0x00, 0x6c, 0x00, 0x65, 0x00, 0x56, 0x00, 0x65, 0x00, 0x72, 0x00,
+      0x73, 0x00, 0x69, 0x00, 0x6f, 0x00, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x31, 0x00, 0x2e, 0x00, 0x30, 0x00, 0x2e, 0x00, 0x30, 0x00, 0x00, 0x00,
+      0x3a, 0x00, 0x0d, 0x00, 0x01, 0x00, 0x49, 0x00, 0x6e, 0x00, 0x74, 0x00,
+      0x65, 0x00, 0x72, 0x00, 0x6e, 0x00, 0x61, 0x00, 0x6c, 0x00, 0x4e, 0x00,
+      0x61, 0x00, 0x6d, 0x00, 0x65, 0x00, 0x00, 0x00, 0x77, 0x00, 0x72, 0x00,
+      0x63, 0x00, 0x5f, 0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00,
+      0x2e, 0x00, 0x64, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x84, 0x00, 0x30, 0x00, 0x01, 0x00, 0x4c, 0x00, 0x65, 0x00, 0x67, 0x00,
+      0x61, 0x00, 0x6c, 0x00, 0x43, 0x00, 0x6f, 0x00, 0x70, 0x00, 0x79, 0x00,
+      0x72, 0x00, 0x69, 0x00, 0x67, 0x00, 0x68, 0x00, 0x74, 0x00, 0x00, 0x00,
+      0x28, 0x00, 0x43, 0x00, 0x29, 0x00, 0x20, 0x00, 0x32, 0x00, 0x30, 0x00,
+      0x31, 0x00, 0x37, 0x00, 0x2c, 0x00, 0x20, 0x00, 0x4a, 0x00, 0x6f, 0x00,
+      0x61, 0x00, 0x63, 0x00, 0x68, 0x00, 0x69, 0x00, 0x6d, 0x00, 0x20, 0x00,
+      0x4d, 0x00, 0x65, 0x00, 0x74, 0x00, 0x7a, 0x00, 0x20, 0x00, 0x3c, 0x00,
+      0x6a, 0x00, 0x6f, 0x00, 0x61, 0x00, 0x63, 0x00, 0x68, 0x00, 0x69, 0x00,
+      0x6d, 0x00, 0x2e, 0x00, 0x6d, 0x00, 0x65, 0x00, 0x74, 0x00, 0x7a, 0x00,
+      0x40, 0x00, 0x67, 0x00, 0x6d, 0x00, 0x61, 0x00, 0x69, 0x00, 0x6c, 0x00,
+      0x2e, 0x00, 0x63, 0x00, 0x6f, 0x00, 0x6d, 0x00, 0x3e, 0x00, 0x00, 0x00,
+      0x42, 0x00, 0x0d, 0x00, 0x01, 0x00, 0x4f, 0x00, 0x72, 0x00, 0x69, 0x00,
+      0x67, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x61, 0x00, 0x6c, 0x00, 0x46, 0x00,
+      0x69, 0x00, 0x6c, 0x00, 0x65, 0x00, 0x6e, 0x00, 0x61, 0x00, 0x6d, 0x00,
+      0x65, 0x00, 0x00, 0x00, 0x77, 0x00, 0x72, 0x00, 0x63, 0x00, 0x5f, 0x00,
+      0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x2e, 0x00, 0x64, 0x00,
+      0x6c, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x09, 0x00,
+      0x01, 0x00, 0x50, 0x00, 0x72, 0x00, 0x6f, 0x00, 0x64, 0x00, 0x75, 0x00,
+      0x63, 0x00, 0x74, 0x00, 0x4e, 0x00, 0x61, 0x00, 0x6d, 0x00, 0x65, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x77, 0x00, 0x72, 0x00, 0x63, 0x00, 0x5f, 0x00,
+      0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x30, 0x00, 0x06, 0x00, 0x01, 0x00, 0x50, 0x00, 0x72, 0x00, 0x6f, 0x00,
+      0x64, 0x00, 0x75, 0x00, 0x63, 0x00, 0x74, 0x00, 0x56, 0x00, 0x65, 0x00,
+      0x72, 0x00, 0x73, 0x00, 0x69, 0x00, 0x6f, 0x00, 0x6e, 0x00, 0x00, 0x00,
+      0x31, 0x00, 0x2e, 0x00, 0x30, 0x00, 0x2e, 0x00, 0x30, 0x00, 0x00, 0x00,
+      0x44, 0x00, 0x00, 0x00, 0x01, 0x00, 0x56, 0x00, 0x61, 0x00, 0x72, 0x00,
+      0x46, 0x00, 0x69, 0x00, 0x6c, 0x00, 0x65, 0x00, 0x49, 0x00, 0x6e, 0x00,
+      0x66, 0x00, 0x6f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x04, 0x00,
+      0x00, 0x00, 0x54, 0x00, 0x72, 0x00, 0x61, 0x00, 0x6e, 0x00, 0x73, 0x00,
+      0x6c, 0x00, 0x61, 0x00, 0x74, 0x00, 0x69, 0x00, 0x6f, 0x00, 0x6e, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x09, 0x04, 0xe4, 0x04]))
 
   def testGetVersionInformationNoWrc(self):
     """Tests the _GetVersionInformation function."""
@@ -128,7 +237,6 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
 
     # Test with an empty WRC stream.
     wrc_stream = TestWrcStream()
-
     message_resource_file._wrc_stream = wrc_stream
 
     message_resource_file._GetVersionInformation()
@@ -136,9 +244,17 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     self.assertIsNone(message_resource_file.product_version)
 
     # Test with empty version information.
-    wrc_stream.resources[0x10] = TestVersionResource()
+    wrc_resource = TestWrcResource()
+    wrc_stream.resources[0x10] = wrc_resource
 
-    message_resource_file._wrc_stream = wrc_stream
+    wrc_resource_item = TestWrcResourceItem(1)
+    wrc_resource.items.append(wrc_resource_item)
+
+    wrc_resource_sub_item = TestWrcResourceItem(0x409)
+    wrc_resource_item.sub_items.append(wrc_resource_sub_item)
+
+    wrc_resource_sub_item.resource_data = (
+        self._VERSION_INFORMATION_RESOURCE_DATA)
 
     message_resource_file._GetVersionInformation()
     self.assertEqual(message_resource_file.file_version, '0.0.0.0')
@@ -188,7 +304,9 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
       message_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
-        message_resource_file.Close()
+        message_resource_file.OpenFileObject(file_object)
+
+      message_resource_file.Close()
 
   def testOpenFileObjectAndCloseWrc(self):
     """Tests the OpenFileObject and Close functions."""
@@ -217,8 +335,12 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      with self.assertRaises(IOError):
-        message_resource_file.GetMessageTableResource()
+      try:
+        with self.assertRaises(IOError):
+          message_resource_file.GetMessageTableResource()
+
+      finally:
+        message_resource_file.Close()
 
   def testGetMessageTableResourceWrc(self):
     """Tests the GetMessageTableResource function."""
@@ -231,10 +353,12 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      message_table_resource = message_resource_file.GetMessageTableResource()
-      self.assertIsNotNone(message_table_resource)
+      try:
+        message_table_resource = message_resource_file.GetMessageTableResource()
+        self.assertIsNotNone(message_table_resource)
 
-      message_resource_file.Close()
+      finally:
+        message_resource_file.Close()
 
   def testGetMUILanguage(self):
     """Tests the GetMUILanguage function."""
@@ -260,8 +384,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     mui_language = message_resource_file.GetMUILanguage()
     self.assertIsNone(mui_language)
 
-  def testGetStringResourceNoWrc(self):
-    """Tests the GetStringResource function."""
+  def testGetStringTableResourceNoWrc(self):
+    """Tests the GetStringTableResource function."""
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -271,11 +395,15 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      with self.assertRaises(IOError):
-        message_resource_file.GetStringResource()
+      try:
+        with self.assertRaises(IOError):
+          message_resource_file.GetStringTableResource()
 
-  def testGetStringResourceWrc(self):
-    """Tests the GetStringResource function."""
+      finally:
+        message_resource_file.Close()
+
+  def testGetStringTableResourceWrc(self):
+    """Tests the GetStringTableResource function."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
@@ -285,10 +413,84 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      string_resource = message_resource_file.GetStringResource()
-      self.assertIsNotNone(string_resource)
+      try:
+        string_resource = message_resource_file.GetStringTableResource()
+        self.assertIsNotNone(string_resource)
 
-      message_resource_file.Close()
+      finally:
+        message_resource_file.Close()
+
+  def testHasMessageTableResourceNoWrc(self):
+    """Tests the HasMessageTableResource function."""
+    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    message_resource_file = resource_file.MessageResourceFile(
+        'C:\\Windows\\System32\\nowrc_test.dll')
+
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      try:
+        result = message_resource_file.HasMessageTableResource()
+        self.assertFalse(result)
+
+      finally:
+        message_resource_file.Close()
+
+  def testHasMessageTableResourceWrc(self):
+    """Tests the HasMessageTableResource function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    message_resource_file = resource_file.MessageResourceFile(
+        'C:\\Windows\\System32\\wrc_test.dll')
+
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      try:
+        result = message_resource_file.HasMessageTableResource()
+        self.assertTrue(result)
+
+      finally:
+        message_resource_file.Close()
+
+  def testHasStringTableResourceNoWrc(self):
+    """Tests the HasStringTableResource function."""
+    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    message_resource_file = resource_file.MessageResourceFile(
+        'C:\\Windows\\System32\\nowrc_test.dll')
+
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      try:
+        result = message_resource_file.HasStringTableResource()
+        self.assertFalse(result)
+
+      finally:
+        message_resource_file.Close()
+
+  def testHasStringTableResourceWrc(self):
+    """Tests the HasStringTableResource function."""
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    message_resource_file = resource_file.MessageResourceFile(
+        'C:\\Windows\\System32\\wrc_test.dll')
+
+    with open(test_file_path, 'rb') as file_object:
+      message_resource_file.OpenFileObject(file_object)
+
+      try:
+        result = message_resource_file.HasStringTableResource()
+        self.assertTrue(result)
+
+      finally:
+        message_resource_file.Close()
 
 
 if __name__ == '__main__':

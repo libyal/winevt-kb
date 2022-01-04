@@ -5,6 +5,8 @@
 import os
 import unittest
 
+import pywrc
+
 from winevtrc import database
 from winevtrc import errors
 from winevtrc import resource_file
@@ -464,7 +466,11 @@ class MessageResourceFileSQLite3DatabaseWriterTest(
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      message_table_resource = message_resource_file.GetMessageTableResource()
+      wrc_resource = message_resource_file.GetMessageTableResource()
+      resource_data = wrc_resource.items[0].sub_items[0].read()
+
+      message_table_resource = pywrc.message_table_resource()
+      message_table_resource.copy_from_byte_stream(resource_data)
 
       database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
@@ -557,7 +563,13 @@ class MessageResourceFileSQLite3DatabaseWriterTest(
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      string_resource = message_resource_file.GetStringResource()
+      wrc_resource = message_resource_file.GetStringTableResource()
+      wrc_resource_item = wrc_resource.items[0]
+      resource_data = wrc_resource_item.sub_items[0].read()
+
+      string_table_resource = pywrc.string_table_resource()
+      string_table_resource.copy_from_byte_stream(
+          resource_data, wrc_resource_item.identifier)
 
       database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
           message_resource_file)
@@ -569,7 +581,7 @@ class MessageResourceFileSQLite3DatabaseWriterTest(
         database_writer._WriteMessageFile(message_resource_file)
 
         database_writer._WriteStringTable(
-            message_resource_file, string_resource, 0x00000409)
+            message_resource_file, string_table_resource, 0x00000409)
 
         database_writer.Close()
 

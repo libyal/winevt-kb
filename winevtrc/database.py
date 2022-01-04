@@ -6,6 +6,8 @@ import logging
 import re
 import sqlite3
 
+import pywrc
+
 from winevtrc import definitions
 from winevtrc import errors
 from winevtrc import resources
@@ -654,13 +656,14 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
     raise IOError('More than one value found in database.')
 
   def _WriteMessage(
-      self, message_resource_file, message_table, language_identifier,
+      self, message_resource_file, message_table_resource, language_identifier,
       message_index, table_name, has_table):
     """Writes a message to a specific message table.
 
     Args:
       message_resource_file (MessageResourceFile): message resource file.
-      message_table (pywrc.message_table): message table resource.
+      message_table_resource (pywrc.message_table_resource): message table
+          resource.
       language_identifier (int): language identifier (LCID).
       message_index (int): message index.
       table_name (str): name of the table.
@@ -668,12 +671,11 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
     """
     column_names = ['message_identifier', 'message_string']
 
-    message_identifier = message_table.get_message_identifier(
-        language_identifier, message_index)
+    message_identifier = message_table_resource.get_message_identifier(
+        message_index)
     message_identifier = '0x{0:08x}'.format(message_identifier)
 
-    message_string = message_table.get_string(
-        language_identifier, message_index)
+    message_string = message_table_resource.get_string(message_index)
 
     if not has_table:
       insert_values = True
@@ -756,16 +758,16 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteMessageTable(
-      self, message_resource_file, message_table, language_identifier):
+      self, message_resource_file, message_table_resource, language_identifier):
     """Writes a message table for a specific language identifier.
 
     Args:
       message_resource_file (MessageResourceFile): message resource file.
-      message_table (pywrc.message_table): message table resource.
+      message_table_resource (pywrc.message_table_resource): message table
+          resource.
       language_identifier (int): language identifier (LCID).
     """
-    number_of_messages = message_table.get_number_of_messages(
-        language_identifier)
+    number_of_messages = message_table_resource.get_number_of_messages()
 
     if number_of_messages > 0:
       message_file_key = self._GetMessageFileKey(message_resource_file)
@@ -789,7 +791,7 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
       for message_index in range(0, number_of_messages):
         self._WriteMessage(
-            message_resource_file, message_table, language_identifier,
+            message_resource_file, message_table_resource, language_identifier,
             message_index, table_name, has_table)
 
   def _WriteMessageTableLanguage(self, message_file_key, language_identifier):
@@ -828,29 +830,33 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
   def _WriteMessageTables(self):
     """Writes the message tables."""
-    message_table = self._message_resource_file.GetMessageTableResource()
-    try:
-      number_of_languages = message_table.get_number_of_languages()
-    except IOError as exception:
-      number_of_languages = 0
-      logging.warning((
-          'Unable to retrieve number of languages from: {0:s} '
-          'with error: {1!s}').format(
-              self._message_resource_file.windows_path, exception))
+    wrc_resource = self._message_resource_file.GetMessageTableResource()
+    if wrc_resource and wrc_resource.number_of_items > 0:
+      if wrc_resource.number_of_items != 1:
+        logging.warning((
+            'More than 1 message table resource item in message file: '
+            '{0:s}.').format(self._message_resource_file.windows_path))
 
-    if number_of_languages > 0:
-      for language_identifier in message_table.language_identifiers:
+      wrc_resource_item = wrc_resource.items[0]
+      for wrc_resource_sub_item in wrc_resource_item.sub_items:
+        resource_data = wrc_resource_sub_item.read()
+
+        message_table_resource = pywrc.message_table_resource()
+        message_table_resource.copy_from_byte_stream(resource_data)
+
         self._WriteMessageTable(
-            self._message_resource_file, message_table, language_identifier)
+            self._message_resource_file, message_table_resource,
+            wrc_resource_sub_item.identifier)
 
   def _WriteString(
-      self, message_resource_file, string_table, language_identifier,
+      self, message_resource_file, string_table_resource, language_identifier,
       string_index, table_name, has_table):
     """Writes a string to a specific string table.
 
     Args:
       message_resource_file (MessageResourceFile): message resource file.
-      string_table (pywrc.strings): string table.
+      string_table_resource (pywrc.string_table_resource): string table
+          resource.
       language_identifier (int): language identifier (LCID).
       string_index (int): string index.
       table_name (str): name of the table.
@@ -858,11 +864,11 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
     """
     column_names = ['string_identifier', 'string']
 
-    string_identifier = string_table.get_string_identifier(
-        language_identifier, string_index)
+    string_identifier = string_table_resource.get_string_identifier(
+        string_index)
     string_identifier = '0x{0:08x}'.format(string_identifier)
 
-    string = string_table.get_string(language_identifier, string_index)
+    string = string_table_resource.get_string(string_index)
 
     if not has_table:
       insert_values = True
@@ -898,16 +904,16 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteStringTable(
-      self, message_resource_file, string_table, language_identifier):
+      self, message_resource_file, string_table_resource, language_identifier):
     """Writes a string table for a specific language identifier.
 
     Args:
       message_resource_file (MessageResourceFile): message resource file.
-      string_table (pywrc.strings): string table.
+      string_table_resource (pywrc.string_table_resource): string table
+          resource.
       language_identifier (int): language identifier (LCID).
     """
-    number_of_strings = string_table.get_number_of_strings(
-        language_identifier)
+    number_of_strings = string_table_resource.get_number_of_strings()
 
     if number_of_strings > 0:
       message_file_key = self._GetMessageFileKey(message_resource_file)
@@ -930,7 +936,7 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
       for string_index in range(0, number_of_strings):
         self._WriteString(
-            message_resource_file, string_table, language_identifier,
+            message_resource_file, string_table_resource, language_identifier,
             string_index, table_name, has_table)
 
   def _WriteStringTableLanguage(self, message_file_key, language_identifier):
@@ -969,23 +975,19 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
   def _WriteStringTables(self):
     """Writes the string tables."""
-    string_table = self._message_resource_file.GetStringResource()
-    if not string_table:
-      return
+    wrc_resource = self._message_resource_file.GetStringTableResource()
+    if wrc_resource:
+      for wrc_resource_item in wrc_resource.items:
+        for wrc_resource_sub_item in wrc_resource_item.sub_items:
+          resource_data = wrc_resource_sub_item.read()
 
-    try:
-      number_of_languages = string_table.get_number_of_languages()
-    except IOError as exception:
-      number_of_languages = 0
-      logging.warning((
-          'Unable to retrieve number of languages from: {0:s} '
-          'with error: {1!s}').format(
-              self._message_resource_file.windows_path, exception))
+          string_table_resource = pywrc.string_table_resource()
+          string_table_resource.copy_from_byte_stream(
+              resource_data, wrc_resource_item.identifier)
 
-    if number_of_languages > 0:
-      for language_identifier in string_table.language_identifiers:
-        self._WriteStringTable(
-            self._message_resource_file, string_table, language_identifier)
+          self._WriteStringTable(
+              self._message_resource_file, string_table_resource,
+              wrc_resource_sub_item.identifier)
 
   def WriteResources(self):
     """Writes the resources."""
