@@ -413,7 +413,7 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
     raise IOError(
         'More than one value found in database for log source: {0:s}.'.format(
-            event_log_provider.log_source1))
+            log_source1))
 
   def _GetMessageFileKey(self, message_filename):
     """Retrieves the key of a message file.
@@ -490,6 +490,11 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
         'identifier', 'additional_identifier', 'log_source1', 'log_source2',
         'log_source3', 'log_type']
 
+    log_sources = event_log_provider.log_sources + [None, None]
+    log_source1, log_source2, log_source3 = log_sources[:3]
+
+    insert_values = True
+
     if not self._database_file.HasTable(table_name):
       column_definitions = [
           'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -497,13 +502,49 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
           'log_source2 TEXT', 'log_source3 TEXT', 'log_type TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
-    log_sources = event_log_provider.log_sources + [None, None]
-    log_source1, log_source2, log_source3 = log_sources[:3]
+    else:
+      condition = (
+          'log_source1 = "{0:s}" OR log_source2 = "{0:s}" OR '
+          'log_source3 = "{0:s}"').format(log_source1)
 
-    values = [
-        event_log_provider.identifier, event_log_provider.additional_identifier,
-        log_source1, log_source2, log_source3, event_log_provider.log_type]
-    self._database_file.InsertValues(table_name, column_names, values)
+      if log_source2:
+        condition = (
+            '{0:s} OR log_source1 = "{1:s}" OR log_source2 = "{1:s}" OR '
+            'log_source3 = "{1:s}"').format(condition, log_source2)
+
+      if log_source3:
+        condition = (
+            '{0:s} OR log_source1 = "{1:s}" OR log_source2 = "{1:s}" OR '
+            'log_source3 = "{1:s}"').format(condition, log_source3)
+
+      if event_log_provider.identifier:
+        condition = (
+            '{0:s} OR identifier = "{1:s}" OR additional_identifier = '
+            '"{1:s}"').format(
+                condition, event_log_provider.identifier)
+
+      if event_log_provider.additional_identifier:
+        condition = (
+            '{0:s} OR identifier = "{1:s}" OR additional_identifier = '
+            '"{1:s}"').format(
+                condition, event_log_provider.additional_identifier)
+
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      if number_of_values > 0:
+        # TODO: determine if event log provider should be updated.
+        logging.warning('Event log provider: {0:s} already exists.'.format(
+            log_source1))
+        insert_values = False
+
+    if insert_values:
+      values = [
+          event_log_provider.identifier,
+          event_log_provider.additional_identifier, log_source1, log_source2,
+          log_source3, event_log_provider.log_type]
+      self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_filename, database_filename):
     """Writes a Windows message file to the database.

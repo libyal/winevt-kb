@@ -10,6 +10,7 @@ import sys
 
 from dfvfs.helpers import command_line as dfvfs_command_line
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
+from dfvfs.lib import errors as dfvfs_errors
 
 from winevtrc import database
 from winevtrc import definitions
@@ -213,9 +214,9 @@ def Main():
           'directory to write the sqlite3 databases to.'))
 
   argument_parser.add_argument(
-      '--winver', dest='windows_version', action='store', metavar='xp',
-      default=None, help=(
-          'string that identifies the Windows version in the database.'))
+      '-w', '--windows_version', '--windows-version',
+      dest='windows_version', action='store', metavar='Windows XP',
+      default=None, help='string that identifies the Windows version.')
 
   argument_parser.add_argument(
       'source', nargs='?', action='store', metavar='/mnt/c/',
@@ -257,8 +258,13 @@ def Main():
   volume_scanner_options.snapshots = ['none']
   volume_scanner_options.volumes = ['none']
 
-  if not extractor_object.ScanForWindowsVolume(
-      options.source, options=volume_scanner_options):
+  try:
+    result = extractor_object.ScanForWindowsVolume(
+        options.source, options=volume_scanner_options)
+  except dfvfs_errors.ScannerError:
+    result = False
+
+  if not result:
     print(('Unable to retrieve the volume with the Windows directory from: '
            '{0:s}.').format(options.source))
     print('')
@@ -270,7 +276,7 @@ def Main():
 
       if options.database:
         print('Database output requires a Windows version, specify one with '
-              '--winver.')
+              '--windows-version.')
         print('')
         return False
 
@@ -282,7 +288,7 @@ def Main():
     return False
 
   try:
-    logging.info('Windows version: {0:s}.'.format(
+    logging.info('Detected Windows version: {0:s}'.format(
         extractor_object.windows_version))
 
     extractor_object.CollectSystemEnvironmentVariables()
