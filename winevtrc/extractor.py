@@ -147,45 +147,6 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     return mui_message_resource_file
 
-  def _GetNormalizedMessageFilePath(self, path):
-    """Retrieves a normalized variant of a message file path.
-
-    Args:
-      path (str): path of a message file.
-
-    Returns:
-      str: normalized path of a message file.
-    """
-    path_segments = path.split('\\')
-    filename = path_segments.pop()
-
-    if path_segments:
-      # Check if the first path segment is a drive letter or "%SystemDrive%".
-      first_path_segment = path_segments[0].lower()
-      if ((len(first_path_segment) == 2 and first_path_segment[1:] == ':') or
-          first_path_segment == '%systemdrive%'):
-        path_segments[0] = ''
-
-    path_segments_lower = [
-        path_segment.lower() for path_segment in path_segments]
-
-    if (not path_segments_lower or
-        path_segments_lower[0] == '$(runtime.system32)'):
-      # If the path is just a filename assume the file is stored in:
-      # "%SystemRoot%\System32".
-      path_segments = ['%SystemRoot%', 'System32']
-
-    elif path_segments_lower[0] in ('%systemroot%', '%windir%', 'windows'):
-      path_segments = ['%SystemRoot%'] + path_segments[1:]
-
-    # Check if path starts with \SystemRoot\ for example:
-    # \SystemRoot\system32\drivers\SerCx.sys
-    elif not path_segments_lower[0] and path_segments_lower[1] == 'systemroot':
-      path_segments = ['%SystemRoot%'] + path_segments[2:]
-
-    path_segments.append(filename)
-    return '\\'.join(path_segments) or '\\'
-
   def _GetNormalizedPath(self, path):
     """Retrieves a normalized variant of a path.
 
@@ -329,7 +290,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       MessageResourceFile: message resource file or None if not available or
           already processed.
     """
-    normalized_message_file_path = self._GetNormalizedMessageFilePath(
+    normalized_message_file_path = self.GetNormalizedMessageFilePath(
         message_filename)
 
     # Skip message file if it was already processed.
@@ -395,3 +356,43 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     self._processed_message_filenames.append(lookup_path)
 
     return message_resource_file
+
+  def GetNormalizedMessageFilePath(self, path):
+    """Retrieves a normalized variant of a message file path.
+
+    Args:
+      path (str): path of a message file.
+
+    Returns:
+      str: normalized path of a message file.
+    """
+    path_segments = path.split('\\')
+    filename = path_segments.pop()
+
+    if path_segments:
+      # Check if the first path segment is a drive letter or "%SystemDrive%".
+      first_path_segment = path_segments[0].lower()
+      if ((len(first_path_segment) == 2 and first_path_segment[1:] == ':') or
+          first_path_segment == '%systemdrive%'):
+        path_segments[0] = ''
+
+    path_segments_lower = [
+        path_segment.lower() for path_segment in path_segments]
+
+    if (not path_segments_lower or
+        path_segments_lower[0] == '$(runtime.system32)'):
+      # If the path is just a filename assume the file is stored in:
+      # "%SystemRoot%\System32".
+      path_segments = ['%SystemRoot%', 'System32']
+
+    elif path_segments_lower[0] in ('%systemroot%', '%windir%'):
+      path_segments = ['%SystemRoot%'] + path_segments[1:]
+
+    # Check if path starts with "\SystemRoot\", "\Windows\" or "\WinNT\" for
+    # example: "\SystemRoot\system32\drivers\SerCx.sys"
+    elif not path_segments_lower[0] and path_segments_lower[1] in (
+        'systemroot', 'windows', 'winnt'):
+      path_segments = ['%SystemRoot%'] + path_segments[2:]
+
+    path_segments.append(filename)
+    return '\\'.join(path_segments) or '\\'

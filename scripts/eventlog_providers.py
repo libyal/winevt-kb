@@ -88,14 +88,36 @@ class MarkdownOutputWriter(object):
     """
     log_sources = sorted(event_log_provider.log_sources)
 
-    lines = [
-        '## {0:s}'.format(log_sources[0]),
-        '']
+    lines = []
+    if self._file_object.tell() == 0:
+      lines.extend([
+          '## {0:s}'.format(log_sources[0]),
+          ''])
 
     if windows_versions:
-      lines.extend([
-          'Seen on: {0:s}'.format(', '.join(sorted(windows_versions))),
-          ''])
+      # TODO: combine Windows versions into a more compact string
+      versions_per_prefix = {}
+      for version in sorted(windows_versions):
+        for prefix in ('Windows 10', 'Windows 11', None):
+          if prefix and version.startswith(prefix):
+            break
+
+        if not prefix:
+          versions_per_prefix[version] = []
+        else:
+          if prefix not in versions_per_prefix:
+            versions_per_prefix[prefix] = []
+          versions_per_prefix[prefix].append(version[len(prefix) + 2:-1])
+
+      lines.append('Seen on:')
+
+      for prefix, versions in versions_per_prefix.items():
+        line = '* {0:s}'.format(prefix)
+        if versions:
+          line = '{0:s} ({1:s})'.format(line, ', '.join(versions))
+        lines.append(line)
+
+      lines.append('')
 
     lines.extend([
         '<table border="1" class="docutils">',
@@ -289,45 +311,73 @@ def Main():
       log_sources = sorted(event_log_provider.log_sources)
       first_log_source = log_sources[0]
 
+      # pylint: disable=consider-using-set-comprehension
+
+      event_log_provider.category_message_files = set([
+          extractor_object.GetNormalizedMessageFilePath(path).lower()
+          for path in event_log_provider.category_message_files])
+
+      event_log_provider.event_message_files = set([
+          extractor_object.GetNormalizedMessageFilePath(path).lower()
+          for path in event_log_provider.event_message_files])
+
+      event_log_provider.parameter_message_files = set([
+          extractor_object.GetNormalizedMessageFilePath(path).lower()
+          for path in event_log_provider.parameter_message_files])
+
       event_log_providers[first_log_source] = event_log_provider
 
     if event_log_providers:
       event_log_providers_per_version.append(
           (windows_version, event_log_providers))
 
-  result_event_log_providers = {
+  results_per_log_source = {
       log_source: [] for log_source in event_log_providers.keys()
       for _, event_log_providers in event_log_providers_per_version}
 
-  for first_log_source in sorted(result_event_log_providers.keys()):
+  for first_log_source, results in sorted(results_per_log_source.items()):
     for windows_version, event_log_providers in event_log_providers_per_version:
       event_log_provider = event_log_providers.get(first_log_source, None)
       if not event_log_provider:
         continue
 
-      if not result_event_log_providers[first_log_source]:
+      is_equivalent = False
+      for result_dict in results:
+        result_event_log_provider = result_dict['event_log_provider']
+        is_equivalent = True
+
+        if event_log_provider.identifier != (
+            result_event_log_provider.identifier):
+          is_equivalent = False
+
+        elif event_log_provider.category_message_files != (
+            result_event_log_provider.category_message_files):
+          is_equivalent = False
+
+        elif event_log_provider.event_message_files != (
+            result_event_log_provider.event_message_files):
+          is_equivalent = False
+
+        elif event_log_provider.parameter_message_files != (
+            result_event_log_provider.parameter_message_files):
+          is_equivalent = False
+
+        if is_equivalent:
+          result_dict['windows_versions'].append(windows_version)
+          break
+
+      if not is_equivalent:
         result_event_log_provider = {
             'event_log_provider': event_log_provider,
             'windows_versions': [windows_version]}
-        result_event_log_providers[first_log_source].append(
-            result_event_log_provider)
-
-        continue
-
-      result_event_log_provider = result_event_log_providers[
-          first_log_source][0]
-
-      # TODO: compare event log providers
-      # TODO: set windows versions
-      result_event_log_provider['windows_versions'].append(windows_version)
+        results.append(result_event_log_provider)
 
   output_directory = os.path.join('docs', 'sources', 'eventlog-providers')
   os.makedirs(output_directory, exist_ok=True)
 
   index_rst_file_path = os.path.join(output_directory, 'index.rst')
   with IndexRstOutputWriter(index_rst_file_path) as index_rst_writer:
-    for first_log_source, event_log_providers in sorted(
-        result_event_log_providers.items()):
+    for first_log_source, results in sorted(results_per_log_source.items()):
       index_rst_writer.WriteEventLogProvider(first_log_source)
 
       output_filename = 'Provider-{0:s}.md'.format(first_log_source)
@@ -335,12 +385,12 @@ def Main():
 
       markdown_file_path = os.path.join(output_directory, output_filename)
       with MarkdownOutputWriter(markdown_file_path) as markdown_writer:
-        for result_event_log_provider in event_log_providers:
+        for result_dict in results:
           markdown_writer.WriteEventLogProvider(
-              result_event_log_provider['event_log_provider'],
-              result_event_log_provider['windows_versions'])
+              result_dict['event_log_provider'],
+              result_dict['windows_versions'])
 
-  if not event_log_providers_per_version:
+  if not results_per_log_source:
     print('No Windows Event Log providers found.')
 
   return True
