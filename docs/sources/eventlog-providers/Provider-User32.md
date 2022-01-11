@@ -10,16 +10,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>User32</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{b0aa8734-56f7-41cc-b2f4-de228e98b946}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>User32</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

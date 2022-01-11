@@ -11,24 +11,28 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Windows Defender</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>WinDefend</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>WinDefendRtp</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{11cd958a-c507-4ef3-b3f2-5fd9dfbd2c78}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>WinDefendRtp</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>WinDefend</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

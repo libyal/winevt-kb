@@ -12,16 +12,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Backup</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{1db28f2e-8f80-4027-8c5a-a11f7f10f62d}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft-Windows-Backup</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

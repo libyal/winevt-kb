@@ -13,20 +13,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-TerminalServices-RemoteConnectionManager</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{c76baa63-ae81-421c-b425-340b4b24157f}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-TerminalServices-RemoteConnectionManager</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>TermService</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{c76baa63-ae81-421c-b425-340b4b24157f}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

@@ -13,20 +13,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-PerfOS</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{f82fb576-e941-4956-a2c7-a0cf83f6450a}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-PerfOS</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>PerfOs</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{f82fb576-e941-4956-a2c7-a0cf83f6450a}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

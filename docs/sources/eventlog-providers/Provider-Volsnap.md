@@ -11,12 +11,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Volsnap</td>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
+      <td><b>Log source(s):</b></td>
+      <td>Volsnap</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
@@ -38,16 +38,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Volsnap</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{cb017cd2-1f37-4e65-82bc-3e91f6a37559}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Volsnap</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

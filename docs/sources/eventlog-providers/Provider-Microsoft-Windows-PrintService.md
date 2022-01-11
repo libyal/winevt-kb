@@ -12,20 +12,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-PrintService</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>Print</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{747ef6fd-e535-4d16-b510-42c90f6873a1}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Print</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

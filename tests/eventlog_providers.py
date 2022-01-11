@@ -52,7 +52,7 @@ class EventLogProvidersCollectorTest(shared_test_lib.BaseTestCase):
     eventlog_provider = test_results[0]
     self.assertIsNone(eventlog_provider.identifier)
     self.assertEqual(eventlog_provider.log_sources, ['.NET Runtime'])
-    self.assertEqual(eventlog_provider.log_type, 'Application')
+    self.assertEqual(eventlog_provider.log_types, ['Application'])
     self.assertEqual(eventlog_provider.category_message_files, set())
     self.assertEqual(
         eventlog_provider.event_message_files,

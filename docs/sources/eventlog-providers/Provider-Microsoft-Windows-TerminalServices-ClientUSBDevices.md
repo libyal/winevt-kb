@@ -11,20 +11,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-TerminalServices-ClientUSBDevices</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>TsUsbFlt</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{6e400999-5b82-475f-b800-cef6fe361539}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>TsUsbFlt</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

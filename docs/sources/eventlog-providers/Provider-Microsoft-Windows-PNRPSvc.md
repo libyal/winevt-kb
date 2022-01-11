@@ -6,20 +6,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-PNRPSvc</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>PNRPSvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{bbe94f36-f8dc-4c33-8227-81602b7a3d53}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>PNRPSvc</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
@@ -40,20 +40,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-PNRPSvc</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>PNRPSvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{bbe94f36-f8dc-4c33-8227-81602b7a3d53}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>PNRPSvc</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

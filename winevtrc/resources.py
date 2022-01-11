@@ -28,30 +28,26 @@ class EventLogProvider(object):
   Attributes:
     additional_identifier (str): additional identifier of the provider,
         contains a GUID.
-    category_message_files (set[str]): filenames of the category message files.
-    event_message_files (set[str]): filenames of the event message files.
+    category_message_files (set[str]): paths of the category message files.
+    event_message_files (set[str]): paths of the event message files.
     identifier (str): identifier of the provider, contains a GUID.
-    log_sources (list[str]): names of the Windows Event Log source.
-    log_type (str): Windows Event Log type.
-    parameter_message_files (set[str]): filenames of the parameter message
+    log_sources (list[str]): names of the corresponding Event Log sources.
+    log_types (list[str]): Windows Event Log types.
+    name (str): name of the provider.
+    parameter_message_files (set[str]): paths of the parameter message
         files.
   """
 
-  def __init__(self, identifier, log_source, log_type):
-    """Initializes the Windows Event Log provider.
-
-    Args:
-      identifier (str): identifier of the provider, contains a GUID.
-      log_source (str): Event Log source.
-      log_type (str): Event Log type.
-    """
+  def __init__(self):
+    """Initializes the Windows Event Log provider."""
     super(EventLogProvider, self).__init__()
     self.additional_identifier = None
     self.category_message_files = set()
     self.event_message_files = set()
-    self.identifier = identifier
-    self.log_sources = [log_source]
-    self.log_type = log_type
+    self.identifier = None
+    self.log_sources = []
+    self.log_types = []
+    self.name = None
     self.parameter_message_files = set()
 
   @property

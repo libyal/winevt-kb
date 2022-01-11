@@ -9,16 +9,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>TPM</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{1b6b0772-251b-4d42-917d-faca166bc059}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>TPM</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
@@ -35,12 +39,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>TPM</td>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
+      <td><b>Log source(s):</b></td>
+      <td>TPM</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

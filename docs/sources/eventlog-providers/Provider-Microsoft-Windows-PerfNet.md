@@ -13,20 +13,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-PerfNet</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{cab2b8a5-49b9-4eec-b1b0-fac21da05a3b}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-PerfNet</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>PerfNet</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{cab2b8a5-49b9-4eec-b1b0-fac21da05a3b}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

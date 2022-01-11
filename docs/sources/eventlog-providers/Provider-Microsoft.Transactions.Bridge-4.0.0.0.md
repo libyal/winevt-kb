@@ -10,12 +10,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Microsoft.Transactions.Bridge 4.0.0.0</td>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft.Transactions.Bridge 4.0.0.0</td>
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
@@ -36,12 +36,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Microsoft.Transactions.Bridge 4.0.0.0</td>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft.Transactions.Bridge 4.0.0.0</td>
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>

@@ -10,16 +10,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Crypto-CNG</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{e3e0e2f0-c9c5-11e0-8ab9-9ebc4824019b}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft-Windows-Crypto-CNG</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

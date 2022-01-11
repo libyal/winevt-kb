@@ -9,16 +9,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-LiveId</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{05f02597-fe85-4e67-8542-69567ab8fd4f}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft-Windows-LiveId</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

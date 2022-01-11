@@ -13,12 +13,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Desktop Window Manager</td>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
+      <td><b>Log source(s):</b></td>
+      <td>Desktop Window Manager</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

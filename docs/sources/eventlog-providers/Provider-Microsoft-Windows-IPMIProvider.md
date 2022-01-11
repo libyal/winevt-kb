@@ -11,20 +11,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-IPMIProvider</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>ipmiprv</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{2a45d52e-bbf3-4843-8e18-b356ed5f6a65}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>ipmiprv</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

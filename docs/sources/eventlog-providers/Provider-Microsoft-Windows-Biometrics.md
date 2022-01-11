@@ -10,20 +10,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Biometrics</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>Microsoft-Windows-WBioSrvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{a0e3d8ea-c34f-4419-a1db-90435b8b21d0}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft-Windows-WBioSrvc</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

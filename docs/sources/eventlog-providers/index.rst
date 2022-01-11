@@ -13,7 +13,6 @@ Event Log providers
    AFD <Provider-AFD>
    AmdK8 <Provider-AmdK8>
    AmdPPM <Provider-AmdPPM>
-   AppReadiness <Provider-AppReadiness>
    AppleSSD <Provider-AppleSSD>
    Application <Provider-Application>
    Application Error <Provider-Application-Error>
@@ -23,27 +22,17 @@ Event Log providers
    Application Popup <Provider-Application-Popup>
    Application-Addon-Event-Provider <Provider-Application-Addon-Event-Provider>
    AsyncMac <Provider-AsyncMac>
-   AutoEnrollment <Provider-AutoEnrollment>
    BTHPORT <Provider-BTHPORT>
    BTHUSB <Provider-BTHUSB>
    BasicRender <Provider-BasicRender>
    BthEnum <Provider-BthEnum>
    BthLEEnum <Provider-BthLEEnum>
    BthMini <Provider-BthMini>
-   BugCheck <Provider-BugCheck>
-   COM <Provider-COM>
-   COM+ <Provider-COM+>
    CardSpace 4.0.0.0 <Provider-CardSpace-4.0.0.0>
-   CertCa <Provider-CertCa>
-   CertEnroll <Provider-CertEnroll>
    Chkdsk <Provider-Chkdsk>
-   DCOM <Provider-DCOM>
    DS <Provider-DS>
    DeliveryOptimization <Provider-DeliveryOptimization>
    Desktop Window Manager <Provider-Desktop-Window-Manager>
-   DfsSvc <Provider-DfsSvc>
-   Dhcp <Provider-Dhcp>
-   Dhcpv6 <Provider-Dhcpv6>
    DiskQuota <Provider-DiskQuota>
    Display <Provider-Display>
    Dnsapi <Provider-Dnsapi>
@@ -53,9 +42,7 @@ Event Log providers
    Edge <Provider-Edge>
    Error Instrument <Provider-Error-Instrument>
    EventLog <Provider-EventLog>
-   EventSystem <Provider-EventSystem>
    FltMgr <Provider-FltMgr>
-   Folder Redirection <Provider-Folder-Redirection>
    Group Policy Applications <Provider-Group-Policy-Applications>
    Group Policy Client <Provider-Group-Policy-Client>
    Group Policy Data Sources <Provider-Group-Policy-Data-Sources>
@@ -84,31 +71,19 @@ Event Log providers
    Handwriting Recognition <Provider-Handwriting-Recognition>
    HidBth <Provider-HidBth>
    HpSAMD <Provider-HpSAMD>
-   Http <Provider-Http>
-   IPMGM <Provider-IPMGM>
    IPMIDRV <Provider-IPMIDRV>
-   IPNATHLP <Provider-IPNATHLP>
-   IPRouterManager <Provider-IPRouterManager>
-   IPxlatCfg <Provider-IPxlatCfg>
    Intel-iaLPSS-GPIO <Provider-Intel-iaLPSS-GPIO>
    Intel-iaLPSS-I2C <Provider-Intel-iaLPSS-I2C>
    Intel-iaLPSS2-GPIO2 <Provider-Intel-iaLPSS2-GPIO2>
    Intel-iaLPSS2-I2C <Provider-Intel-iaLPSS2-I2C>
    ItSas35i <Provider-ItSas35i>
-   Kerberos <Provider-Kerberos>
-   KmsRequests <Provider-KmsRequests>
    LSA <Provider-LSA>
    LSI_SAS <Provider-LSI_SAS>
    LSI_SAS2i <Provider-LSI_SAS2i>
    LSI_SAS3i <Provider-LSI_SAS3i>
-   LSM <Provider-LSM>
    Lfsvc <Provider-Lfsvc>
    LmHosts <Provider-LmHosts>
    LsaSrv <Provider-LsaSrv>
-   MSDTC <Provider-MSDTC>
-   MSDTC 2 <Provider-MSDTC-2>
-   MSDTC Client <Provider-MSDTC-Client>
-   MSDTC Client 2 <Provider-MSDTC-Client-2>
    MSiSCSI <Provider-MSiSCSI>
    MTConfig <Provider-MTConfig>
    Microsoft Fax <Provider-Microsoft-Fax>
@@ -157,6 +132,7 @@ Event Log providers
    Microsoft-Windows-AppModel-MessagingDataModel <Provider-Microsoft-Windows-AppModel-MessagingDataModel>
    Microsoft-Windows-AppModel-Runtime <Provider-Microsoft-Windows-AppModel-Runtime>
    Microsoft-Windows-AppModel-State <Provider-Microsoft-Windows-AppModel-State>
+   Microsoft-Windows-AppReadiness <Provider-Microsoft-Windows-AppReadiness>
    Microsoft-Windows-AppSruProv <Provider-Microsoft-Windows-AppSruProv>
    Microsoft-Windows-AppXDeployment <Provider-Microsoft-Windows-AppXDeployment>
    Microsoft-Windows-AppXDeployment-Server <Provider-Microsoft-Windows-AppXDeployment-Server>
@@ -207,11 +183,15 @@ Event Log providers
    Microsoft-Windows-COM <Provider-Microsoft-Windows-COM>
    Microsoft-Windows-COM-Perf <Provider-Microsoft-Windows-COM-Perf>
    Microsoft-Windows-COM-RundownInstrumentation <Provider-Microsoft-Windows-COM-RundownInstrumentation>
+   Microsoft-Windows-COMRuntime <Provider-Microsoft-Windows-COMRuntime>
    Microsoft-Windows-CertPolEng <Provider-Microsoft-Windows-CertPolEng>
    Microsoft-Windows-CertificateServicesClient <Provider-Microsoft-Windows-CertificateServicesClient>
+   Microsoft-Windows-CertificateServicesClient-AutoEnrollment <Provider-Microsoft-Windows-CertificateServicesClient-AutoEnrollment>
+   Microsoft-Windows-CertificateServicesClient-CertEnroll <Provider-Microsoft-Windows-CertificateServicesClient-CertEnroll>
    Microsoft-Windows-CertificateServicesClient-CredentialRoaming <Provider-Microsoft-Windows-CertificateServicesClient-CredentialRoaming>
    Microsoft-Windows-CertificateServicesClient-Lifecycle-System <Provider-Microsoft-Windows-CertificateServicesClient-Lifecycle-System>
    Microsoft-Windows-CertificateServicesClient-Lifecycle-User <Provider-Microsoft-Windows-CertificateServicesClient-Lifecycle-User>
+   Microsoft-Windows-CertificationAuthorityClient-CertCli <Provider-Microsoft-Windows-CertificationAuthorityClient-CertCli>
    Microsoft-Windows-Cleanmgr <Provider-Microsoft-Windows-Cleanmgr>
    Microsoft-Windows-ClearTypeTextTuner <Provider-Microsoft-Windows-ClearTypeTextTuner>
    Microsoft-Windows-CloudStore <Provider-Microsoft-Windows-CloudStore>
@@ -219,6 +199,7 @@ Event Log providers
    Microsoft-Windows-CodeIntegrity <Provider-Microsoft-Windows-CodeIntegrity>
    Microsoft-Windows-ComDlg32 <Provider-Microsoft-Windows-ComDlg32>
    Microsoft-Windows-Compat-Appraiser <Provider-Microsoft-Windows-Compat-Appraiser>
+   Microsoft-Windows-Complus <Provider-Microsoft-Windows-Complus>
    Microsoft-Windows-Containers-BindFlt <Provider-Microsoft-Windows-Containers-BindFlt>
    Microsoft-Windows-Containers-Wcifs <Provider-Microsoft-Windows-Containers-Wcifs>
    Microsoft-Windows-CoreSystem-InitMachineConfig <Provider-Microsoft-Windows-CoreSystem-InitMachineConfig>
@@ -241,6 +222,7 @@ Event Log providers
    Microsoft-Windows-DAL-Provider <Provider-Microsoft-Windows-DAL-Provider>
    Microsoft-Windows-DCLocator <Provider-Microsoft-Windows-DCLocator>
    Microsoft-Windows-DDisplay <Provider-Microsoft-Windows-DDisplay>
+   Microsoft-Windows-DHCPv6-Client <Provider-Microsoft-Windows-DHCPv6-Client>
    Microsoft-Windows-DLNA-Namespace <Provider-Microsoft-Windows-DLNA-Namespace>
    Microsoft-Windows-DNS-Client <Provider-Microsoft-Windows-DNS-Client>
    Microsoft-Windows-DNS-Client-DiagTrack <Provider-Microsoft-Windows-DNS-Client-DiagTrack>
@@ -272,6 +254,8 @@ Event Log providers
    Microsoft-Windows-DeviceUpdateAgent <Provider-Microsoft-Windows-DeviceUpdateAgent>
    Microsoft-Windows-DeviceUx <Provider-Microsoft-Windows-DeviceUx>
    Microsoft-Windows-Devices-Background <Provider-Microsoft-Windows-Devices-Background>
+   Microsoft-Windows-DfsSvc <Provider-Microsoft-Windows-DfsSvc>
+   Microsoft-Windows-Dhcp-Client <Provider-Microsoft-Windows-Dhcp-Client>
    Microsoft-Windows-DiagCpl <Provider-Microsoft-Windows-DiagCpl>
    Microsoft-Windows-Diagnosis-AdvancedTaskManager <Provider-Microsoft-Windows-Diagnosis-AdvancedTaskManager>
    Microsoft-Windows-Diagnosis-DPS <Provider-Microsoft-Windows-Diagnosis-DPS>
@@ -309,6 +293,7 @@ Event Log providers
    Microsoft-Windows-Display <Provider-Microsoft-Windows-Display>
    Microsoft-Windows-DisplayColorCalibration <Provider-Microsoft-Windows-DisplayColorCalibration>
    Microsoft-Windows-DisplaySwitch <Provider-Microsoft-Windows-DisplaySwitch>
+   Microsoft-Windows-DistributedCOM <Provider-Microsoft-Windows-DistributedCOM>
    Microsoft-Windows-Documents <Provider-Microsoft-Windows-Documents>
    Microsoft-Windows-DomainJoinManagerTriggerProvider <Provider-Microsoft-Windows-DomainJoinManagerTriggerProvider>
    Microsoft-Windows-Dot3MM <Provider-Microsoft-Windows-Dot3MM>
@@ -345,6 +330,7 @@ Event Log providers
    Microsoft-Windows-ErrorReportingConsole <Provider-Microsoft-Windows-ErrorReportingConsole>
    Microsoft-Windows-EventCollector <Provider-Microsoft-Windows-EventCollector>
    Microsoft-Windows-EventLog-WMIProvider <Provider-Microsoft-Windows-EventLog-WMIProvider>
+   Microsoft-Windows-EventSystem <Provider-Microsoft-Windows-EventSystem>
    Microsoft-Windows-Eventlog <Provider-Microsoft-Windows-Eventlog>
    Microsoft-Windows-FMS <Provider-Microsoft-Windows-FMS>
    Microsoft-Windows-FailoverClustering-Client <Provider-Microsoft-Windows-FailoverClustering-Client>
@@ -364,6 +350,7 @@ Event Log providers
    Microsoft-Windows-Firewall <Provider-Microsoft-Windows-Firewall>
    Microsoft-Windows-Firewall-CPL <Provider-Microsoft-Windows-Firewall-CPL>
    Microsoft-Windows-FirstUX-PerfInstrumentation <Provider-Microsoft-Windows-FirstUX-PerfInstrumentation>
+   Microsoft-Windows-Folder Redirection <Provider-Microsoft-Windows-Folder-Redirection>
    Microsoft-Windows-Forwarding <Provider-Microsoft-Windows-Forwarding>
    Microsoft-Windows-FunctionDiscovery <Provider-Microsoft-Windows-FunctionDiscovery>
    Microsoft-Windows-FunctionDiscoveryHost <Provider-Microsoft-Windows-FunctionDiscoveryHost>
@@ -384,6 +371,7 @@ Event Log providers
    Microsoft-Windows-HomeGroup-ControlPanel <Provider-Microsoft-Windows-HomeGroup-ControlPanel>
    Microsoft-Windows-HotspotAuth <Provider-Microsoft-Windows-HotspotAuth>
    Microsoft-Windows-Http-SQM-Provider <Provider-Microsoft-Windows-Http-SQM-Provider>
+   Microsoft-Windows-HttpEvent <Provider-Microsoft-Windows-HttpEvent>
    Microsoft-Windows-HttpLog <Provider-Microsoft-Windows-HttpLog>
    Microsoft-Windows-HttpService <Provider-Microsoft-Windows-HttpService>
    Microsoft-Windows-Hyper-V-ComputeLib <Provider-Microsoft-Windows-Hyper-V-ComputeLib>
@@ -414,6 +402,7 @@ Event Log providers
    Microsoft-Windows-IPMIProvider <Provider-Microsoft-Windows-IPMIProvider>
    Microsoft-Windows-IPNAT <Provider-Microsoft-Windows-IPNAT>
    Microsoft-Windows-IPSEC-SRV <Provider-Microsoft-Windows-IPSEC-SRV>
+   Microsoft-Windows-IPxlatCfg <Provider-Microsoft-Windows-IPxlatCfg>
    Microsoft-Windows-IdCtrls <Provider-Microsoft-Windows-IdCtrls>
    Microsoft-Windows-IdleTriggerProvider <Provider-Microsoft-Windows-IdleTriggerProvider>
    Microsoft-Windows-Immersive-Shell <Provider-Microsoft-Windows-Immersive-Shell>
@@ -494,9 +483,14 @@ Event Log providers
    Microsoft-Windows-MMCSS <Provider-Microsoft-Windows-MMCSS>
    Microsoft-Windows-MP4SDECD <Provider-Microsoft-Windows-MP4SDECD>
    Microsoft-Windows-MPEG2_DLNA-Encoder <Provider-Microsoft-Windows-MPEG2_DLNA-Encoder>
+   Microsoft-Windows-MPRMSG <Provider-Microsoft-Windows-MPRMSG>
    Microsoft-Windows-MPS-CLNT <Provider-Microsoft-Windows-MPS-CLNT>
    Microsoft-Windows-MPS-DRV <Provider-Microsoft-Windows-MPS-DRV>
    Microsoft-Windows-MPS-SRV <Provider-Microsoft-Windows-MPS-SRV>
+   Microsoft-Windows-MSDTC <Provider-Microsoft-Windows-MSDTC>
+   Microsoft-Windows-MSDTC 2 <Provider-Microsoft-Windows-MSDTC-2>
+   Microsoft-Windows-MSDTC Client <Provider-Microsoft-Windows-MSDTC-Client>
+   Microsoft-Windows-MSDTC Client 2 <Provider-Microsoft-Windows-MSDTC-Client-2>
    Microsoft-Windows-MSFTEDIT <Provider-Microsoft-Windows-MSFTEDIT>
    Microsoft-Windows-MSMPEG2ADEC <Provider-Microsoft-Windows-MSMPEG2ADEC>
    Microsoft-Windows-MSMPEG2VDEC <Provider-Microsoft-Windows-MSMPEG2VDEC>
@@ -640,6 +634,7 @@ Event Log providers
    Microsoft-Windows-RadioManager <Provider-Microsoft-Windows-RadioManager>
    Microsoft-Windows-Ras-AgileVpn <Provider-Microsoft-Windows-Ras-AgileVpn>
    Microsoft-Windows-Ras-NdisWanPacketCapture <Provider-Microsoft-Windows-Ras-NdisWanPacketCapture>
+   Microsoft-Windows-RasServer <Provider-Microsoft-Windows-RasServer>
    Microsoft-Windows-RasSstp <Provider-Microsoft-Windows-RasSstp>
    Microsoft-Windows-ReFS <Provider-Microsoft-Windows-ReFS>
    Microsoft-Windows-ReFS-v1 <Provider-Microsoft-Windows-ReFS-v1>
@@ -684,9 +679,11 @@ Event Log providers
    Microsoft-Windows-Security-EnterpriseData-FileRevocationManager <Provider-Microsoft-Windows-Security-EnterpriseData-FileRevocationManager>
    Microsoft-Windows-Security-ExchangeActiveSyncProvisioning <Provider-Microsoft-Windows-Security-ExchangeActiveSyncProvisioning>
    Microsoft-Windows-Security-IdentityStore <Provider-Microsoft-Windows-Security-IdentityStore>
+   Microsoft-Windows-Security-Kerberos <Provider-Microsoft-Windows-Security-Kerberos>
    Microsoft-Windows-Security-LessPrivilegedAppContainer <Provider-Microsoft-Windows-Security-LessPrivilegedAppContainer>
    Microsoft-Windows-Security-Mitigations <Provider-Microsoft-Windows-Security-Mitigations>
    Microsoft-Windows-Security-Netlogon <Provider-Microsoft-Windows-Security-Netlogon>
+   Microsoft-Windows-Security-SPP <Provider-Microsoft-Windows-Security-SPP>
    Microsoft-Windows-Security-SPP-UX <Provider-Microsoft-Windows-Security-SPP-UX>
    Microsoft-Windows-Security-SPP-UX-GC <Provider-Microsoft-Windows-Security-SPP-UX-GC>
    Microsoft-Windows-Security-SPP-UX-GenuineCenter-Logging <Provider-Microsoft-Windows-Security-SPP-UX-GenuineCenter-Logging>
@@ -713,6 +710,7 @@ Event Log providers
    Microsoft-Windows-SetupQueue <Provider-Microsoft-Windows-SetupQueue>
    Microsoft-Windows-SetupUGC <Provider-Microsoft-Windows-SetupUGC>
    Microsoft-Windows-ShareMedia-ControlPanel <Provider-Microsoft-Windows-ShareMedia-ControlPanel>
+   Microsoft-Windows-SharedAccess_NAT <Provider-Microsoft-Windows-SharedAccess_NAT>
    Microsoft-Windows-Shell-AppWizCpl <Provider-Microsoft-Windows-Shell-AppWizCpl>
    Microsoft-Windows-Shell-AuthUI <Provider-Microsoft-Windows-Shell-AuthUI>
    Microsoft-Windows-Shell-ConnectedAccountState <Provider-Microsoft-Windows-Shell-ConnectedAccountState>
@@ -791,6 +789,7 @@ Event Log providers
    Microsoft-Windows-TenantRestrictions <Provider-Microsoft-Windows-TenantRestrictions>
    Microsoft-Windows-TerminalServices-ClientActiveXCore <Provider-Microsoft-Windows-TerminalServices-ClientActiveXCore>
    Microsoft-Windows-TerminalServices-ClientUSBDevices <Provider-Microsoft-Windows-TerminalServices-ClientUSBDevices>
+   Microsoft-Windows-TerminalServices-LocalSessionManager <Provider-Microsoft-Windows-TerminalServices-LocalSessionManager>
    Microsoft-Windows-TerminalServices-MediaRedirection <Provider-Microsoft-Windows-TerminalServices-MediaRedirection>
    Microsoft-Windows-TerminalServices-PnPDevices <Provider-Microsoft-Windows-TerminalServices-PnPDevices>
    Microsoft-Windows-TerminalServices-Printers <Provider-Microsoft-Windows-TerminalServices-Printers>
@@ -867,6 +866,7 @@ Event Log providers
    Microsoft-Windows-WEPHOSTSVC <Provider-Microsoft-Windows-WEPHOSTSVC>
    Microsoft-Windows-WER-Diag <Provider-Microsoft-Windows-WER-Diag>
    Microsoft-Windows-WER-PayloadHealth <Provider-Microsoft-Windows-WER-PayloadHealth>
+   Microsoft-Windows-WER-SystemErrorReporting <Provider-Microsoft-Windows-WER-SystemErrorReporting>
    Microsoft-Windows-WFP <Provider-Microsoft-Windows-WFP>
    Microsoft-Windows-WHEA-Logger <Provider-Microsoft-Windows-WHEA-Logger>
    Microsoft-Windows-WLAN-AutoConfig <Provider-Microsoft-Windows-WLAN-AutoConfig>

@@ -13,16 +13,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Security-Auditing</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Security</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{54849625-5478-4994-a5ba-3e3b0328c30d}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Security</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Microsoft-Windows-Security-Auditing</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

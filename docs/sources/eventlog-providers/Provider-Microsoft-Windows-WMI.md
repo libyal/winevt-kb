@@ -13,20 +13,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-WMI</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>WinMgmt</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{1edeee53-0afe-4609-b846-d8c0b2075b1f}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>WinMgmt</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

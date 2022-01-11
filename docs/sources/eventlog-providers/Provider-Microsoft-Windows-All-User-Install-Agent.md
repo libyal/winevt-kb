@@ -9,7 +9,7 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-All-User-Install-Agent</td>
     </tr>
     <tr>
@@ -19,6 +19,40 @@ Seen on:
     <tr>
       <td><b>Event message file(s):</b></td>
       <td>%systemroot%\system32\rdsappxhelper.dll</td>
+    </tr>
+  </tbody>
+</table>
+
+&nbsp;
+
+Seen on:
+* Windows 8.0
+
+<table border="1" class="docutils">
+  <tbody>
+    <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-All-User-Install-Agent</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{d2e990da-8504-4702-a5e5-367fc2f823bf}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>AllUserInstallAgent</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>Microsoft-Windows-All-User-Install-Agent</td>
+    </tr>
+    <tr>
+      <td><b>Event message file(s):</b></td>
+      <td>%systemroot%\system32\auinstallagent.dll</td>
     </tr>
   </tbody>
 </table>

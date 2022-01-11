@@ -338,15 +338,19 @@ class EventProvidersSQLite3DatabaseReader(SQLite3DatabaseReader):
 
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      event_log_provider = resources.EventLogProvider(
-          values['identifier'], values['log_source1'], values['log_type'])
+      event_log_provider = resources.EventLogProvider()
+      event_log_provider.identifier = values['identifier']
+
+      if values['additional_identifier']:
+        event_log_provider.additional_identifier = values[
+            'additional_identifier']
+
+      event_log_provider.log_types.append(values['log_type'])
+      event_log_provider.log_sources.append(values['log_source1'])
       if values['log_source2']:
         event_log_provider.log_sources.append(values['log_source2'])
       if values['log_source3']:
         event_log_provider.log_sources.append(values['log_source3'])
-      if values['additional_identifier']:
-        event_log_provider.additional_identifier = values[
-            'additional_identifier']
 
       message_filenames = self._GetMessageFilenames(
           values['event_log_provider_key'],
@@ -543,7 +547,7 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       values = [
           event_log_provider.identifier,
           event_log_provider.additional_identifier, log_source1, log_source2,
-          log_source3, event_log_provider.log_type]
+          log_source3, event_log_provider.log_types[0]]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_filename, database_filename):
@@ -1192,8 +1196,11 @@ class ResourcesSQLite3DatabaseReader(SQLite3DatabaseReader):
     event_log_providers = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      event_log_provider = resources.EventLogProvider(
-          values['provider_guid'], values['log_source'], None)
+      event_log_provider = resources.EventLogProvider()
+      event_log_provider.identifier = values['provider_guid']
+
+      event_log_provider.log_sources.append(values['log_source'])
+
       event_log_providers.append(event_log_provider)
 
     for event_log_provider in event_log_providers:

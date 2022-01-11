@@ -9,12 +9,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Application Popup</td>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
+      <td><b>Log source(s):</b></td>
+      <td>Application Popup</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
@@ -32,12 +32,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Application Popup</td>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
+      <td><b>Log source(s):</b></td>
+      <td>Application Popup</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
@@ -62,16 +62,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Application Popup</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{47bfa2b7-bd54-4fac-b70b-29021084ca8f}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Application Popup</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
@@ -88,12 +92,12 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Application Popup</td>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
+      <td><b>Log source(s):</b></td>
+      <td>Application Popup</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

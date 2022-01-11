@@ -6,11 +6,11 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Log type(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
+      <td><b>Log source(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
@@ -45,11 +45,11 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Log type(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
+      <td><b>Log source(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
@@ -90,11 +90,11 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Log type(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
+      <td><b>Log source(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
@@ -120,11 +120,11 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Log type(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
+      <td><b>Log source(s):</b></td>
       <td>Security</td>
     </tr>
     <tr>

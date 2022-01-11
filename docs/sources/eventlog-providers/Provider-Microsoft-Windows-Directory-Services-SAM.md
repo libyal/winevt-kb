@@ -13,20 +13,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-Directory-Services-SAM</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{0d4fdc09-8c27-494a-bda0-505e4fd8adae}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-Directory-Services-SAM</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>SAM</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{0d4fdc09-8c27-494a-bda0-505e4fd8adae}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

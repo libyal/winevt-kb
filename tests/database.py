@@ -235,10 +235,10 @@ class EventProvidersSQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
   def testWriteMessageFilesPerEventLogProvider(self):
     """Tests the WriteMessageFilesPerEventLogProvider function."""
-    event_log_provider = resources.EventLogProvider(
-        'Application',
-        'Microsoft-Windows-RPC-Events',
-        '{f4aed7c7-a898-4627-b053-44a7caa12fcd}')
+    event_log_provider = resources.EventLogProvider()
+    event_log_provider.identifier = '{f4aed7c7-a898-4627-b053-44a7caa12fcd}'
+    event_log_provider.log_sources.append('Microsoft-Windows-RPC-Events')
+    event_log_provider.log_types = ['Application']
 
     database_writer = database.EventProvidersSQLite3DatabaseWriter()
 
@@ -261,10 +261,10 @@ class EventProvidersSQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
 
   def testWriteEventLogProvider(self):
     """Tests the WriteEventLogProvider function."""
-    event_log_provider = resources.EventLogProvider(
-        'Application',
-        'Microsoft-Windows-RPC-Events',
-        '{f4aed7c7-a898-4627-b053-44a7caa12fcd}')
+    event_log_provider = resources.EventLogProvider()
+    event_log_provider.identifier = '{f4aed7c7-a898-4627-b053-44a7caa12fcd}'
+    event_log_provider.log_sources.append('Microsoft-Windows-RPC-Events')
+    event_log_provider.log_types = ['Application']
 
     database_writer = database.EventProvidersSQLite3DatabaseWriter()
 

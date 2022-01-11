@@ -10,20 +10,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-BitLocker-Driver</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>fvevol</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{651df93b-5053-4d1e-94c5-f6e6d25908d0}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>fvevol</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>Microsoft-Windows-BitLocker-Driver</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

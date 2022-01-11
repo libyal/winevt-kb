@@ -12,16 +12,16 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>PrintFilterPipelineSvc</td>
+      <td><b>Identifier:</b></td>
+      <td>{5b33145c-1c66-49f3-b4ca-f563c165f2c0}</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
+      <td><b>Log type(s):</b></td>
       <td>System</td>
     </tr>
     <tr>
-      <td><b>Identifier:</b></td>
-      <td>{5b33145c-1c66-49f3-b4ca-f563c165f2c0}</td>
+      <td><b>Log source(s):</b></td>
+      <td>PrintFilterPipelineSvc</td>
     </tr>
   </tbody>
 </table>

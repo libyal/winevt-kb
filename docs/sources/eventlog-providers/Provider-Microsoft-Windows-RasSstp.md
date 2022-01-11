@@ -12,20 +12,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-RasSstp</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{6c260f2c-049a-43d8-bf4d-d350a4e6611a}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-RasSstp</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>RasSstp</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{6c260f2c-049a-43d8-bf4d-d350a4e6611a}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

@@ -86,12 +86,15 @@ class MarkdownOutputWriter(object):
       windows_versions (list[str]): strings that identify the Windows
           versions.
     """
-    log_sources = sorted(event_log_provider.log_sources)
+    name = event_log_provider.name
+    if not name:
+      log_sources = sorted(event_log_provider.log_sources)
+      name = log_sources[0]
 
     lines = []
     if self._file_object.tell() == 0:
       lines.extend([
-          '## {0:s}'.format(log_sources[0]),
+          '## {0:s}'.format(name),
           ''])
 
     if windows_versions:
@@ -123,25 +126,11 @@ class MarkdownOutputWriter(object):
         '<table border="1" class="docutils">',
         '  <tbody>'])
 
-    for index, log_source in enumerate(log_sources):
-      if index == 0:
-        lines.extend([
-          '    <tr>',
-          '      <td><b>Log source(s):</b></td>',
-          '      <td>{0:s}</td>'.format(log_source),
-          '    </tr>'])
-      else:
-        lines.extend([
-          '    <tr>',
-          '      <td>&nbsp;</td>',
-          '      <td>{0:s}</td>'.format(log_source),
-          '    </tr>'])
-
-    if event_log_provider.log_type:
+    if event_log_provider.name:
       lines.extend([
           '    <tr>',
-          '      <td><b>Log type:</b></td>',
-          '      <td>{0:s}</td>'.format(event_log_provider.log_type),
+          '      <td><b>Name:</b></td>',
+          '      <td>{0:s}</td>'.format(event_log_provider.name),
           '    </tr>'])
 
     if event_log_provider.identifier:
@@ -157,6 +146,34 @@ class MarkdownOutputWriter(object):
           '      <td><b>Additional identifier:</b></td>',
           '      <td>{0:s}</td>'.format(
               event_log_provider.additional_identifier),
+          '    </tr>'])
+
+    for index, log_type in enumerate(event_log_provider.log_types):
+      if index == 0:
+        lines.extend([
+          '    <tr>',
+          '      <td><b>Log type(s):</b></td>',
+          '      <td>{0:s}</td>'.format(log_type),
+          '    </tr>'])
+      else:
+        lines.extend([
+          '    <tr>',
+          '      <td>&nbsp;</td>',
+          '      <td>{0:s}</td>'.format(log_type),
+          '    </tr>'])
+
+    for index, log_source in enumerate(event_log_provider.log_sources):
+      if index == 0:
+        lines.extend([
+          '    <tr>',
+          '      <td><b>Log source(s):</b></td>',
+          '      <td>{0:s}</td>'.format(log_source),
+          '    </tr>'])
+      else:
+        lines.extend([
+          '    <tr>',
+          '      <td>&nbsp;</td>',
+          '      <td>{0:s}</td>'.format(log_source),
           '    </tr>'])
 
     for index, path in enumerate(sorted((
@@ -308,8 +325,10 @@ def Main():
     event_log_providers = {}
 
     for event_log_provider in extractor_object.CollectEventLogProviders():
-      log_sources = sorted(event_log_provider.log_sources)
-      first_log_source = log_sources[0]
+      name = event_log_provider.name
+      if not name:
+        log_sources = sorted(event_log_provider.log_sources)
+        name = log_sources[0]
 
       # pylint: disable=consider-using-set-comprehension
 
@@ -325,7 +344,7 @@ def Main():
           extractor_object.GetNormalizedMessageFilePath(path).lower()
           for path in event_log_provider.parameter_message_files])
 
-      event_log_providers[first_log_source] = event_log_provider
+      event_log_providers[name] = event_log_provider
 
     if event_log_providers:
       event_log_providers_per_version.append(
@@ -335,9 +354,9 @@ def Main():
       log_source: [] for log_source in event_log_providers.keys()
       for _, event_log_providers in event_log_providers_per_version}
 
-  for first_log_source, results in sorted(results_per_log_source.items()):
+  for name, results in sorted(results_per_log_source.items()):
     for windows_version, event_log_providers in event_log_providers_per_version:
-      event_log_provider = event_log_providers.get(first_log_source, None)
+      event_log_provider = event_log_providers.get(name, None)
       if not event_log_provider:
         continue
 
@@ -377,10 +396,10 @@ def Main():
 
   index_rst_file_path = os.path.join(output_directory, 'index.rst')
   with IndexRstOutputWriter(index_rst_file_path) as index_rst_writer:
-    for first_log_source, results in sorted(results_per_log_source.items()):
-      index_rst_writer.WriteEventLogProvider(first_log_source)
+    for name, results in sorted(results_per_log_source.items()):
+      index_rst_writer.WriteEventLogProvider(name)
 
-      output_filename = 'Provider-{0:s}.md'.format(first_log_source)
+      output_filename = 'Provider-{0:s}.md'.format(name)
       output_filename = output_filename.replace(' ', '-').replace('/', '-')
 
       markdown_file_path = os.path.join(output_directory, output_filename)

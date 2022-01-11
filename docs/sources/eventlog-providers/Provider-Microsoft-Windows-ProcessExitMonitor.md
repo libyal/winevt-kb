@@ -12,20 +12,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-ProcessExitMonitor</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>Process Exit Monitor</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{fd771d53-8492-4057-8e35-8c02813af49b}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Process Exit Monitor</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

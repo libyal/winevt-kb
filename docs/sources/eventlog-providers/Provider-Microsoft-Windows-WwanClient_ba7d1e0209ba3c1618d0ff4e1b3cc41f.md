@@ -6,7 +6,7 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-WwanClient_ba7d1e0209ba3c1618d0ff4e1b3cc41f</td>
     </tr>
     <tr>

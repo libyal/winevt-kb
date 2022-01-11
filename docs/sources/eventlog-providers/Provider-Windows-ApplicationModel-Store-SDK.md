@@ -7,7 +7,7 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Windows-ApplicationModel-Store-SDK</td>
     </tr>
     <tr>

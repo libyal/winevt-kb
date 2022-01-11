@@ -13,20 +13,28 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Wininit</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>Wininit</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{206f6dea-d3c5-4d10-bc72-989f03c8b84b}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Wininit</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>Microsoft-Windows-Wininit</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

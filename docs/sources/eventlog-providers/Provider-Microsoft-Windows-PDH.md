@@ -13,20 +13,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-PDH</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>PDH</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{04d66358-c4a1-419b-8023-23b73902de2c}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>PDH</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

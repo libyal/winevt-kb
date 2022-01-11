@@ -13,20 +13,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-PerfProc</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{72d211e1-4c54-4a93-9520-4901681b2271}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-PerfProc</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>PerfProc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{72d211e1-4c54-4a93-9520-4901681b2271}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

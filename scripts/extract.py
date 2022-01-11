@@ -155,10 +155,10 @@ class StdoutOutputWriter(object):
       event_log_provider (EventLogProvider): Event Log provider.
     """
     print('Source\t\t: {0:s}'.format(
-        event_log_provider.log_source))
+        event_log_provider.log_sources[0]))
 
     print('Event Log type\t: {0:s}'.format(
-        event_log_provider.log_type))
+        event_log_provider.log_types[0]))
 
     print('Categories\t: {0:s}'.format(
         event_log_provider.category_message_files))

@@ -10,16 +10,16 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
-      <td>Standard TCP/IP Port</td>
+      <td><b>Identifier:</b></td>
+      <td>{cad2d809-03d9-4f46-9cf4-72aa4f04b6b9}</td>
     </tr>
     <tr>
-      <td><b>Log type:</b></td>
+      <td><b>Log type(s):</b></td>
       <td>Application</td>
     </tr>
     <tr>
-      <td><b>Identifier:</b></td>
-      <td>{cad2d809-03d9-4f46-9cf4-72aa4f04b6b9}</td>
+      <td><b>Log source(s):</b></td>
+      <td>Standard TCP/IP Port</td>
     </tr>
   </tbody>
 </table>

@@ -13,20 +13,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Smartcard-Server</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>SCardSvr</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{4fcbf664-a33a-4652-b436-9d558983d955}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>SCardSvr</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

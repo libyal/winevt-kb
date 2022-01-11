@@ -13,20 +13,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-WinHttp</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>WinHttpAutoProxySvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{7d44233d-3055-4b9c-ba64-0d47ca40a232}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>WinHttpAutoProxySvc</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

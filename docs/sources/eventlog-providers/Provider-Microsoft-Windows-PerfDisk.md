@@ -13,20 +13,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-PerfDisk</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>PerfDisk</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{7f9d83de-8abb-457f-98e8-4ad161449ecc}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>PerfDisk</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

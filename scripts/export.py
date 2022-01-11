@@ -328,8 +328,8 @@ class StdoutOutputWriter(object):
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
     """
-    print('Log type:\t{0:s}'.format(event_log_provider.log_type))
-    print('Log source:\t{0:s}'.format(event_log_provider.log_source))
+    print('Log type:\t{0:s}'.format(event_log_provider.log_types[0]))
+    print('Log source:\t{0:s}'.format(event_log_provider.log_sources[0]))
 
     # TODO: print more details.
 

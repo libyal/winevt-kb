@@ -11,20 +11,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Search</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>Windows Search Service</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{ca4e628d-8567-4896-ab6b-835b221f373f}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Windows Search Service</td>
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>

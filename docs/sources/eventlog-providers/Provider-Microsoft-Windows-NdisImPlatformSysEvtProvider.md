@@ -10,20 +10,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-NdisImPlatformSysEvtProvider</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{62de9e48-90c6-4755-8813-6a7d655b0802}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-NdisImPlatformSysEvtProvider</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>NdisImPlatformSysEvtProvider</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{62de9e48-90c6-4755-8813-6a7d655b0802}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

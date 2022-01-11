@@ -13,20 +13,24 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
+      <td><b>Name:</b></td>
+      <td>Microsoft-Windows-User Profiles Service</td>
+    </tr>
+    <tr>
+      <td><b>Identifier:</b></td>
+      <td>{89b1e9f0-5aff-44a6-9b44-0a07a7ce5845}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
       <td><b>Log source(s):</b></td>
       <td>Microsoft-Windows-User Profiles Service</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>Profsvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{89b1e9f0-5aff-44a6-9b44-0a07a7ce5845}</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

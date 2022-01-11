@@ -125,10 +125,12 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
     # TODO: improve test.
-    event_log_provider = resources.EventLogProvider(
-        'log_type', 'log_source', 'provider_guid')
-    message_filename = 'bogus'
+    event_log_provider = resources.EventLogProvider()
+    event_log_provider.identifier = 'provider_guid'
+    event_log_provider.log_sources.append('log_source')
+    event_log_provider.log_types = ['log_type']
 
+    message_filename = 'bogus'
     message_resource_file = extractor_object.GetMessageResourceFile(
         event_log_provider, message_filename)
 

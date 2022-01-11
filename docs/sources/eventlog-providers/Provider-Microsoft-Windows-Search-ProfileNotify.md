@@ -11,20 +11,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-Search-ProfileNotify</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>Windows Search Service Profile Notification</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>Application</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{fc6f77dd-769a-470e-bcf9-1b6555a118be}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>Application</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>Windows Search Service Profile Notification</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

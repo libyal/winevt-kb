@@ -14,8 +14,10 @@ class EventLogProviderTest(test_lib.BaseTestCase):
 
   def testSetCategoryMessageFilenames(self):
     """Tests the SetCategoryMessageFilenames function."""
-    event_log_provider = resources.EventLogProvider(
-        'log_type', 'log_source', 'provider_guid')
+    event_log_provider = resources.EventLogProvider()
+    event_log_provider.identifier = 'provider_guid'
+    event_log_provider.log_sources.append('log_source')
+    event_log_provider.log_types = ['log_type']
 
     expected_category_message_files = set(['test1', 'test2', 'test3'])
 
@@ -32,8 +34,10 @@ class EventLogProviderTest(test_lib.BaseTestCase):
 
   def testSetEventMessageFilenames(self):
     """Tests the SetEventMessageFilenames function."""
-    event_log_provider = resources.EventLogProvider(
-        'log_type', 'log_source', 'provider_guid')
+    event_log_provider = resources.EventLogProvider()
+    event_log_provider.identifier = 'provider_guid'
+    event_log_provider.log_sources.append('log_source')
+    event_log_provider.log_types = ['log_type']
 
     expected_event_message_files = set(['test1', 'test2', 'test3'])
 
@@ -50,8 +54,10 @@ class EventLogProviderTest(test_lib.BaseTestCase):
 
   def testSetParameterMessageFilenames(self):
     """Tests the SetParameterMessageFilenames function."""
-    event_log_provider = resources.EventLogProvider(
-        'log_type', 'log_source', 'provider_guid')
+    event_log_provider = resources.EventLogProvider()
+    event_log_provider.identifier = 'provider_guid'
+    event_log_provider.log_sources.append('log_source')
+    event_log_provider.log_types = ['log_type']
 
     expected_parameter_message_files = set(['test1', 'test2', 'test3'])
 

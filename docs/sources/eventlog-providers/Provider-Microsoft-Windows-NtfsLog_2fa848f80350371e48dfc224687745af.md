@@ -6,7 +6,7 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-NtfsLog_2fa848f80350371e48dfc224687745af</td>
     </tr>
     <tr>

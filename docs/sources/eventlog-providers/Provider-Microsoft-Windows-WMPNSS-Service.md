@@ -11,20 +11,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-WMPNSS-Service</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>WMPNetworkSvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{6a2dc7c1-930a-4fb5-bb44-80b30aebed6c}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>WMPNetworkSvc</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

@@ -11,20 +11,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-WPDClassInstaller</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>WPDClassInstaller</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{ad5162d8-daf0-4a25-88a7-01cbeb33902e}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>WPDClassInstaller</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

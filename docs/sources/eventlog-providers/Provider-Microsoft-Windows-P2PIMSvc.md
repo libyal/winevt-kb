@@ -10,20 +10,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-P2PIMSvc</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>P2PIMSvc</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{2992e9cf-4f99-48f5-a0b6-b99b11cd387d}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>P2PIMSvc</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>

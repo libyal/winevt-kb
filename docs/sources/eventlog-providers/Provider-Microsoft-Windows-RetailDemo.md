@@ -7,20 +7,20 @@ Seen on:
 <table border="1" class="docutils">
   <tbody>
     <tr>
-      <td><b>Log source(s):</b></td>
+      <td><b>Name:</b></td>
       <td>Microsoft-Windows-RetailDemo</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td>RetailDemo</td>
-    </tr>
-    <tr>
-      <td><b>Log type:</b></td>
-      <td>System</td>
     </tr>
     <tr>
       <td><b>Identifier:</b></td>
       <td>{d3f29eda-805d-428a-9902-b259b937f84b}</td>
+    </tr>
+    <tr>
+      <td><b>Log type(s):</b></td>
+      <td>System</td>
+    </tr>
+    <tr>
+      <td><b>Log source(s):</b></td>
+      <td>RetailDemo</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
