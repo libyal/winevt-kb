@@ -57,8 +57,8 @@ napoleon_include_special_with_doc = True
 
 # General information about the project.
 # pylint: disable=redefined-builtin
-project = 'winevt-kb'
-copyright = 'The winevt-kb Project Authors'
+project = 'Windows Event Log knowledge base (winevt-kb)'
+copyright = 'The Windows Event Log knowledge base (winevt-kb) authors'
 version = winevtrc.__version__
 release = winevtrc.__version__
 
@@ -83,7 +83,7 @@ pygments_style = 'sphinx'
 html_theme = 'sphinx_rtd_theme'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'winevtrcdoc'
+htmlhelp_basename = 'winevtkbdoc'
 
 
 # -- Options linkcheck ----------------------------------------------------

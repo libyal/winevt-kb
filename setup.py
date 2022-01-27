@@ -216,7 +216,7 @@ setup(
     },
     scripts=glob.glob(os.path.join('scripts', '[a-z]*.py')),
     data_files=[
-        ('share/doc/winevtrc', [
+        ('share/doc/winevt-kb', [
             'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
     ],
     install_requires=parse_requirements_from_file('requirements.txt'),

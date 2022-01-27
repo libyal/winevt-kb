@@ -276,7 +276,7 @@ def Main():
 
   except (SyntaxError, UnicodeDecodeError):
     source_definitions = [{
-        'path': options.source, 'windows_version': options.windows_version}]
+        'source': options.source, 'windows_version': options.windows_version}]
 
   mediator = dfvfs_command_line.CLIVolumeScannerMediator()
 
@@ -287,7 +287,7 @@ def Main():
 
   event_log_providers_per_version = []
   for source_definition in source_definitions:
-    source_path = source_definition['path']
+    source_path = source_definition['source']
     logging.info('Processing: {0:s}'.format(source_path))
 
     extractor_object = extractor.EventMessageStringExtractor(
