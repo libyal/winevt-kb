@@ -4,36 +4,19 @@
 
 import unittest
 
+from dfimagetools import windows_registry
+
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import windows_path_resolver
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from dfwinreg import registry as dfwinreg_registry
+
 from winevtrc import extractor
 from winevtrc import resources
 
 from tests import test_lib as shared_test_lib
-
-
-class EventMessageStringRegistryFileReaderTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows Registry file reader."""
-
-  def testOpen(self):
-    """Tests the Open function."""
-    volume_scanner = extractor.EventMessageStringExtractor()
-
-    file_reader = extractor.EventMessageStringRegistryFileReader(
-        volume_scanner)
-
-    test_file_path = self._GetTestFilePath(['SOFTWARE'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    # TODO: implement tests.
-    # file_reader.Open(test_file_path)
-
-    # file_reader.Open('bogus')
-    _ = file_reader
-    _ = test_file_path
 
 
 class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
@@ -65,15 +48,21 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     extractor_object = extractor.EventMessageStringExtractor()
 
     extractor_object._file_system = file_system_builder.file_system
+    extractor_object._windows_directory = 'C:\\Windows'
+
     extractor_object._path_resolver = (
         windows_path_resolver.WindowsPathResolver(
             file_system_builder.file_system, mount_point))
-    extractor_object._windows_directory = 'C:\\Windows'
-
     extractor_object._path_resolver.SetEnvironmentVariable(
         'SystemRoot', extractor_object._windows_directory)
     extractor_object._path_resolver.SetEnvironmentVariable(
         'WinDir', extractor_object._windows_directory)
+
+    registry_file_reader = (
+        windows_registry.StorageMediaImageWindowsRegistryFileReader(
+            file_system_builder.file_system, extractor_object._path_resolver))
+    extractor_object._registry = dfwinreg_registry.WinRegistry(
+        registry_file_reader=registry_file_reader)
 
     return extractor_object
 

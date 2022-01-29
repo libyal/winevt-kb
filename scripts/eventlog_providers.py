@@ -308,9 +308,13 @@ def Main():
     windows_version = source_definition['windows_version']
     if windows_version:
       extractor_object.windows_version = windows_version
+
     elif extractor_object.windows_version:
       logging.info('Detected Windows version: {0:s}'.format(
           extractor_object.windows_version))
+
+      windows_version = extractor_object.windows_version
+
     else:
       print('Unable to determine Windows version.')
 

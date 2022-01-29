@@ -3,57 +3,16 @@
 
 import logging
 
+from dfimagetools import environment_variables
+from dfimagetools import windows_registry
+
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.resolver import resolver as dfvfs_resolver
-from dfwinreg import interface as dfwinreg_interface
-from dfwinreg import regf as dfwinreg_regf
+
 from dfwinreg import registry as dfwinreg_registry
 
-from winevtrc import environment_variables
 from winevtrc import eventlog_providers
 from winevtrc import resource_file
-
-
-class EventMessageStringRegistryFileReader(
-    dfwinreg_interface.WinRegistryFileReader):
-  """Class that defines a Windows Registry file reader."""
-
-  def __init__(self, volume_scanner):
-    """Initializes a Windows Registry file reader.
-
-    Args:
-      volume_scanner (WindowsVolumeScanner): Windows volume scanner.
-    """
-    super(EventMessageStringRegistryFileReader, self).__init__()
-    self._volume_scanner = volume_scanner
-
-  def Open(self, path, ascii_codepage='cp1252'):
-    """Opens the Windows Registry file specified by the path.
-
-    Args:
-      path (str): path of the Windows Registry file. The path is a Windows path
-          relative to the root of the file system that contains the specific
-          Windows Registry file. E.g. C:\\Windows\\System32\\config\\SYSTEM
-      ascii_codepage (Optional[str]): ASCII string codepage.
-
-    Returns:
-      WinRegistryFile: Windows Registry file or None if the file cannot
-          be opened.
-    """
-    file_object = self._volume_scanner.OpenFile(path)
-    if file_object is None:
-      return None
-
-    registry_file = dfwinreg_regf.REGFWinRegistryFile(
-        ascii_codepage=ascii_codepage)
-
-    try:
-      registry_file.Open(file_object)
-    except IOError:
-      file_object.close()
-      return None
-
-    return registry_file
 
 
 class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
@@ -87,11 +46,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       mediator (dfvfs.VolumeScannerMediator): a volume scanner mediator or None.
     """
     super(EventMessageStringExtractor, self).__init__(mediator=mediator)
-    registry_file_reader = EventMessageStringRegistryFileReader(self)
-
     self._debug = debug
-    self._registry = dfwinreg_registry.WinRegistry(
-        registry_file_reader=registry_file_reader)
+    self._registry = None
     self._processed_message_filenames = []
     self._windows_version = None
 
@@ -266,14 +222,14 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     # TODO: have CLI argument control this mode.
     # all_control_sets = False
 
-    collector_object = eventlog_providers.EventLogProvidersCollector()
-    return collector_object.Collect(self._registry)
+    collector = eventlog_providers.EventLogProvidersCollector()
+    return collector.Collect(self._registry)
 
   def CollectSystemEnvironmentVariables(self):
     """Collects the system environment variables."""
-    collector_object = environment_variables.EnvironmentVariablesCollector()
+    collector = environment_variables.WindowsEnvironmentVariablesCollector()
 
-    for environment_variable in collector_object.Collect(self._registry):
+    for environment_variable in collector.Collect(self._registry):
       if environment_variable.name.upper() in self._PATH_ENVIRONMENT_VARIABLES:
         normalized_path = self._GetNormalizedPath(environment_variable.value)
         self._path_resolver.SetEnvironmentVariable(
@@ -396,3 +352,33 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     path_segments.append(filename)
     return '\\'.join(path_segments) or '\\'
+
+  def ScanForWindowsVolume(self, source_path, options=None):
+    """Scans for a Windows volume.
+
+    Args:
+      source_path (str): source path.
+      options (Optional[VolumeScannerOptions]): volume scanner options. If None
+          the default volume scanner options are used, which are defined in the
+          VolumeScannerOptions class.
+
+    Returns:
+      bool: True if a Windows volume was found.
+
+    Raises:
+      ScannerError: if the source path does not exists, or if the source path
+          is not a file or directory, or if the format of or within
+          the source file is not supported.
+    """
+    result = super(EventMessageStringExtractor, self).ScanForWindowsVolume(
+        source_path, options=options)
+    if not result:
+      return False
+
+    registry_file_reader = (
+        windows_registry.StorageMediaImageWindowsRegistryFileReader(
+            self._file_system, self._path_resolver))
+    self._registry = dfwinreg_registry.WinRegistry(
+        registry_file_reader=registry_file_reader)
+
+    return True
