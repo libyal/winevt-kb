@@ -195,7 +195,7 @@ class ProcessTree(object):
     Yields:
       EventLogRecord: EventLog record.
     """
-    with open(source, 'r') as file_object:
+    with open(source, 'r', encoding='utf-8') as file_object:
       for line_index, line in enumerate(file_object.readlines()):
         line = line.strip()
 
