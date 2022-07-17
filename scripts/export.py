@@ -34,41 +34,42 @@ class Exporter(object):
     """
     for event_log_provider in database_reader.GetEventLogProviders():
       log_source = event_log_provider.log_source
+      display_name = event_log_provider.name or event_log_provider.log_source
       existing_event_log_provider = self._event_log_providers.get(
           log_source, None)
       if existing_event_log_provider:
         # TODO: merge event providers on mismatch?
 
-        provider_guid = existing_event_log_provider.provider_guid
-        if event_log_provider.provider_guid != provider_guid:
-          if event_log_provider.provider_guid:
-            logging.warning((
-                'Found duplicate alternating event log provider: {0:s}. '
-                'GUID mismatch').format(log_source))
+        existing_identifier = existing_event_log_provider.identifier
+        if event_log_provider.identifier and (
+           event_log_provider.identifier != existing_identifier):
+          logging.warning((
+              'Found duplicate alternating event log provider: {0:s}. '
+              'GUID mismatch').format(display_name))
           continue
 
         message_files = existing_event_log_provider.category_message_files
-        if event_log_provider.category_message_files != message_files:
-          if event_log_provider.category_message_files:
-            logging.warning((
-                'Found duplicate alternating event log provider: {0:s}. '
-                'Category message files mismatch').format(log_source))
+        if event_log_provider.category_message_files and (
+           event_log_provider.category_message_files != message_files):
+          logging.warning((
+              'Found duplicate alternating event log provider: {0:s}. '
+              'Category message files mismatch').format(display_name))
           continue
 
         message_files = existing_event_log_provider.event_message_files
-        if event_log_provider.event_message_files != message_files:
-          if event_log_provider.event_message_files:
-            logging.warning((
-                'Found duplicate alternating event log provider: {0:s}. '
-                'Event message files mismatch').format(log_source))
+        if event_log_provider.event_message_files and (
+           event_log_provider.event_message_files != message_files):
+          logging.warning((
+              'Found duplicate alternating event log provider: {0:s}. '
+              'Event message files mismatch').format(display_name))
           continue
 
         message_files = existing_event_log_provider.parameter_message_files
-        if event_log_provider.parameter_message_files != message_files:
-          if event_log_provider.parameter_message_files:
-            logging.warning((
-                'Found duplicate alternating event log provider: {0:s}. '
-                'Parameter message files mismatch').format(log_source))
+        if event_log_provider.parameter_message_files and (
+           event_log_provider.parameter_message_files != message_files):
+          logging.warning((
+              'Found duplicate alternating event log provider: {0:s}. '
+              'Parameter message files mismatch').format(display_name))
           continue
 
       self._event_log_providers[log_source] = event_log_provider
@@ -295,8 +296,9 @@ class StdoutOutputWriter(object):
     Args:
       message_table (MessageTable): message table.
     """
-    print('{0:s} (LCID: {1:s})'.format(
-        message_table.language, message_table.lcid))
+    language_identifier = int(message_table.lcid, 16)
+    language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
+    print('{0:s} (LCID: {1:s})'.format(language, message_table.lcid))
     print('')
     print('Message identifier\tMessage string')
 
@@ -307,7 +309,7 @@ class StdoutOutputWriter(object):
 
       ouput_string = '{0:s}\t{1:s}'.format(identifier, string)
 
-      print(ouput_string.encode('utf8'))
+      print(ouput_string)
 
     print('')
 
@@ -328,8 +330,23 @@ class StdoutOutputWriter(object):
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
     """
-    print('Log type:\t{0:s}'.format(event_log_provider.log_types[0]))
-    print('Log source:\t{0:s}'.format(event_log_provider.log_sources[0]))
+    if event_log_provider.name:
+      print('Name\t: {0:s}'.format(event_log_provider.name))
+
+    if event_log_provider.identifier:
+      print('Identifier\t: {0:s}'.format(event_log_provider.identifier))
+
+    for index, log_type in enumerate(event_log_provider.log_types):
+      if index == 0:
+        print('Log type(s)\t: {0:s}'.format(log_type))
+      else:
+        print('\t\t: {0:s}'.format(log_type))
+
+    for index, log_source in enumerate(event_log_provider.log_sources):
+      if index == 0:
+        print('Log source(s)\t: {0:s}'.format(log_source))
+      else:
+        print('\t\t: {0:s}'.format(log_source))
 
     # TODO: print more details.
 

@@ -333,7 +333,7 @@ class EventProvidersSQLite3DatabaseReader(SQLite3DatabaseReader):
     table_names = ['event_log_providers']
     column_names = [
         'event_log_provider_key', 'identifier', 'additional_identifier',
-        'log_source1', 'log_source2', 'log_source3', 'log_type']
+        'name', 'log_source1', 'log_source2', 'log_source3', 'log_type']
     condition = ''
 
     for values in self._database_file.GetValues(
@@ -345,8 +345,12 @@ class EventProvidersSQLite3DatabaseReader(SQLite3DatabaseReader):
         event_log_provider.additional_identifier = values[
             'additional_identifier']
 
-      event_log_provider.log_types.append(values['log_type'])
-      event_log_provider.log_sources.append(values['log_source1'])
+      event_log_provider.name = values['name']
+
+      if values['log_type']:
+        event_log_provider.log_types.append(values['log_type'])
+      if values['log_source1']:
+        event_log_provider.log_sources.append(values['log_source1'])
       if values['log_source2']:
         event_log_provider.log_sources.append(values['log_source2'])
       if values['log_source3']:
@@ -534,16 +538,17 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
     """
     table_name = 'event_log_providers'
     column_names = [
-        'identifier', 'additional_identifier', 'log_source1', 'log_source2',
-        'log_source3', 'log_type']
+        'identifier', 'additional_identifier', 'name', 'log_source1',
+        'log_source2', 'log_source3', 'log_type']
 
     insert_values = True
 
     if not self._database_file.HasTable(table_name):
       column_definitions = [
           'event_log_provider_key INTEGER PRIMARY KEY AUTOINCREMENT',
-          'identifier TEXT', 'additional_identifier TEXT', 'log_source1 TEXT',
-          'log_source2 TEXT', 'log_source3 TEXT', 'log_type TEXT']
+          'identifier TEXT', 'additional_identifier TEXT', 'name TEXT',
+          'log_source1 TEXT', 'log_source2 TEXT', 'log_source3 TEXT',
+          'log_type TEXT']
       self._database_file.CreateTable(table_name, column_definitions)
 
     else:
@@ -569,8 +574,8 @@ class EventProvidersSQLite3DatabaseWriter(SQLite3DatabaseWriter):
 
       values = [
           event_log_provider.identifier,
-          event_log_provider.additional_identifier, log_source1, log_source2,
-          log_source3, event_log_provider.log_type]
+          event_log_provider.additional_identifier, event_log_provider.name,
+          log_source1, log_source2, log_source3, event_log_provider.log_type]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_filename, database_filename):
@@ -891,9 +896,9 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       insert_values = number_of_values == 0
 
     if insert_values:
+      language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
       values = [
-          '0x{0:08x}'.format(language_identifier), message_file_key,
-          definitions.LANGUAGES.get(language_identifier, ['', ''])[0]]
+          '0x{0:08x}'.format(language_identifier), message_file_key, language]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteMessageTables(self):
@@ -1036,9 +1041,9 @@ class MessageResourceFileSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       insert_values = number_of_values == 0
 
     if insert_values:
+      language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
       values = [
-          '0x{0:08x}'.format(language_identifier), message_file_key,
-          definitions.LANGUAGES.get(language_identifier, ['', ''])[0]]
+          '0x{0:08x}'.format(language_identifier), message_file_key, language]
       self._database_file.InsertValues(table_name, column_names, values)
 
   def _WriteStringTables(self):
@@ -1630,7 +1635,11 @@ class ResourcesSQLite3DatabaseWriter(SQLite3DatabaseWriter):
       insert_values = True
 
     else:
-      condition = 'log_source = "{0:s}"'.format(event_log_provider.log_source)
+      if event_log_provider.log_source:
+        condition = 'log_source = "{0:s}"'.format(event_log_provider.log_source)
+      if event_log_provider.identifier:
+        condition = 'provider_guid = "{0:s}"'.format(
+            event_log_provider.identifier)
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 

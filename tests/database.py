@@ -205,7 +205,7 @@ class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetEventLogProviders()
     event_log_providers = list(generator)
 
-    self.assertEqual(len(event_log_providers), 974)
+    self.assertEqual(len(event_log_providers), 1122)
 
     database_reader.Close()
 
@@ -220,7 +220,7 @@ class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     generator = database_reader.GetMessageFiles()
     message_files = list(generator)
 
-    self.assertEqual(len(message_files), 672)
+    self.assertEqual(len(message_files), 788)
 
     database_reader.Close()
 
