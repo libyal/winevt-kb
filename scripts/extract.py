@@ -92,7 +92,7 @@ class SQLite3OutputWriter(object):
 
     self._database_writer.WriteMessageFile(message_filename, database_filename)
 
-    # TODO: write the relationship between the event log provider and
+    # TODO: write the relationship between the Event Log provider and
     # the message file and the Windows version?
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_filename, message_file_type)
@@ -296,8 +296,8 @@ def Main():
     # TODO: handle $(runtime.X) notation
 
     for event_log_provider in extractor_object.CollectEventLogProviders():
-      logging.info('Processing event log provider: {0:s}'.format(
-          event_log_provider.log_source))
+      name = event_log_provider.name or event_log_provider.log_source
+      logging.info('Processing Event Log provider: {0:s}'.format(name))
       output_writer.WriteEventLogProvider(event_log_provider)
 
       if event_log_provider.event_message_files:
