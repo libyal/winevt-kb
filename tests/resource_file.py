@@ -211,8 +211,12 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       message_resource_file.OpenFileObject(file_object)
 
-      with self.assertRaises(IOError):
-        message_resource_file._GetVersionInformation()
+      try:
+        resource = message_resource_file._GetVersionInformation()
+        self.assertIsNone(resource)
+
+      finally:
+        message_resource_file.Close()
 
   def testGetVersionInformationWrc(self):
     """Tests the _GetVersionInformation function."""
@@ -336,8 +340,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
       message_resource_file.OpenFileObject(file_object)
 
       try:
-        with self.assertRaises(IOError):
-          message_resource_file.GetMessageTableResource()
+        resource = message_resource_file.GetMessageTableResource()
+        self.assertIsNone(resource)
 
       finally:
         message_resource_file.Close()
@@ -396,8 +400,8 @@ class MessageResourceFileTest(shared_test_lib.BaseTestCase):
       message_resource_file.OpenFileObject(file_object)
 
       try:
-        with self.assertRaises(IOError):
-          message_resource_file.GetStringTableResource()
+        resource = message_resource_file.GetStringTableResource()
+        self.assertIsNone(resource)
 
       finally:
         message_resource_file.Close()
