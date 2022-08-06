@@ -208,6 +208,7 @@ setup(
     version=winevtrc.__version__,
     description=winevtrc_description,
     long_description=winevtrc_long_description,
+    long_description_content_type='text/plain',
     license='Apache License, Version 2.0',
     url='https://github.com/libyal/winevt-kb',
     maintainer='Joachim Metz',
