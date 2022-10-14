@@ -50,29 +50,31 @@ def Main():
     wrc_stream.open_file_object(exe_section)
 
     wrc_resource = wrc_stream.get_resource_by_name('WEVT_TEMPLATE')
-    for wrc_resource_item in wrc_resource.items:
-      for wrc_resource_sub_item in wrc_resource_item.sub_items:
-        resource_data = wrc_resource_sub_item.read()
+    if wrc_resource:
+      for wrc_resource_item in wrc_resource.items:
+        for wrc_resource_sub_item in wrc_resource_item.sub_items:
+          resource_data = wrc_resource_sub_item.read()
 
-        wevt_manifest = pyfwevt.manifest()
-        wevt_manifest.copy_from_byte_stream(resource_data)
+          wevt_manifest = pyfwevt.manifest()
+          wevt_manifest.copy_from_byte_stream(resource_data)
 
-        for wevt_provider in wevt_manifest.providers:  # pylint: disable=not-an-iterable
-          print('Event provider:')
-          print('\tIdentifier\t\t\t: {{{0:s}}}'.format(
-              wevt_provider.identifier))
-          print('\tLanguage identifier\t\t: 0x{0:04x}'.format(
-              wrc_resource_sub_item.identifier))
-          print('\tNumber of events\t\t: {0:d}'.format(
-              wevt_provider.number_of_events))
-          print('')
-
-          for index, wevt_event in enumerate(wevt_provider.events):
-            print('\tEvent {0:d}:'.format(index))
-            print('\t\tIdentifier\t\t: {0:d}'.format(wevt_event.identifier))
-            print('\t\tMessage identifier\t: 0x{0:08x}'.format(
-                wevt_event.message_identifier))
+          for wevt_provider in wevt_manifest.providers:  # pylint: disable=not-an-iterable
+            print('Event provider:')
+            print('\tIdentifier\t\t\t: {{{0:s}}}'.format(
+                wevt_provider.identifier))
+            print('\tLanguage identifier\t\t: 0x{0:04x}'.format(
+                wrc_resource_sub_item.identifier))
+            print('\tNumber of events\t\t: {0:d}'.format(
+                wevt_provider.number_of_events))
             print('')
+
+            for index, wevt_event in enumerate(wevt_provider.events):
+              print('\tEvent {0:d}:'.format(index))
+              print('\t\tIdentifier\t\t: {0:d}'.format(wevt_event.identifier))
+              print('\t\tVersion\t\t\t: {0:d}'.format(wevt_event.version or 0))
+              print('\t\tMessage identifier\t: 0x{0:08x}'.format(
+                  wevt_event.message_identifier))
+              print('')
 
     wrc_stream.close()
 
