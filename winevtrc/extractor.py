@@ -86,20 +86,19 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     path, _, name = message_file_path.rpartition('\\')
 
-    mui_message_file_path = '{0:s}\\{1:s}\\{2:s}.mui'.format(
-        path, mui_language, name)
+    mui_message_file_path = f'{path:s}\\{mui_language:s}\\{name:s}.mui'
     mui_message_resource_file = self._OpenMessageResourceFile(
         mui_message_file_path)
 
     if not mui_message_resource_file:
-      mui_message_file_path = '{0:s}\\{1:s}.mui'.format(path, name)
+      mui_message_file_path = f'{path:s}\\{name:s}.mui'
       mui_message_resource_file = self._OpenMessageResourceFile(
           mui_message_file_path)
 
     if mui_message_resource_file:
-      logging.info(
-          'Message file: {0:s} references MUI message file: {1:s}'.format(
-              message_file_path, mui_message_file_path))
+      logging.info((
+          f'Message file: {message_file_path:s} references MUI message file: '
+          f'{mui_message_file_path:s}'))
 
     return mui_message_resource_file
 
@@ -199,8 +198,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     try:
       file_object = dfvfs_resolver.Resolver.OpenFileObject(path_spec)
     except IOError as exception:
-      logging.warning('Unable to open: {0:s} with error: {1!s}'.format(
-          path_spec.comparable, exception))
+      logging.warning(
+          f'Unable to open: {path_spec.comparable:s} with error: {exception!s}')
       file_object = None
 
     if file_object is None:
@@ -261,8 +260,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       # If normalized_message_file_path points to a directory try appending
       # the Event Log provider log source as the file name.
       if file_entry.IsDirectory():
-        logging.info('Message file: {0:s} refers to directory'.format(
-            message_filename))
+        logging.info(f'Message file: {message_filename:s} refers to directory')
 
         for log_source in event_log_provider.log_sources:
           message_file_path = '\\'.join([
@@ -276,7 +274,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       message_resource_file = self._OpenMessageResourceFileByPathSpec(path_spec)
 
     if not message_resource_file:
-      logging.warning('Missing message file: {0:s}'.format(message_filename))
+      logging.warning(f'Missing message file: {message_filename:s}')
 
       if message_filename not in self.missing_message_filenames:
         self.missing_message_filenames.append(message_filename)
@@ -294,9 +292,9 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
         message_resource_file = mui_message_resource_file
 
     if not message_resource_file.HasMessageTableResource():
-      logging.warning(
-          'Message table resource missing from message file: {0:s}'.format(
-              message_filename))
+      logging.warning((
+          f'Message table resource missing from message file: '
+          f'{message_filename:s}'))
 
       if not message_resource_file.HasStringTableResource():
         if message_filename not in self.missing_resources_message_filenames:
