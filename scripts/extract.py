@@ -50,8 +50,9 @@ class SQLite3OutputWriter(object):
     event_providers_database_path = os.path.join(
         self._databases_path, self.EVENT_PROVIDERS_DATABASE_FILENAME)
     if os.path.exists(event_providers_database_path):
-      logging.warning('event providers database: {0:s} already exists.'.format(
-          event_providers_database_path))
+      logging.warning((
+          f'event providers database: {event_providers_database_path:s} '
+          f'already exists.'))
       return False
 
     self._database_writer = database.EventProvidersSQLite3DatabaseWriter()
@@ -80,7 +81,8 @@ class SQLite3OutputWriter(object):
     """
     database_filename = message_resource_file.windows_path
     _, _, database_filename = database_filename.rpartition('\\')
-    database_filename = '{0:s}.db'.format(database_filename.lower())
+    database_filename = database_filename.lower()
+    database_filename = f'{database_filename:s}.db'
     database_filename = re.sub(r'\.mui', '', database_filename)
 
     database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
@@ -112,8 +114,7 @@ class StdoutOutputWriter(object):
     except IOError as exception:
       number_of_languages = 0
       logging.warning(
-          'Unable to retrieve number of languages with error: {0:s}.'.format(
-              exception))
+          f'Unable to retrieve number of languages with error: {exception!s}.')
 
     if number_of_languages > 0:
       for language_identifier in message_table.language_identifiers:
@@ -122,16 +123,14 @@ class StdoutOutputWriter(object):
 
         if number_of_messages > 0:
           print('Message table:')
-          print('LCID\t\t: 0x{0:08x}'.format(language_identifier))
+          print(f'LCID\t\t: 0x{language_identifier:08x}')
           for message_index in range(0, number_of_messages):
             message_identifier = message_table.get_message_identifier(
                 language_identifier, message_index)
             message_string = message_table.get_string(
                 language_identifier, message_index)
 
-            ouput_string = '0x{0:08x}\t: {1:s}'.format(
-                message_identifier, message_string)
-
+            ouput_string = f'0x{message_identifier:08x}\t: {message_string:s}'
             print(ouput_string.encode('utf8'))
 
           print('')
@@ -154,21 +153,14 @@ class StdoutOutputWriter(object):
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
     """
-    print('Source\t\t: {0:s}'.format(
-        event_log_provider.log_sources[0]))
+    log_source = event_log_provider.log_sources[0]
+    log_type = event_log_provider.log_types[0]
 
-    print('Event Log type\t: {0:s}'.format(
-        event_log_provider.log_types[0]))
-
-    print('Categories\t: {0:s}'.format(
-        event_log_provider.category_message_files))
-
-    print('Messages\t: {0:s}'.format(
-        event_log_provider.event_message_files))
-
-    print('Parameters\t: {0:s}'.format(
-        event_log_provider.parameter_message_files))
-
+    print(f'Source\t\t: {log_source:s}')
+    print(f'Event Log type\t: {log_type:s}')
+    print(f'Categories\t: {event_log_provider.category_message_files:s}')
+    print(f'Messages\t: {event_log_provider.event_message_files:s}')
+    print(f'Parameters\t: {event_log_provider.parameter_message_files:s}')
     print('')
 
   # pylint: disable=unused-argument
@@ -187,9 +179,9 @@ class StdoutOutputWriter(object):
     product_version = getattr(message_resource_file, 'product_version', '')
 
     print('Message file:')
-    print('Path\t\t: {0:s}'.format(message_resource_file.windows_path))
-    print('File version\t: {0:s}'.format(file_version))
-    print('Product version\t: {0:s}'.format(product_version))
+    print(f'Path\t\t: {message_resource_file.windows_path:s}')
+    print(f'File version\t: {file_version:s}')
+    print(f'Product version\t: {product_version:s}')
 
     message_table = message_resource_file.GetMessageTableResource()
     self._WriteMessageTable(message_table)
@@ -241,7 +233,7 @@ def Main():
       os.mkdir(options.database)
 
     if not os.path.isdir(options.database):
-      print('{0:s} must be a directory'.format(options.database))
+      print(f'{options.database:s} must be a directory')
       print('')
       return False
 
@@ -265,8 +257,8 @@ def Main():
     result = False
 
   if not result:
-    print(('Unable to retrieve the volume with the Windows directory from: '
-           '{0:s}.').format(options.source))
+    print((f'Unable to retrieve the volume with the Windows directory from: '
+           f'{options.source:s}.'))
     print('')
     return False
 
@@ -288,8 +280,8 @@ def Main():
     return False
 
   try:
-    logging.info('Detected Windows version: {0:s}'.format(
-        extractor_object.windows_version))
+    logging.info(
+        f'Detected Windows version: {extractor_object.windows_version:s}')
 
     extractor_object.CollectSystemEnvironmentVariables()
 
@@ -297,7 +289,7 @@ def Main():
 
     for event_log_provider in extractor_object.CollectEventLogProviders():
       name = event_log_provider.name or event_log_provider.log_source
-      logging.info('Processing Event Log provider: {0:s}'.format(name))
+      logging.info(f'Processing Event Log provider: {name:s}')
       output_writer.WriteEventLogProvider(event_log_provider)
 
       if event_log_provider.event_message_files:
@@ -306,8 +298,7 @@ def Main():
               event_log_provider, message_filename)
 
           if message_resource_file:
-            logging.info('Processing event message file: {0:s}'.format(
-                message_filename))
+            logging.info(f'Processing event message file: {message_filename:s}')
 
             output_writer.WriteMessageResourceFile(
                 event_log_provider, message_resource_file,
@@ -321,8 +312,8 @@ def Main():
               event_log_provider, message_filename)
 
           if message_resource_file:
-            logging.info('Processing category message file: {0:s}'.format(
-                message_filename))
+            logging.info(
+                f'Processing category message file: {message_filename:s}')
 
             output_writer.WriteMessageResourceFile(
                 event_log_provider, message_resource_file,
@@ -336,8 +327,8 @@ def Main():
               event_log_provider, message_filename)
 
           if message_resource_file:
-            logging.info('Processing parameter message file: {0:s}'.format(
-                message_filename))
+            logging.info(
+                f'Processing parameter message file: {message_filename:s}')
 
             output_writer.WriteMessageResourceFile(
                 event_log_provider, message_resource_file,
@@ -352,14 +343,14 @@ def Main():
     print('')
     print('Message resource files not found or without resource section:')
     for message_filename in extractor_object.missing_message_filenames:
-      print('{0:s}'.format(message_filename))
+      print(message_filename)
 
   if extractor_object.missing_resources_message_filenames:
     print('')
     print('Message resource files without a string and message table resource:')
     for message_filename in (
         extractor_object.missing_resources_message_filenames):
-      print('{0:s}'.format(message_filename))
+      print(message_filename)
 
   print('')
   return True

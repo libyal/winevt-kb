@@ -64,8 +64,7 @@ def Main():
         pass
 
     if message_identifier is None:
-      print('Unsupported message identifier: {0:s}'.format(
-          options.message_identifier))
+      print(f'Unsupported message identifier: {options.message_identifier:s}')
       return False
 
   if not getattr(options, 'event_provider', None):
@@ -77,7 +76,7 @@ def Main():
     print('Message strings:')
     for message_identifier, message_string in database_reader.GetMessages(
         options.event_provider, options.lcid):
-      print('{0:s}:\t{1:s}'.format(message_identifier, message_string))
+      print(f'{message_identifier:s}:\t{message_string:s}')
 
   else:
     message_string = database_reader.GetMessage(
@@ -85,7 +84,7 @@ def Main():
 
     print('Message string:')
     if message_string:
-      print('0x{0:08x}:\t{1:s}'.format(message_identifier, message_string))
+      print(f'0x{message_identifier:08x}:\t{message_string:s}')
 
   database_reader.Close()
 

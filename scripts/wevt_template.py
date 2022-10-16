@@ -58,22 +58,21 @@ def Main():
           wevt_manifest = pyfwevt.manifest()
           wevt_manifest.copy_from_byte_stream(resource_data)
 
-          for wevt_provider in wevt_manifest.providers:  # pylint: disable=not-an-iterable
+          for wevt_provider in iter(wevt_manifest.providers):
             print('Event provider:')
-            print('\tIdentifier\t\t\t: {{{0:s}}}'.format(
-                wevt_provider.identifier))
-            print('\tLanguage identifier\t\t: 0x{0:04x}'.format(
-                wrc_resource_sub_item.identifier))
-            print('\tNumber of events\t\t: {0:d}'.format(
-                wevt_provider.number_of_events))
+            print(f'\tIdentifier\t\t\t: {{{wevt_provider.identifier:s}}}')
+            print((f'\tLanguage identifier\t\t: '
+                   f'0x{wrc_resource_sub_item.identifier:04x}'))
+            print(f'\tNumber of events\t\t: {wevt_provider.number_of_events:d}')
             print('')
 
             for index, wevt_event in enumerate(wevt_provider.events):
-              print('\tEvent {0:d}:'.format(index))
-              print('\t\tIdentifier\t\t: {0:d}'.format(wevt_event.identifier))
-              print('\t\tVersion\t\t\t: {0:d}'.format(wevt_event.version or 0))
-              print('\t\tMessage identifier\t: 0x{0:08x}'.format(
-                  wevt_event.message_identifier))
+              version = wevt_event.version or 0
+              print(f'\tEvent {index:d}:')
+              print(f'\t\tIdentifier\t\t: {wevt_event.identifier:d}')
+              print(f'\t\tVersion\t\t\t: {version:d}')
+              print((f'\t\tMessage identifier\t: '
+                     f'0x{wevt_event.message_identifier:08x}'))
               print('')
 
     wrc_stream.close()

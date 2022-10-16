@@ -52,11 +52,9 @@ class IndexRstOutputWriter(object):
     Args:
       log_source (str): log source.
     """
-    output_filename = 'Provider-{0:s}'.format(log_source)
-    output_filename = output_filename.replace(' ', '-').replace('/', '-')
-
-    text = '   {0:s} <{1:s}>\n'.format(log_source, output_filename)
-    self._file_object.write(text)
+    output_filename = f'Provider-{log_source:s}'.replace(
+        ' ', '-').replace('/', '-')
+    self._file_object.write(f'   {log_source:s} <{output_filename:s}>\n')
 
 
 class MarkdownOutputWriter(object):
@@ -94,7 +92,7 @@ class MarkdownOutputWriter(object):
     lines = []
     if self._file_object.tell() == 0:
       lines.extend([
-          '## {0:s}'.format(name),
+          f'## {name:s}',
           ''])
 
     if windows_versions:
@@ -115,9 +113,10 @@ class MarkdownOutputWriter(object):
       lines.append('Seen on:')
 
       for prefix, versions in versions_per_prefix.items():
-        line = '* {0:s}'.format(prefix)
+        line = f'* {prefix:s}'
         if versions:
-          line = '{0:s} ({1:s})'.format(line, ', '.join(versions))
+          versions_string = ', '.join(versions)
+          line = f'{line:s} ({versions_string:s})'
         lines.append(line)
 
       lines.append('')
@@ -130,22 +129,21 @@ class MarkdownOutputWriter(object):
       lines.extend([
           '    <tr>',
           '      <td><b>Name:</b></td>',
-          '      <td>{0:s}</td>'.format(event_log_provider.name),
+          f'      <td>{event_log_provider.name:s}</td>',
           '    </tr>'])
 
     if event_log_provider.identifier:
       lines.extend([
           '    <tr>',
           '      <td><b>Identifier:</b></td>',
-          '      <td>{0:s}</td>'.format(event_log_provider.identifier),
+          f'      <td>{event_log_provider.identifier:s}</td>',
           '    </tr>'])
 
     if event_log_provider.additional_identifier:
       lines.extend([
           '    <tr>',
           '      <td><b>Additional identifier:</b></td>',
-          '      <td>{0:s}</td>'.format(
-              event_log_provider.additional_identifier),
+          f'      <td>{event_log_provider.additional_identifier:s}</td>',
           '    </tr>'])
 
     for index, log_type in enumerate(event_log_provider.log_types):
@@ -153,13 +151,13 @@ class MarkdownOutputWriter(object):
         lines.extend([
           '    <tr>',
           '      <td><b>Log type(s):</b></td>',
-          '      <td>{0:s}</td>'.format(log_type),
+          f'      <td>{log_type:s}</td>',
           '    </tr>'])
       else:
         lines.extend([
           '    <tr>',
           '      <td>&nbsp;</td>',
-          '      <td>{0:s}</td>'.format(log_type),
+          f'      <td>{log_type:s}</td>',
           '    </tr>'])
 
     for index, log_source in enumerate(event_log_provider.log_sources):
@@ -167,13 +165,13 @@ class MarkdownOutputWriter(object):
         lines.extend([
           '    <tr>',
           '      <td><b>Log source(s):</b></td>',
-          '      <td>{0:s}</td>'.format(log_source),
+          f'      <td>{log_source:s}</td>',
           '    </tr>'])
       else:
         lines.extend([
           '    <tr>',
           '      <td>&nbsp;</td>',
-          '      <td>{0:s}</td>'.format(log_source),
+          f'      <td>{log_source:s}</td>',
           '    </tr>'])
 
     for index, path in enumerate(sorted((
@@ -182,13 +180,13 @@ class MarkdownOutputWriter(object):
         lines.extend([
           '    <tr>',
           '      <td><b>Category message file(s):</b></td>',
-          '      <td>{0:s}</td>'.format(path),
+          f'      <td>{path:s}</td>',
           '    </tr>'])
       else:
         lines.extend([
           '    <tr>',
           '      <td>&nbsp;</td>',
-          '      <td>{0:s}</td>'.format(path),
+          f'      <td>{path:s}</td>',
           '    </tr>'])
 
     for index, path in enumerate(sorted((
@@ -197,13 +195,13 @@ class MarkdownOutputWriter(object):
         lines.extend([
           '    <tr>',
           '      <td><b>Event message file(s):</b></td>',
-          '      <td>{0:s}</td>'.format(path),
+          f'      <td>{path:s}</td>',
           '    </tr>'])
       else:
         lines.extend([
           '    <tr>',
           '      <td>&nbsp;</td>',
-          '      <td>{0:s}</td>'.format(path),
+          f'      <td>{path:s}</td>',
           '    </tr>'])
 
     for index, path in enumerate(sorted((
@@ -212,13 +210,13 @@ class MarkdownOutputWriter(object):
         lines.extend([
           '    <tr>',
           '      <td><b>Parameter message file(s):</b></td>',
-          '      <td>{0:s}</td>'.format(path),
+          f'      <td>{path:s}</td>',
           '    </tr>'])
       else:
         lines.extend([
           '    <tr>',
           '      <td>&nbsp;</td>',
-          '      <td>{0:s}</td>'.format(path),
+          f'      <td>{path:s}</td>',
           '    </tr>'])
 
     lines.extend([
@@ -288,7 +286,7 @@ def Main():
   event_log_providers_per_version = []
   for source_definition in source_definitions:
     source_path = source_definition['source']
-    logging.info('Processing: {0:s}'.format(source_path))
+    logging.info(f'Processing: {source_path:s}')
 
     extractor_object = extractor.EventMessageStringExtractor(
         debug=options.debug, mediator=mediator)
@@ -300,8 +298,8 @@ def Main():
       result = False
 
     if not result:
-      print(('Unable to retrieve the volume with the Windows directory from: '
-             '{0:s}.').format(source_path))
+      print((f'Unable to retrieve the volume with the Windows directory from: '
+             f'{source_path:s}.'))
       print('')
       return False
 
@@ -310,8 +308,8 @@ def Main():
       extractor_object.windows_version = windows_version
 
     elif extractor_object.windows_version:
-      logging.info('Detected Windows version: {0:s}'.format(
-          extractor_object.windows_version))
+      logging.info(
+          f'Detected Windows version: {extractor_object.windows_version:s}')
 
       windows_version = extractor_object.windows_version
 
@@ -403,8 +401,8 @@ def Main():
     for name, results in sorted(results_per_log_source.items()):
       index_rst_writer.WriteEventLogProvider(name)
 
-      output_filename = 'Provider-{0:s}.md'.format(name)
-      output_filename = output_filename.replace(' ', '-').replace('/', '-')
+      output_filename = f'Provider-{name:s}.md'.replace(
+          ' ', '-').replace('/', '-')
 
       markdown_file_path = os.path.join(output_directory, output_filename)
       with MarkdownOutputWriter(markdown_file_path) as markdown_writer:

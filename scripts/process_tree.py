@@ -202,8 +202,7 @@ class ProcessTree(object):
         try:
           xml = ElementTree.fromstring(line)
         except ElementTree.ParseError:
-          logging.error('Unable to parse line: {0:d} "{1:s}"'.format(
-              line_index, line))
+          logging.error(f'Unable to parse line: {line_index:d} "{line:s}"')
           continue
 
         xml_system = xml.find(
@@ -242,9 +241,10 @@ class ProcessTree(object):
     active_processes = {}
     for process_event in record_generator(source):
       if isinstance(process_event, ProcessStartEvent):
-        print('Process started: (PID: {0:d}, PPID: {1:d}) {2:s} {3:s}'.format(
-            process_event.new_process_id, process_event.process_id,
-            process_event.new_process_name, process_event.command_line))
+        print((f'Process started: (PID: {process_event.new_process_id:d}, '
+               f'PPID: {process_event.process_id:d}) '
+               f'{process_event.new_process_name:s} '
+               f'{process_event.command_line:s}'))
 
       elif isinstance(process_event, ProcessStopEvent):
         active_process = active_processes.get(
@@ -253,8 +253,8 @@ class ProcessTree(object):
         if active_process:
           active_process.stop_time = process_event.written_time
 
-        print('Process stopped: (PID: {0:d}) {1:s}'.format(
-            process_event.process_id, process_event.process_name))
+        print((f'Process stopped: (PID: {process_event.process_id:d}) '
+               f'{process_event.process_name:s}'))
 
   def Output(self, source):
     """Outputs a process tree.

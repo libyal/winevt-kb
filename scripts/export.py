@@ -44,32 +44,32 @@ class Exporter(object):
         if event_log_provider.identifier and (
            event_log_provider.identifier != existing_identifier):
           logging.warning((
-              'Found duplicate alternating event log provider: {0:s}. '
-              'GUID mismatch').format(display_name))
+              f'Found duplicate alternating event log provider: '
+              f'{display_name:s}. GUID mismatch'))
           continue
 
         message_files = existing_event_log_provider.category_message_files
         if event_log_provider.category_message_files and (
            event_log_provider.category_message_files != message_files):
           logging.warning((
-              'Found duplicate alternating event log provider: {0:s}. '
-              'Category message files mismatch').format(display_name))
+              f'Found duplicate alternating event log provider: '
+              f'{display_name:s}. Category message files mismatch'))
           continue
 
         message_files = existing_event_log_provider.event_message_files
         if event_log_provider.event_message_files and (
            event_log_provider.event_message_files != message_files):
           logging.warning((
-              'Found duplicate alternating event log provider: {0:s}. '
-              'Event message files mismatch').format(display_name))
+              f'Found duplicate alternating event log provider: '
+              f'{display_name:s}. Event message files mismatch'))
           continue
 
         message_files = existing_event_log_provider.parameter_message_files
         if event_log_provider.parameter_message_files and (
            event_log_provider.parameter_message_files != message_files):
           logging.warning((
-              'Found duplicate alternating event log provider: {0:s}. '
-              'Parameter message files mismatch').format(display_name))
+              f'Found duplicate alternating event log provider: '
+              f'{display_name:s}. Parameter message files mismatch'))
           continue
 
       self._event_log_providers[log_source] = event_log_provider
@@ -105,10 +105,10 @@ class Exporter(object):
       message_file_database_path = os.path.join(source_path, database_filename)
       if not os.path.exists(message_file_database_path):
         logging.warning(
-            'Missing message file database: {0:s}.'.format(database_filename))
+            f'Missing message file database: {database_filename:s}.')
         continue
 
-      logging.info('Processing: {0:s}'.format(database_filename))
+      logging.info(f'Processing: {database_filename:s}')
 
       message_file = resources.MessageFile(database_filename[:-3])
       message_file.windows_path = windows_path
@@ -153,11 +153,11 @@ class Exporter(object):
             differ = difflib.Differ()
             diff_list = list(differ.compare(
                 [stored_message_string], [message_string]))
+            diff_list = '\n'.join(diff_list)
             logging.warning((
-                'Found duplicate alternating message string: {0:s} '
-                'in LCID: {1:s} and version: {2:s}.\n{3:s}\n').format(
-                    message_identifier, message_table.lcid, file_version,
-                    '\n'.join(diff_list)))
+                f'Found duplicate alternating message string: '
+                f'{message_identifier:s} in LCID: {message_table.lcid:s} and '
+                f'version: {file_version:s}.\n{diff_list:s}\n'))
 
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
@@ -184,10 +184,10 @@ class Exporter(object):
 
           elif string != stored_string:
             logging.warning((
-                'Found duplicate alternating string: {0:s} in LCID: {1:s} '
-                'and version: {2:s}.\nPrevious: {3:s}\nNew:{4:s}\n').format(
-                    string_identifier, string_table.lcid, file_version,
-                    stored_string, string))
+                f'Found duplicate alternating string: {string_identifier:s} '
+                f'in LCID: {string_table.lcid:s} and version: '
+                f'{file_version:s}.\nPrevious: {stored_string:s}\nNew: '
+                f'{string:s}\n'))
 
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
@@ -298,7 +298,7 @@ class StdoutOutputWriter(object):
     """
     language_identifier = int(message_table.lcid, 16)
     language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
-    print('{0:s} (LCID: {1:s})'.format(language, message_table.lcid))
+    print(f'{language:s} (LCID: {message_table.lcid:s})')
     print('')
     print('Message identifier\tMessage string')
 
@@ -307,9 +307,7 @@ class StdoutOutputWriter(object):
       string = re.sub(r'\r', '\\\\r', string)
       string = re.sub(r'\t', '\\\\t', string)
 
-      ouput_string = '{0:s}\t{1:s}'.format(identifier, string)
-
-      print(ouput_string)
+      print(f'{identifier:s}\t{string:s}')
 
     print('')
 
@@ -331,22 +329,22 @@ class StdoutOutputWriter(object):
       event_log_provider (EventLogProvider): Event Log provider.
     """
     if event_log_provider.name:
-      print('Name\t: {0:s}'.format(event_log_provider.name))
+      print(f'Name\t: {event_log_provider.name:s}')
 
     if event_log_provider.identifier:
-      print('Identifier\t: {0:s}'.format(event_log_provider.identifier))
+      print(f'Identifier\t: {event_log_provider.identifier:s}')
 
     for index, log_type in enumerate(event_log_provider.log_types):
       if index == 0:
-        print('Log type(s)\t: {0:s}'.format(log_type))
+        print(f'Log type(s)\t: {log_type:s}')
       else:
-        print('\t\t: {0:s}'.format(log_type))
+        print(f'\t\t: {log_type:s}')
 
     for index, log_source in enumerate(event_log_provider.log_sources):
       if index == 0:
-        print('Log source(s)\t: {0:s}'.format(log_source))
+        print(f'Log source(s)\t: {log_source:s}')
       else:
-        print('\t\t: {0:s}'.format(log_source))
+        print(f'\t\t: {log_source:s}')
 
     # TODO: print more details.
 
@@ -356,8 +354,8 @@ class StdoutOutputWriter(object):
     Args:
       message_file (MessageFile): message file.
     """
-    print('{0:s}'.format(message_file.name))
-    print('Path:\t{0:s}'.format(message_file.windows_path))
+    print(message_file.name)
+    print('Path:\t{message_file.windows_path:s}')
 
     for message_table in message_file.GetMessageTables():
       self._WriteMessageTable(message_table)
@@ -403,7 +401,7 @@ class AsciidocFileWriter(object):
 
   def WriteLine(self, line):
     """Writes a line."""
-    self._file.write('{0:s}\n'.format(line).encode('utf8'))
+    self._file.write(f'{line:s}\n'.encode('utf8'))
 
   def WriteLines(self, lines):
     """Writes lines."""
@@ -431,8 +429,7 @@ class AsciidocOutputWriter(object):
       file_writer (AsciidocFileWriter): file writer.
     """
     file_writer.WriteLines([
-        '=== {0:s} (LCID: {1:s})'.format(
-            message_table.language, message_table.lcid),
+        f'=== {message_table.language:s} (LCID: {message_table.lcid:s})',
         '',
         '[cols="1,5",options="header"]',
         '|===',
@@ -443,9 +440,7 @@ class AsciidocOutputWriter(object):
       string = re.sub(r'\r', '\\\\r', string)
       string = re.sub(r'\t', '\\\\t', string)
 
-      ouput_string = '| {0:s} | {1:s}'.format(identifier, string)
-
-      file_writer.WriteLine(ouput_string.encode('utf8'))
+      file_writer.WriteLine(f'| {identifier:s} | {string:s}'.encode('utf8'))
 
     file_writer.WriteLines([
         '|===',
@@ -482,15 +477,14 @@ class AsciidocOutputWriter(object):
       message_file (MessageFile): message file.
     """
     file_writer = AsciidocFileWriter()
-    path = os.path.join(
-        self._path, '{0:s}.asciidoc'.format(message_file.name))
+    path = os.path.join(self._path, f'{message_file.name:s}.asciidoc')
 
     if file_writer.Open(path):
 
       file_writer.WriteLines([
-          '== {0:s}'.format(message_file.name),
+          f'== {message_file.name:s}',
           '|===',
-          '| Path: | {0:s}'.format(message_file.windows_path),
+          '| Path: | {message_file.windows_path:s}',
           '|===',
           ''])
 
