@@ -216,7 +216,7 @@ class Exporter(object):
 
 
 class SQLite3OutputWriter(object):
-  """Class that defines a sqlite3 output writer."""
+  """Class that defines a SQLite3 output writer."""
 
   def __init__(self, database_path, string_format='wrc'):
     """Initializes an output writer object.
@@ -516,12 +516,13 @@ def Main():
   argument_parser.add_argument(
       'source', nargs='?', action='store', metavar='./winevt-db/',
       default=None, help=(
-          'directory that contains the sqlite3 with the extracted strings.'))
+          'directory that contains the SQLite3 with the extracted strings.'))
 
+  # TODO: replace by --output
   argument_parser.add_argument(
       '--db', '--database', dest='database', action='store',
       metavar='winevt-rc.db', default=None, help=(
-          'filename of the sqlite3 database to write to.'))
+          'filename of the SQLite3 database to write to.'))
 
   argument_parser.add_argument(
       '--string_format', '--string-format', dest='string_format',

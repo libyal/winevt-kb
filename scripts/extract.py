@@ -203,7 +203,7 @@ def Main():
   argument_parser.add_argument(
       '--db', '--database', dest='database', action='store',
       metavar='./winevt-kb/', default=None, help=(
-          'directory to write the sqlite3 databases to.'))
+          'directory to write the SQLite3 databases to.'))
 
   argument_parser.add_argument(
       '-w', '--windows_version', '--windows-version',

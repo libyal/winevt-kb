@@ -7,8 +7,6 @@ import pyexe
 import pywrc
 
 
-# pylint: disable=logging-format-interpolation
-
 class MessageResourceFile(object):
   """Windows Message Resource file.
 

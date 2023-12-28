@@ -19,7 +19,7 @@ class IndexRstOutputWriter(object):
   """Index.rst output writer."""
 
   def __init__(self, path):
-    """Initializes a Markdown output writer."""
+    """Initializes an index.rst output writer."""
     super(IndexRstOutputWriter, self).__init__()
     self._file_object = None
     self._path = path
@@ -47,7 +47,7 @@ class IndexRstOutputWriter(object):
     self._file_object = None
 
   def WriteEventLogProvider(self, log_source):
-    """Writes a Event Log provider to the output.
+    """Writes an Event Log provider to the index.rst file.
 
     Args:
       log_source (str): log source.
@@ -77,7 +77,7 @@ class MarkdownOutputWriter(object):
     self._file_object = None
 
   def WriteEventLogProvider(self, event_log_provider, windows_versions):
-    """Writes a Event Log provider to the output.
+    """Writes an Event Log provider to a Markdown file.
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.

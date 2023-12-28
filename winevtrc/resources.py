@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Windows Event Log resources."""
 
+from acstore.containers import interface as containers_interface
+from acstore.containers import manager as containers_manager
+
 
 class EnvironmentVariable(object):
   """Environment variable.
@@ -22,7 +25,7 @@ class EnvironmentVariable(object):
     self.value = value
 
 
-class EventLogProvider(object):
+class EventLogProvider(containers_interface.AttributeContainer):
   """Windows Event Log provider.
 
   Attributes:
@@ -37,6 +40,18 @@ class EventLogProvider(object):
     parameter_message_files (set[str]): paths of the parameter message
         files.
   """
+
+  CONTAINER_TYPE = 'windows_eventlog_provider'
+
+  SCHEMA = {
+      'additional_identifier': 'str',
+      'category_message_files': 'List[str]',
+      'event_message_files': 'List[str]',
+      'identifier': 'str',
+      'log_sources': 'List[str]',
+      'log_types': 'List[str]',
+      'name': 'str',
+      'parameter_message_files': 'List[str]'}
 
   def __init__(self):
     """Initializes the Windows Event Log provider."""
@@ -104,7 +119,7 @@ class EventLogProvider(object):
 
 
 class MessageFile(object):
-  """Class that defines a Windows Event Log message file.
+  """Windows Event Log message file.
 
   Attributes:
     name (str): name.
@@ -191,6 +206,32 @@ class MessageFile(object):
       yield string_table
 
 
+class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
+  """Windows Event Log message file database descriptor.
+
+  Attributes:
+      database_filename (str): database filename.
+      message_filename (str): message filename.
+    """
+
+  CONTAINER_TYPE = 'message_file_database_descriptor'
+
+  SCHEMA = {
+      'database_filename': 'str',
+      'message_filename': 'str'}
+
+  def __init__(self, database_filename=None, message_filename=None):
+    """Initializes a Windows Event Log message file database descriptor.
+
+    Args:
+      database_filename (Optional[str]): database filename.
+      message_filename (Optional[str]): message filename.
+    """
+    super(MessageFileDatabaseDescriptor, self).__init__()
+    self.database_filename = database_filename
+    self.message_filename = message_filename
+
+
 class MessageTable(object):
   """Class that contains the messages per language.
 
@@ -231,3 +272,7 @@ class StringTable(object):
     self.file_versions = []
     self.lcid = lcid
     self.strings = {}
+
+
+containers_manager.AttributeContainersManager.RegisterAttributeContainers([
+    EventLogProvider, MessageFileDatabaseDescriptor])

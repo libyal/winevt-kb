@@ -6,7 +6,7 @@ import unittest
 
 from winevtrc import resource_file
 
-from tests import test_lib as shared_test_lib
+from tests import test_lib
 
 
 class TestWrcResource(object):
@@ -129,7 +129,7 @@ class TestWrcStream(object):
     return self.resources.get(name, None)
 
 
-class MessageResourceFileTest(shared_test_lib.BaseTestCase):
+class MessageResourceFileTest(test_lib.BaseTestCase):
   """Tests for the Windows Message Resource file object."""
 
   # pylint: disable=protected-access
