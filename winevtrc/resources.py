@@ -214,7 +214,7 @@ class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
       message_filename (str): message filename.
     """
 
-  CONTAINER_TYPE = 'message_file_database_descriptor'
+  CONTAINER_TYPE = 'message_file_database'
 
   SCHEMA = {
       'database_filename': 'str',
@@ -230,6 +230,37 @@ class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
     super(MessageFileDatabaseDescriptor, self).__init__()
     self.database_filename = database_filename
     self.message_filename = message_filename
+
+
+class MessageFileDescriptor(containers_interface.AttributeContainer):
+  """Windows Event Log message file descriptor.
+
+  Attributes:
+      file_version (str): file version.
+      message_filename (str): message filename.
+      product_version (str): product version.
+    """
+
+  CONTAINER_TYPE = 'message_file'
+
+  SCHEMA = {
+      'file_version': 'str',
+      'message_filename': 'str',
+      'product_version': 'str'}
+
+  def __init__(
+      self, file_version=None, message_filename=None, product_version=None):
+    """Initializes a Windows Event Log message file descriptor.
+
+    Args:
+      file_version (Optional[str]): file version.
+      message_filename (Optional[str]): message filename.
+      product_version (Optional[str]): product version.
+    """
+    super(MessageFileDescriptor, self).__init__()
+    self.file_version = file_version
+    self.message_filename = message_filename
+    self.product_version = product_version
 
 
 class MessageTable(object):
@@ -251,6 +282,100 @@ class MessageTable(object):
     self.file_versions = []
     self.lcid = lcid
     self.message_strings = {}
+
+
+class MessageStringDescriptor(containers_interface.AttributeContainer):
+  """Windows Event Log message string descriptor.
+
+  Attributes:
+      identifier (int): message identifier.
+      text (str): message text.
+    """
+
+  CONTAINER_TYPE = 'message_string'
+
+  SCHEMA = {
+      '_message_table_identifier': 'AttributeContainerIdentifier',
+      'identifier': 'int',
+      'text': 'str'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_message_table_identifier']
+
+  def __init__(self, identifier=None, text=None):
+    """Initializes a Windows Event Log message string descriptor.
+
+    Args:
+      identifier (Optional[int]): message identifier.
+      text (Optional[int]): message text.
+    """
+    super(MessageStringDescriptor, self).__init__()
+    self._message_table_identifier = None
+    self.identifier = identifier
+    self.text = text
+
+  def GetMessageTableIdentifier(self):
+    """Retrieves the identifier of the associated message table.
+
+    Returns:
+      AttributeContainerIdentifier: message table identifier or None when not
+          set.
+    """
+    return self._message_table_identifier
+
+  def SetMessageTableIdentifier(self, message_table_identifier):
+    """Sets the identifier of the associated message table.
+
+    Args:
+      message_table_identifier (AttributeContainerIdentifier): message table
+          identifier.
+    """
+    self._message_table_identifier = message_table_identifier
+
+
+class MessageTableDescriptor(containers_interface.AttributeContainer):
+  """Windows Event Log message table descriptor.
+
+  Attributes:
+      language_identifier (int): language identifier (LCID).
+    """
+
+  CONTAINER_TYPE = 'message_table'
+
+  SCHEMA = {
+      '_message_file_identifier': 'AttributeContainerIdentifier',
+      'language_identifier': 'int'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_message_file_identifier']
+
+  def __init__(self, language_identifier=None):
+    """Initializes a Windows Event Log message table descriptor.
+
+    Args:
+      language_identifier (Optional[int]): language identifier (LCID).
+    """
+    super(MessageTableDescriptor, self).__init__()
+    self._message_file_identifier = None
+    self.language_identifier = language_identifier
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when not
+          set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
 
 
 class StringTable(object):
@@ -275,4 +400,5 @@ class StringTable(object):
 
 
 containers_manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventLogProvider, MessageFileDatabaseDescriptor])
+    EventLogProvider, MessageFileDatabaseDescriptor, MessageFileDescriptor,
+    MessageStringDescriptor, MessageTableDescriptor])

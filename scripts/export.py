@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Script to export strings extracted from message files."""
+"""Script to export strings extracted from Windows EventLog message files."""
 
 import argparse
 import difflib
@@ -18,7 +18,7 @@ from winevtrc import storage  # pylint: disable=unused-import
 
 
 class Exporter(object):
-  """Class that exports the strings extracted from message files."""
+  """Exports the strings extracted from Windows EventLog message files."""
 
   EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
 
@@ -86,8 +86,8 @@ class Exporter(object):
       message_file (MessageFile): message file.
       message_file_database_path (str): path of the message file database.
     """
-    database_reader = database.MessageFileSQLite3DatabaseReader()
-    database_reader.Open(message_file_database_path)
+    database_reader = sqlite_store.SQLiteAttributeContainerStore()
+    database_reader.Open(path=message_file_database_path, read_only=True)
 
     self._ExportMessageStrings(message_file, database_reader)
     # TODO: implement has table check.
@@ -141,41 +141,72 @@ class Exporter(object):
 
     Args:
       message_file (MessageFile): message file.
-      database_reader (MessageFileSQLite3DatabaseReader): message file
+      database_reader (SQLiteAttributeContainerStore): message file
           database reader.
     """
-    for lcid, file_version in database_reader.GetMessageTables():
-      message_file.AppendMessageTable(lcid, file_version)
+    for extracted_message_table in database_reader.GetAttributeContainers(
+        resources.MessageTableDescriptor.CONTAINER_TYPE):
+      extracted_message_file_identifier = (
+          extracted_message_table.GetMessageFileIdentifier())
+      extracted_message_file = (
+          database_reader.GetAttributeContainerByIdentifier(
+              resources.MessageFileDescriptor.CONTAINER_TYPE,
+              extracted_message_file_identifier))
 
-    for message_table in message_file.GetMessageTables():
-      for file_version in message_table.file_versions:
-        for message_identifier, message_string in database_reader.GetMessages(
-            message_table.lcid, file_version):
-          stored_message_string = message_table.message_strings.get(
-              message_identifier, None)
+      message_file.AppendMessageTable(
+          f'0x{extracted_message_table.language_identifier:08x}',
+          extracted_message_file.file_version)
 
-          if not stored_message_string:
-            message_table.message_strings[message_identifier] = message_string
+    for extracted_message_string in database_reader.GetAttributeContainers(
+        resources.MessageStringDescriptor.CONTAINER_TYPE):
+      extracted_message_table_identifier = (
+          extracted_message_string.GetMessageTableIdentifier())
+      extracted_message_table = (
+          database_reader.GetAttributeContainerByIdentifier(
+              resources.MessageTableDescriptor.CONTAINER_TYPE,
+              extracted_message_table_identifier))
 
-          elif message_string != stored_message_string:
-            differ = difflib.Differ()
-            diff_list = list(differ.compare(
-                [stored_message_string], [message_string]))
-            diff_list = '\n'.join(diff_list)
-            logging.warning((
-                f'Found duplicate alternating message string: '
-                f'{message_identifier:s} in LCID: {message_table.lcid:s} and '
-                f'version: {file_version:s}.\n{diff_list:s}\n'))
+      language_identifier = (
+          f'0x{extracted_message_table.language_identifier:08x}')
 
-            # TODO: is there a better way to determine which string to use.
-            # E.g. latest build version?
+      message_table = message_file.GetMessageTable(language_identifier)
+      message_identifier = extracted_message_string.identifier
+      extracted_message_text = extracted_message_string.text
+
+      message_string = message_table.message_strings.get(
+          message_identifier, None)
+      if not message_string:
+        message_table.message_strings[message_identifier] = (
+            extracted_message_text)
+
+      elif message_string != extracted_message_text:
+        extracted_message_file_identifier = (
+            extracted_message_table.GetMessageFileIdentifier())
+        extracted_message_file = (
+            database_reader.GetAttributeContainerByIdentifier(
+                resources.MessageFileDescriptor.CONTAINER_TYPE,
+                extracted_message_file_identifier))
+
+        file_version = extracted_message_file.file_version
+
+        differ = difflib.Differ()
+        diff_list = list(differ.compare(
+            [message_string], [extracted_message_text]))
+        diff_list = '\n'.join(diff_list)
+        logging.warning((
+            f'Found duplicate alternating message string: '
+            f'{message_identifier:s} in LCID: {language_identifier:s} and '
+            f'version: {file_version:s}.\n{diff_list:s}\n'))
+
+        # TODO: is there a better way to determine which string to use.
+        # E.g. latest build version?
 
   def _ExportStrings(self, message_file, database_reader):
     """Exports the strings in a message file database.
 
     Args:
       message_file (MessageFile): message file.
-      database_reader (MessageFileSQLite3DatabaseReader): message file
+      database_reader (SQLiteAttributeContainerStore): message file
           database reader.
     """
     for lcid, file_version in database_reader.GetStringTables():

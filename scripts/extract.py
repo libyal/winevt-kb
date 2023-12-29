@@ -14,7 +14,8 @@ from dfvfs.helpers import command_line as dfvfs_command_line
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.lib import errors as dfvfs_errors
 
-from winevtrc import database
+import pywrc
+
 from winevtrc import definitions
 from winevtrc import extractor
 from winevtrc import resources
@@ -89,16 +90,87 @@ class SQLite3OutputWriter(object):
     database_filename = f'{database_filename:s}.db'
     database_filename = re.sub(r'\.mui', '', database_filename)
 
-    database_writer = database.MessageResourceFileSQLite3DatabaseWriter(
-        message_resource_file)
-    database_writer.Open(
-        os.path.join(self._databases_path, database_filename))
-    database_writer.WriteResources()
-    database_writer.Close()
+    self._WriteResources(message_resource_file, database_filename)
 
     descriptor = resources.MessageFileDatabaseDescriptor(
         database_filename=database_filename, message_filename=message_filename)
     self._database_writer.AddAttributeContainer(descriptor)
+
+  def _WriteResources(self, message_resource_file, database_filename):
+    """Writes the resources.
+
+    Args:
+      message_resource_file (MessageResourceFile): message resource file.
+      database_filename (str): name of the message resource file database.
+    """
+    messeage_resource_file_database_path = os.path.join(
+        self._databases_path, database_filename)
+
+    database_writer = sqlite_store.SQLiteAttributeContainerStore()
+    database_writer.Open(
+        path=messeage_resource_file_database_path, read_only=False)
+
+    descriptor = resources.MessageFileDescriptor(
+        file_version=message_resource_file.file_version,
+        message_filename=message_resource_file.windows_path,
+        product_version=message_resource_file.product_version)
+    database_writer.AddAttributeContainer(descriptor)
+
+    message_file_identifier = descriptor.GetIdentifier()
+
+    self._WriteMessageTables(
+        message_resource_file, message_file_identifier, database_writer)
+
+    # TODO: implement WriteStringTables()
+
+    database_writer.Close()
+
+  def _WriteMessageTables(
+        self, message_resource_file, message_file_identifier, database_writer):
+    """Writes the message tables.
+
+    Args:
+      message_resource_file (MessageResourceFile): message resource file.
+      message_file_identifier (acstore.AttributeContainerIdentifier): message
+          file attribute container identifier.
+      database_writer (acstore.SQLiteAttributeContainerStore): message resource
+          file attribute container store.
+    """
+    wrc_resource = message_resource_file.GetMessageTableResource()
+    if not wrc_resource:
+      return
+
+    if wrc_resource.number_of_items != 1:
+      logging.warning((
+          f'More than 1 message table resource item in message file: '
+          f'{message_resource_file.windows_path:s}.'))
+
+    wrc_resource_item = wrc_resource.items[0]
+    for wrc_resource_sub_item in wrc_resource_item.sub_items:
+      language_identifier = wrc_resource_sub_item.identifier
+
+      descriptor = resources.MessageTableDescriptor(
+          language_identifier=language_identifier)
+      descriptor.SetMessageFileIdentifier(message_file_identifier)
+      database_writer.AddAttributeContainer(descriptor)
+
+      message_table_identifier = descriptor.GetIdentifier()
+
+      resource_data = wrc_resource_sub_item.read()
+
+      message_table_resource = pywrc.message_table_resource()
+      message_table_resource.copy_from_byte_stream(resource_data)
+
+      number_of_messages = message_table_resource.get_number_of_messages()
+      for message_index in range(number_of_messages):
+        message_identifier = message_table_resource.get_message_identifier(
+            message_index)
+        message_string = message_table_resource.get_string(message_index)
+
+        descriptor = resources.MessageStringDescriptor(
+            identifier=message_identifier, text=message_string)
+        descriptor.SetMessageTableIdentifier(message_table_identifier)
+        database_writer.AddAttributeContainer(descriptor)
 
 
 class StdoutOutputWriter(object):
