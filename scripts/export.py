@@ -9,9 +9,12 @@ import os
 import re
 import sys
 
+from acstore import sqlite_store
+
 from winevtrc import database
 from winevtrc import definitions
 from winevtrc import resources
+from winevtrc import storage  # pylint: disable=unused-import
 
 
 class Exporter(object):
@@ -28,11 +31,12 @@ class Exporter(object):
     """Exports the event log provides from an event provider database.
 
     Args:
-      database_reader (EventProvidersSQLite3DatabaseReader): event provider
-          database reader.
+      database_reader (SQLiteAttributeContainerStore): event provider database
+          reader.
       output_writer (OutputWriter): output writer.
     """
-    for event_log_provider in database_reader.GetEventLogProviders():
+    for event_log_provider in database_reader.GetAttributeContainers(
+        resources.EventLogProvider.CONTAINER_TYPE):
       log_source = event_log_provider.log_source
       display_name = event_log_provider.name or event_log_provider.log_source
       existing_event_log_provider = self._event_log_providers.get(
@@ -91,27 +95,30 @@ class Exporter(object):
 
     database_reader.Close()
 
-  def _ExportMessageFiles(
-      self, source_path, database_reader, output_writer):
+  def _ExportMessageFiles(self, source_path, database_reader, output_writer):
     """Exports the message files from an event provider database.
 
     Args:
       source_path (str): source path.
-      database_reader (EventProvidersSQLite3DatabaseReader): event provider
-          database reader.
+      database_reader (SQLiteAttributeContainerStore): event provider database
+          reader.
       output_writer (OutputWriter): output writer.
     """
-    for windows_path, database_filename in database_reader.GetMessageFiles():
-      message_file_database_path = os.path.join(source_path, database_filename)
+    for descriptor in database_reader.GetAttributeContainers(
+        resources.MessageFileDatabaseDescriptor.CONTAINER_TYPE):
+      message_file_database_path = os.path.join(
+          source_path, descriptor.database_filename)
       if not os.path.exists(message_file_database_path):
         logging.warning(
-            f'Missing message file database: {database_filename:s}.')
+            f'Missing message file database: {descriptor.database_filename:s}.')
         continue
 
-      logging.info(f'Processing: {database_filename:s}')
+      logging.info(f'Processing: {descriptor.database_filename:s}')
 
-      message_file = resources.MessageFile(database_filename[:-3])
-      message_file.windows_path = windows_path
+      # Strip ".db" from the database filename.
+      name = descriptor.database_filename[:-3]
+      message_file = resources.MessageFile(name)
+      message_file.windows_path = descriptor.message_filename
 
       self._ExportMessageFile(message_file, message_file_database_path)
 
@@ -125,8 +132,9 @@ class Exporter(object):
     """
     for event_log_provider in self._event_log_providers.values():
       for message_filename in event_log_provider.event_message_files:
+        normalized_path = self._GetNormalizedPath(message_filename)
         output_writer.WriteMessageFilesPerEventLogProvider(
-            event_log_provider, message_filename)
+            event_log_provider, normalized_path)
 
   def _ExportMessageStrings(self, message_file, database_reader):
     """Exports the message strings from a message file database.
@@ -192,6 +200,31 @@ class Exporter(object):
             # TODO: is there a better way to determine which string to use.
             # E.g. latest build version?
 
+  def _GetNormalizedPath(self, path):
+    """Retrieves a normalized variant of a path.
+
+    Args:
+      path (str): path of a message file.
+
+    Returns:
+      str: normalized path of a message file.
+    """
+    path_segments = path.split('\\')
+
+    if path_segments:
+      # Check if the first path segment is a drive letter or "%SystemDrive%".
+      first_path_segment = path_segments[0].lower()
+      if ((len(first_path_segment) == 2 and first_path_segment[1:] == ':') or
+          first_path_segment == '%systemdrive%'):
+        path_segments[0] = ''
+
+      if (len(path_segments) >= 2 and path_segments[0] == '' and
+          path_segments[1].lower() == 'windows'):
+        path_segments.pop(0)
+        path_segments[0] = '%SystemRoot%'
+
+    return '\\'.join(path_segments) or '\\'
+
   def Export(self, source_path, output_writer):
     """Exports the strings extracted from message files.
 
@@ -199,9 +232,11 @@ class Exporter(object):
       source_path (str): source path.
       output_writer (OutputWriter): output writer.
     """
-    database_reader = database.EventProvidersSQLite3DatabaseReader()
-    database_reader.Open(os.path.join(
-        source_path, self.EVENT_PROVIDERS_DATABASE_FILENAME))
+    event_providers_database_path = os.path.join(
+        source_path, self.EVENT_PROVIDERS_DATABASE_FILENAME)
+
+    database_reader = sqlite_store.SQLiteAttributeContainerStore()
+    database_reader.Open(path=event_providers_database_path, read_only=True)
 
     self._ExportEventLogProviders(database_reader, output_writer)
 

@@ -10,7 +10,6 @@ import pywrc
 from winevtrc import database
 from winevtrc import errors
 from winevtrc import resource_file
-from winevtrc import resources
 
 from tests import test_lib as shared_test_lib
 
@@ -183,114 +182,6 @@ class SQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_writer.Open(test_file_path)
-
-      database_writer.Close()
-
-
-class EventProvidersSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
-  """Tests for the event providers SQLite database reader."""
-
-  # pylint: disable=protected-access
-
-  # TODO: add test for _GetMessageFilenames
-
-  def testGetEventLogProviders(self):
-    """Tests the GetEventLogProviders function."""
-    test_file_path = self._GetTestFilePath(['winevt-kb.db'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    database_reader = database.EventProvidersSQLite3DatabaseReader()
-    database_reader.Open(test_file_path)
-
-    generator = database_reader.GetEventLogProviders()
-    event_log_providers = list(generator)
-
-    self.assertEqual(len(event_log_providers), 1122)
-
-    database_reader.Close()
-
-  def testGetMessageFiles(self):
-    """Tests the GetMessageFiles function."""
-    test_file_path = self._GetTestFilePath(['winevt-kb.db'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    database_reader = database.EventProvidersSQLite3DatabaseReader()
-    database_reader.Open(test_file_path)
-
-    generator = database_reader.GetMessageFiles()
-    message_files = list(generator)
-
-    self.assertEqual(len(message_files), 788)
-
-    database_reader.Close()
-
-
-class EventProvidersSQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
-  """Tests for the event providers SQLite database writer."""
-
-  # pylint: disable=protected-access
-
-  # TODO: add test for _GetEventLogProviderKey
-  # TODO: add test for _GetMessageFileKey
-
-  def testWriteMessageFilesPerEventLogProvider(self):
-    """Tests the WriteMessageFilesPerEventLogProvider function."""
-    event_log_provider = resources.EventLogProvider()
-    event_log_provider.identifier = '{f4aed7c7-a898-4627-b053-44a7caa12fcd}'
-    event_log_provider.log_sources.append('Microsoft-Windows-RPC-Events')
-    event_log_provider.log_types = ['Application']
-
-    database_writer = database.EventProvidersSQLite3DatabaseWriter()
-
-    with shared_test_lib.TempDirectory() as temporary_directory:
-      test_file_path = os.path.join(temporary_directory, 'winevt-kb.db')
-      database_writer.Open(test_file_path)
-
-      database_writer.WriteEventLogProvider(event_log_provider)
-
-      database_writer.WriteMessageFile(
-          '%SystemRoot%\\system32\\rpcrt4.dll', 'rpcrt4.dll.db')
-
-      database_writer.WriteMessageFilesPerEventLogProvider(
-          event_log_provider, '%SystemRoot%\\system32\\rpcrt4.dll', 'event')
-
-      database_writer.WriteMessageFilesPerEventLogProvider(
-          event_log_provider, '%SystemRoot%\\system32\\rpcrt4.dll', 'event')
-
-      database_writer.Close()
-
-  def testWriteEventLogProvider(self):
-    """Tests the WriteEventLogProvider function."""
-    event_log_provider = resources.EventLogProvider()
-    event_log_provider.identifier = '{f4aed7c7-a898-4627-b053-44a7caa12fcd}'
-    event_log_provider.log_sources.append('Microsoft-Windows-RPC-Events')
-    event_log_provider.log_types = ['Application']
-
-    database_writer = database.EventProvidersSQLite3DatabaseWriter()
-
-    with shared_test_lib.TempDirectory() as temporary_directory:
-      test_file_path = os.path.join(temporary_directory, 'winevt-kb.db')
-      database_writer.Open(test_file_path)
-
-      database_writer.WriteEventLogProvider(event_log_provider)
-
-      database_writer.WriteEventLogProvider(event_log_provider)
-
-      database_writer.Close()
-
-  def testWriteMessageFile(self):
-    """Tests the WriteMessageFile function."""
-    database_writer = database.EventProvidersSQLite3DatabaseWriter()
-
-    with shared_test_lib.TempDirectory() as temporary_directory:
-      test_file_path = os.path.join(temporary_directory, 'winevt-kb.db')
-      database_writer.Open(test_file_path)
-
-      database_writer.WriteMessageFile(
-          '%SystemRoot%\\system32\\rpcrt4.dll', 'rpcrt4.dll.db')
-
-      database_writer.WriteMessageFile(
-          '%SystemRoot%\\system32\\rpcrt4.dll', 'rpcrt4.dll.db')
 
       database_writer.Close()
 
