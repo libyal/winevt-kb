@@ -247,56 +247,13 @@ class SQLite3DatabaseFile(object):
     return True
 
 
-class SQLite3DatabaseReader(object):
-  """SQLite database reader."""
+class ResourcesSQLite3DatabaseReader(object):
+  """Event Log resources SQLite database reader."""
 
   def __init__(self):
     """Initializes the database reader."""
-    super(SQLite3DatabaseReader, self).__init__()
+    super(ResourcesSQLite3DatabaseReader, self).__init__()
     self._database_file = SQLite3DatabaseFile()
-
-  def Close(self):
-    """Closes the database reader."""
-    self._database_file.Close()
-
-  def Open(self, filename):
-    """Opens the database reader.
-
-    Args:
-      filename (str): filename of the database.
-
-    Returns:
-      bool: True if successful or False if not.
-    """
-    return self._database_file.Open(filename, read_only=True)
-
-
-class SQLite3DatabaseWriter(object):
-  """SQLite database writer."""
-
-  def __init__(self):
-    """Initializes the database writer."""
-    super(SQLite3DatabaseWriter, self).__init__()
-    self._database_file = SQLite3DatabaseFile()
-
-  def Close(self):
-    """Closes the database writer."""
-    self._database_file.Close()
-
-  def Open(self, filename):
-    """Opens the database writer.
-
-    Args:
-      filename (str): filename of the database.
-
-    Returns:
-      bool: True if successful or False if not.
-    """
-    return self._database_file.Open(filename)
-
-
-class ResourcesSQLite3DatabaseReader(SQLite3DatabaseReader):
-  """Event Log resources SQLite database reader."""
 
   def _GetEventLogProviderKey(self, log_source):
     """Retrieves the Event Log provider key.
@@ -436,6 +393,10 @@ class ResourcesSQLite3DatabaseReader(SQLite3DatabaseReader):
           [table_name], column_names, condition):
         yield values['message_identifier'], values['message_string']
 
+  def Close(self):
+    """Closes the database reader."""
+    self._database_file.Close()
+
   def GetEventLogProviders(self):
     """Retrieves the Event Log providers.
 
@@ -553,8 +514,19 @@ class ResourcesSQLite3DatabaseReader(SQLite3DatabaseReader):
 
     raise IOError('More than one value found in database.')
 
+  def Open(self, filename):
+    """Opens the database reader.
 
-class ResourcesSQLite3DatabaseWriter(SQLite3DatabaseWriter):
+    Args:
+      filename (str): filename of the database.
+
+    Returns:
+      bool: True if successful or False if not.
+    """
+    return self._database_file.Open(filename, read_only=True)
+
+
+class ResourcesSQLite3DatabaseWriter(object):
   """Event Log resources SQLite database writer."""
 
   # Message string specifiers that are considered white space.
@@ -574,6 +546,7 @@ class ResourcesSQLite3DatabaseWriter(SQLite3DatabaseWriter):
           Resource (wrc) format.
     """
     super(ResourcesSQLite3DatabaseWriter, self).__init__()
+    self._database_file = SQLite3DatabaseFile()
     self._string_format = string_format
 
   def _GetEventLogProviderKey(self, event_log_provider):
@@ -837,6 +810,21 @@ class ResourcesSQLite3DatabaseWriter(SQLite3DatabaseWriter):
     if insert_values:
       values = [language_identifier, message_file_key]
       self._database_file.InsertValues(table_name, column_names, values)
+
+  def Close(self):
+    """Closes the database writer."""
+    self._database_file.Close()
+
+  def Open(self, filename):
+    """Opens the database writer.
+
+    Args:
+      filename (str): filename of the database.
+
+    Returns:
+      bool: True if successful or False if not.
+    """
+    return self._database_file.Open(filename)
 
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.

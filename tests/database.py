@@ -155,34 +155,6 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
       database_file.Close()
 
 
-class SQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
-  """Tests for the SQLite database reader."""
-
-  def testOpenClose(self):
-    """Tests the Open and Close functions."""
-    test_file_path = self._GetTestFilePath(['winevt-rc.db'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    database_reader = database.SQLite3DatabaseReader()
-    database_reader.Open(test_file_path)
-
-    database_reader.Close()
-
-
-class SQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
-  """Tests for the SQLite database writer."""
-
-  def testOpenClose(self):
-    """Tests the Open and Close functions."""
-    database_writer = database.SQLite3DatabaseWriter()
-
-    with shared_test_lib.TempDirectory() as temporary_directory:
-      test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
-      database_writer.Open(test_file_path)
-
-      database_writer.Close()
-
-
 class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the resources SQLite database reader."""
 
