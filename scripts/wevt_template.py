@@ -40,6 +40,67 @@ def Main():
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
 
+  input_data_types = {
+      0x01: 'win:UnicodeString',
+      0x02: 'win:AnsiString',
+      0x03: 'win:Int8',
+      0x04: 'win:UInt8',
+      0x05: 'win:Int16',
+      0x06: 'win:UInt16',
+      0x07: 'win:Int32',
+      0x08: 'win:UInt32',
+      0x09: 'win:Int64',
+      0x0a: 'win:UInt64',
+      0x0b: 'win:Float',
+      0x0c: 'win:Double',
+      0x0d: 'win:Boolean',
+      0x0e: 'win:Binary',
+      0x0f: 'win:GUID',
+      0x10: 'win:Pointer',
+      0x11: 'win:FILETIME',
+      0x12: 'win:SYSTEMTIME',
+      0x13: 'win:SID',
+      0x14: 'win:HexInt32',
+      0x15: 'win:HexInt64'}
+
+  output_data_types = {
+      0x01: 'xs:string',
+      0x02: 'xs:dateTime',
+      0x03: 'xs:byte',
+      0x04: 'xs:unsignedByte',
+      0x05: 'xs:short',
+      0x06: 'xs:unsignedShort',
+      0x07: 'xs:int',
+      0x08: 'xs:unsignedInt',
+      0x09: 'xs:long',
+      0x0a: 'xs:unsignedLong',
+      0x0b: 'xs:float',
+      0x0c: 'xs:double',
+      0x0d: 'xs:boolean',
+      0x0e: 'xs:GUID',
+      0x0f: 'xs:hexBinary',
+      0x10: 'win:HexInt8',
+      0x11: 'win:HexInt16',
+      0x12: 'win:HexInt32',
+      0x13: 'win:HexInt64',
+      0x14: 'win:PID',
+      0x15: 'win:TID',
+      0x16: 'win:Port',
+      0x17: 'win:IPv4',
+      0x18: 'win:IPv6',
+      0x19: 'win:SocketAddress',
+      0x1a: 'win:CIMDateTime',
+      0x1b: 'win:ETWTIME',
+      0x1c: 'win:Xml',
+      0x1d: 'win:ErrorCode',
+      0x1e: 'win:Win32Error',
+      0x1f: 'win:NTSTATUS',
+      0x20: 'win:HResult',
+      0x21: 'win:DateTimeCultureInsensitive',
+      0x22: 'win:Json',
+      0x23: 'win:Utf8',
+      0x24: 'win:Pkcs7WithTypeInfo'}
+
   exe_file = pyexe.file()
   exe_file.open(options.source)
 
@@ -117,13 +178,11 @@ def Main():
                 print('                <channels>')
 
                 for wevt_channel in wevt_provider.channels:
-                  channel_name = wevt_channel.name
-                  channel_identifier = wevt_channel.identifier
-
                   print('\n'.join([
                       '                    <channel',
-                      f'                        name="{channel_name:s}"',
-                      f'                        chid="{channel_identifier:d}">',
+                      f'                        name="{wevt_channel.name:s}"',
+                      (f'                        chid='
+                       f'"{wevt_channel.identifier:d}">'),
                       '                    </channel>']))
 
                   # TODO: implement support for other known values if possible
@@ -146,14 +205,27 @@ def Main():
                   print((f'                    <template tid='
                          f'"{{{template_identifier:s}}}">'))
 
-                  # TODO: implement support for instance values
+                  # TODO: add support for template name, get from BinXML
+                  # TODO: add support for UserData
 
-                  print('\n'.join([
-                      '                        <data',
-                      '                            name="name"',
-                      '                            inType="win:UnicodeString"',
-                      '                            outType="xs:string">',
-                      '                        </data>']))
+                  for wevt_template_item in wevt_template.items:
+                    input_type = input_data_types.get(
+                        wevt_template_item.input_data_type, None)
+                    output_type = output_data_types.get(
+                        wevt_template_item.output_data_type, None)
+
+                    # TODO: add support for length
+                    # TODO: add support for count
+
+                    print('\n'.join([
+                        '                        <data',
+                        (f'                            name='
+                         f'"{wevt_template_item.name:s}"'),
+                        f'                            inType="{input_type:s}"',
+                        (f'                            outType='
+                         f'"{output_type:s}">'),
+                        '                        </data>']))
+
                   print('                    <template/>')
 
                 print('                </templates>')
