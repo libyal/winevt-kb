@@ -214,14 +214,22 @@ def Main():
                     output_type = output_data_types.get(
                         wevt_template_item.output_data_type, None)
 
-                    # TODO: add support for length
-                    # TODO: add support for count
-
                     print('\n'.join([
                         '                        <data',
                         (f'                            name='
                          f'"{wevt_template_item.name:s}"'),
-                        f'                            inType="{input_type:s}"',
+                        (f'                            inType='
+                         f'"{input_type:s}"')]))
+
+                    if wevt_template_item.number_of_values > 0:
+                      print((f'                            count='
+                             f'"{wevt_template_item.number_of_values:d}"'))
+
+                    if wevt_template_item.value_data_size > 0:
+                      print((f'                            length='
+                             f'"{wevt_template_item.value_data_size:d}"'))
+
+                    print('\n'.join([
                         (f'                            outType='
                          f'"{output_type:s}">'),
                         '                        </data>']))
