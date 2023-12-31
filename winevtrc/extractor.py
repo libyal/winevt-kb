@@ -86,12 +86,12 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     path, _, name = message_file_path.rpartition('\\')
 
-    mui_message_file_path = f'{path:s}\\{mui_language:s}\\{name:s}.mui'
+    mui_message_file_path = '\\'.join([path, mui_language, f'{name:s}.mui'])
     mui_message_resource_file = self._OpenMessageResourceFile(
         mui_message_file_path)
 
     if not mui_message_resource_file:
-      mui_message_file_path = f'{path:s}\\{name:s}.mui'
+      mui_message_file_path = '\\'.join([path, f'{name:s}.mui'])
       mui_message_resource_file = self._OpenMessageResourceFile(
           mui_message_file_path)
 
@@ -333,13 +333,18 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     path_segments_lower = [
         path_segment.lower() for path_segment in path_segments]
 
-    if (not path_segments_lower or
-        path_segments_lower[0] == '$(runtime.system32)'):
-      # If the path is just a filename assume the file is stored in:
+    if not path_segments_lower:
+      # If the path is a filename assume the file is stored in:
       # "%SystemRoot%\System32".
       path_segments = ['%SystemRoot%', 'System32']
 
-    elif path_segments_lower[0] in ('%systemroot%', '%windir%'):
+    elif path_segments_lower[0] in ('system32', '$(runtime.system32)'):
+        # Note that the path can be relative so if it starts with "System32"
+        # asume this represents "%SystemRoot%\System32".
+      path_segments = ['%SystemRoot%', 'System32'] + path_segments[1:]
+
+    elif path_segments_lower[0] in (
+        '%systemroot%', '%windir%', '$(runtime.windows)'):
       path_segments = ['%SystemRoot%'] + path_segments[1:]
 
     # Check if path starts with "\SystemRoot\", "\Windows\" or "\WinNT\" for
