@@ -124,6 +124,10 @@ class Exporter(object):
 
       output_writer.WriteMessageFile(message_file)
 
+      for message_table in message_file.GetMessageTables():
+          # TODO: track the languages.
+        output_writer.WriteMessageTable(message_file, message_table)
+
   def _ExportMessageFilesPerEventLogProvider(self, output_writer):
     """Exports the message files used by an Event Log provider.
 
@@ -334,7 +338,7 @@ class SQLite3OutputWriter(object):
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
   def WriteMessageFile(self, message_file):
-    """Writes the Windows Message Resource file.
+    """Writes a message file.
 
     Args:
       message_file (MessageFile): message file.
@@ -352,30 +356,18 @@ class SQLite3OutputWriter(object):
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_file, definitions.MESSAGE_FILE_TYPE_EVENT)
 
+  def WriteMessageTable(self, message_file, message_table):
+    """Writes a message table.
+
+    Args:
+      message_file (MessageFile): message file.
+      message_table (MessageTable): message table.
+    """
+    self._database_writer.WriteMessageTable(message_file, message_table)
+
 
 class StdoutOutputWriter(object):
   """Class that defines a stdout output writer."""
-
-  def _WriteMessageTable(self, message_table):
-    """Writes the message table.
-
-    Args:
-      message_table (MessageTable): message table.
-    """
-    language_identifier = int(message_table.lcid, 16)
-    language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
-    print(f'{language:s} (LCID: {message_table.lcid:s})')
-    print('')
-    print('Message identifier\tMessage string')
-
-    for identifier, string in message_table.message_strings.items():
-      string = re.sub(r'\n', '\\\\n', string)
-      string = re.sub(r'\r', '\\\\r', string)
-      string = re.sub(r'\t', '\\\\t', string)
-
-      print(f'{identifier:s}\t{string:s}')
-
-    print('')
 
   def Open(self):
     """Opens the file.
@@ -415,16 +407,13 @@ class StdoutOutputWriter(object):
     # TODO: print more details.
 
   def WriteMessageFile(self, message_file):
-    """Writes the Windows Message Resource file.
+    """Writes a message file.
 
     Args:
       message_file (MessageFile): message file.
     """
     print(message_file.name)
     print('Path:\t{message_file.windows_path:s}')
-
-    for message_table in message_file.GetMessageTables():
-      self._WriteMessageTable(message_table)
 
   # pylint: disable=unused-argument
   def WriteMessageFilesPerEventLogProvider(
@@ -437,15 +426,35 @@ class StdoutOutputWriter(object):
     """
     return
 
+  def WriteMessageTable(self, message_file, message_table):
+    """Writes a message table.
 
-class AsciidocFileWriter(object):
-  """Class to represent an asciidoc file writer."""
-  # TODO: apparently the filename should only contain 1 dot and
-  # end with .asciidoc
+    Args:
+      message_file (MessageFile): message file.
+      message_table (MessageTable): message table.
+    """
+    language_identifier = int(message_table.lcid, 16)
+    language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
+    print(f'{language:s} (LCID: {message_table.lcid:s})')
+    print('')
+    print('Message identifier\tMessage string')
+
+    for identifier, string in message_table.message_strings.items():
+      string = re.sub(r'\n', '\\\\n', string)
+      string = re.sub(r'\r', '\\\\r', string)
+      string = re.sub(r'\t', '\\\\t', string)
+
+      print(f'0x{identifier:08x}\t{string:s}')
+
+    print('')
+
+
+class MarkdownFileWriter(object):
+  """Class to represent a Markdown file writer."""
 
   def __init__(self):
-    """Initializes the asciidoc file writer object."""
-    super(AsciidocFileWriter, self).__init__()
+    """Initializes the Markdown file writer object."""
+    super(MarkdownFileWriter, self).__init__()
     self._file = None
 
   def Open(self, filename):
@@ -475,46 +484,24 @@ class AsciidocFileWriter(object):
       self.WriteLine(line)
 
 
-class AsciidocOutputWriter(object):
-  """Class that defines an asciidoc output writer."""
+class MarkdownOutputWriter(object):
+  """Class that defines a Markdown output writer."""
 
   def __init__(self, path):
-    """Initializes the asciidoc output writer object.
+    """Initializes the Markdown output writer object.
 
     Args:
-      path (str): path to the directory containing the asciidoc files.
+      path (str): path to the directory containing the Markdown files.
     """
-    super(AsciidocOutputWriter, self).__init__()
+    super(MarkdownOutputWriter, self).__init__()
+    self._message_file_writer = None
     self._path = path
-
-  def _WriteMessageTable(self, message_table, file_writer):
-    """Writes the message table.
-
-    Args:
-      message_table (MessageTable): message table.
-      file_writer (AsciidocFileWriter): file writer.
-    """
-    file_writer.WriteLines([
-        f'=== {message_table.language:s} (LCID: {message_table.lcid:s})',
-        '',
-        '[cols="1,5",options="header"]',
-        '|===',
-        '| Message identifier | Message string'])
-
-    for identifier, string in message_table.message_strings.items():
-      string = re.sub(r'\n', '\\\\n', string)
-      string = re.sub(r'\r', '\\\\r', string)
-      string = re.sub(r'\t', '\\\\t', string)
-
-      file_writer.WriteLine(f'| {identifier:s} | {string:s}'.encode('utf8'))
-
-    file_writer.WriteLines([
-        '|===',
-        ''])
 
   def Close(self):
     """Closes the output writer object."""
-    return
+    if self._message_file_writer:
+      self._message_file_writer.Close()
+      self._message_file_writer = None
 
   def Open(self):
     """Opens the output writer object.
@@ -537,27 +524,24 @@ class AsciidocOutputWriter(object):
     return
 
   def WriteMessageFile(self, message_file):
-    """Writes the Windows Message Resource file.
+    """Writes a message file.
 
     Args:
       message_file (MessageFile): message file.
     """
-    file_writer = AsciidocFileWriter()
-    path = os.path.join(self._path, f'{message_file.name:s}.asciidoc')
+    if self._message_file_writer:
+      self._message_file_writer.Close()
+      self._message_file_writer = None
 
-    if file_writer.Open(path):
+    self._message_file_writer = MarkdownFileWriter()
+    path = os.path.join(self._path, f'{message_file.name:s}.md')
 
-      file_writer.WriteLines([
-          f'== {message_file.name:s}',
-          '|===',
-          '| Path: | {message_file.windows_path:s}',
-          '|===',
+    if self._message_file_writer.Open(path):
+      self._message_file_writer.WriteLines([
+          f'## {message_file.name:s}',
+          '',
+          'Path: {message_file.windows_path:s}',
           ''])
-
-      for message_table in message_file.GetMessageTables():
-        self._WriteMessageTable(message_table, file_writer)
-
-      file_writer.Close()
 
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_file):
@@ -568,6 +552,30 @@ class AsciidocOutputWriter(object):
       message_file (MessageFile): message file.
     """
     return
+
+  def WriteMessageTable(self, message_file, message_table):
+    """Writes a message table.
+
+    Args:
+      message_file (MessageFile): message file.
+      message_table (MessageTable): message table.
+    """
+    language_identifier = int(message_table.lcid, 16)
+    language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
+    self._message_file_writer.WriteLines([
+        f'### {language:s} (LCID: {message_table.lcid:s})',
+        '',
+        'Message identifier | Message string',
+        '--- | ---'])
+
+    for identifier, string in message_table.message_strings.items():
+      string = re.sub(r'\n', '\\\\n', string)
+      string = re.sub(r'\r', '\\\\r', string)
+      string = re.sub(r'\t', '\\\\t', string)
+
+      self._message_file_writer.WriteLine(f'0x{identifier:08x} | {string:s}')
+
+    self._message_file_writer.WriteLine('')
 
 
 def Main():
@@ -622,7 +630,7 @@ def Main():
     output_writer = SQLite3OutputWriter(
         options.database, string_format=options.string_format)
   elif options.wiki:
-    output_writer = AsciidocOutputWriter(options.wiki)
+    output_writer = MarkdownOutputWriter(options.wiki)
   else:
     output_writer = StdoutOutputWriter()
 

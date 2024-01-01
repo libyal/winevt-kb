@@ -112,6 +112,8 @@ def Main():
 
     wrc_resource = wrc_stream.get_resource_by_name('WEVT_TEMPLATE')
     if wrc_resource:
+      # Note that symbols do not appear to be stored in the binary format.
+
       print('\n'.join([
           '<?xml version="1.0" encoding="UTF-8"?>',
           '<instrumentationManifest',
@@ -145,7 +147,6 @@ def Main():
 
               # TODO: implement support for other known values if possible
               # name
-              # symbol
               # resourceFileName
               # messageFileName
 
@@ -159,18 +160,25 @@ def Main():
                       '                    <event',
                       (f'                        value='
                        f'"{wevt_event.identifier:d}"'),
-                      f'                        version="{event_version:d}"',
+                      f'                        version="{event_version:d}"']))
+
+                  # TODO: implement support for other known values if possible
+                  # channel
+                  # keywords
+
+                  if wevt_event.template_offset > 0:
+                    wevt_template = wevt_provider.get_template_by_offset(
+                        wevt_event.template_offset)
+                    if wevt_template:
+                      template_identifier = wevt_template.identifier.upper()
+                      print((f'                        template='
+                             f'"{{{template_identifier:s}}}"'))
+
+                  print('\n'.join([
                       (f'                        message='
                        f'"$(string.MessageTable.'
                        f'0x{wevt_event.message_identifier:08x})">'),
                       '                    </event>']))
-
-                # TODO: implement support for other known values if possible
-                # symbol
-                # channel
-                # template
-                # keywords
-                # message
 
                 print('                </events>')
 
@@ -186,7 +194,6 @@ def Main():
                       '                    </channel>']))
 
                   # TODO: implement support for other known values if possible
-                  # symbol
                   # type
                   # enabled
                   # message
@@ -229,10 +236,11 @@ def Main():
                       print((f'                            length='
                              f'"{wevt_template_item.value_data_size:d}"'))
 
-                    print('\n'.join([
-                        (f'                            outType='
-                         f'"{output_type:s}">'),
-                        '                        </data>']))
+                    if output_type:
+                      print((f'                            outType='
+                             f'"{output_type:s}">'))
+
+                    print('                        </data>')
 
                   print('                    <template/>')
 

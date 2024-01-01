@@ -269,7 +269,8 @@ class MessageTable(object):
   Attributes:
     file_versions (list[str]): Windows Event Log resource file versions.
     lcid (int): language identifier (LCID).
-    message_strings (list[str]): Windows Event Log resource message strings.
+    message_strings (dict[int, str]): Windows Event Log resource message
+       strings per identifier.
   """
 
   def __init__(self, lcid):

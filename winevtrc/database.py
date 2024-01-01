@@ -720,65 +720,6 @@ class ResourcesSQLite3DatabaseWriter(object):
       values = [message_identifier, message_string]
       self._database_file.InsertValues(table_name, column_names, values)
 
-  def _WriteMessageFile(self, message_file):
-    """Writes a message file.
-
-    Args:
-      message_file (MessageFile): message file.
-    """
-    table_name = 'message_files'
-    column_names = ['path']
-
-    has_table = self._database_file.HasTable(table_name)
-    if not has_table:
-      column_definitions = [
-          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT', 'path TEXT']
-      self._database_file.CreateTable(table_name, column_definitions)
-
-    if not has_table:
-      insert_values = True
-
-    else:
-      condition = f'LOWER(path) = LOWER("{message_file.windows_path:s}")'
-      values_list = list(self._database_file.GetValues(
-          [table_name], column_names, condition))
-
-      number_of_values = len(values_list)
-      insert_values = number_of_values == 0
-
-    if insert_values:
-      values = [message_file.windows_path]
-      self._database_file.InsertValues(table_name, column_names, values)
-
-  def _WriteMessageTable(self, message_file, message_table):
-    """Writes a message table for a specific language identifier.
-
-    Args:
-      message_file (MessageFile): message file.
-      message_table (MessageTable): message table.
-    """
-    if message_table.message_strings:
-      message_file_key = self._GetMessageFileKey(message_file)
-      if message_file_key is None:
-        logging.warning(
-            f'Missing message file key for: {message_file.windows_path:s}')
-
-      table_name = f'message_table_{message_file_key:d}_{message_table.lcid:s}'
-
-      has_table = self._database_file.HasTable(table_name)
-      if not has_table:
-        column_definitions = [
-            'message_identifier TEXT', 'message_string TEXT']
-        self._database_file.CreateTable(table_name, column_definitions)
-
-      message_strings = message_table.message_strings
-      for message_identifier, message_string in message_strings.items():
-        self._WriteMessage(
-            message_file, message_table.lcid, message_identifier,
-            message_string, table_name, has_table)
-
-      self._WriteMessageTableLanguage(message_file_key, message_table.lcid)
-
   def _WriteMessageTableLanguage(self, message_file_key, language_identifier):
     """Writes a message table language.
 
@@ -861,16 +802,34 @@ class ResourcesSQLite3DatabaseWriter(object):
       self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFile(self, message_file):
-    """Writes the Windows Message Resource file.
+    """Writes a message file.
 
     Args:
       message_file (MessageFile): message file.
     """
-    self._WriteMessageFile(message_file)
+    table_name = 'message_files'
+    column_names = ['path']
 
-    for message_table in message_file.GetMessageTables():
-      # TODO track the languages in a table.
-      self._WriteMessageTable(message_file, message_table)
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = [
+          'message_file_key INTEGER PRIMARY KEY AUTOINCREMENT', 'path TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+
+    if not has_table:
+      insert_values = True
+
+    else:
+      condition = f'LOWER(path) = LOWER("{message_file.windows_path:s}")'
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      insert_values = number_of_values == 0
+
+    if insert_values:
+      values = [message_file.windows_path]
+      self._database_file.InsertValues(table_name, column_names, values)
 
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_filename, message_file_type):
@@ -919,6 +878,35 @@ class ResourcesSQLite3DatabaseWriter(object):
     if insert_values:
       values = [message_file_key, message_file_type, event_log_provider_key]
       self._database_file.InsertValues(table_name, column_names, values)
+
+  def WriteMessageTable(self, message_file, message_table):
+    """Writes a message table for a specific language identifier.
+
+    Args:
+      message_file (MessageFile): message file.
+      message_table (MessageTable): message table.
+    """
+    if message_table.message_strings:
+      message_file_key = self._GetMessageFileKey(message_file)
+      if message_file_key is None:
+        logging.warning(
+            f'Missing message file key for: {message_file.windows_path:s}')
+
+      table_name = f'message_table_{message_file_key:d}_{message_table.lcid:s}'
+
+      has_table = self._database_file.HasTable(table_name)
+      if not has_table:
+        column_definitions = [
+            'message_identifier TEXT', 'message_string TEXT']
+        self._database_file.CreateTable(table_name, column_definitions)
+
+      message_strings = message_table.message_strings
+      for message_identifier, message_string in message_strings.items():
+        self._WriteMessage(
+                message_file, message_table.lcid, f'0x{message_identifier:08x}',
+            message_string, table_name, has_table)
+
+      self._WriteMessageTableLanguage(message_file_key, message_table.lcid)
 
   def WriteMetadataAttribute(self, attribute_name, attribute_value):
     """Writes a metadata attribute.

@@ -44,6 +44,14 @@ winevtrc.extractor module
    :undoc-members:
    :show-inheritance:
 
+winevtrc.language\_tags module
+------------------------------
+
+.. automodule:: winevtrc.language_tags
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 winevtrc.resource\_file module
 ------------------------------
 
@@ -56,6 +64,14 @@ winevtrc.resources module
 -------------------------
 
 .. automodule:: winevtrc.resources
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+winevtrc.storage module
+-----------------------
+
+.. automodule:: winevtrc.storage
    :members:
    :undoc-members:
    :show-inheritance:
