@@ -1,0 +1,103 @@
+## urlmon.dll
+
+Path: %SystemRoot%\system32\urlmon.dll
+
+### 11.0.10586.0, 11.0.14393.0, 11.0.15063.0, 11.0.16299.15, 11.0.17134.1, 11.0.17763.1, 11.0.18362.1, 11.0.19041.1
+
+Message identifier | Message string
+--- | ---
+0x10000001 | Flagged on all URLMon IE events\r\n
+0x30000000 | Info\r\n
+0x50000004 | Information\r\n
+0x800c0002 | The URL is invalid.\r\n
+0x800c0003 | No Internet session has been established.\r\n
+0x800c0004 | Unable to connect to the target server.\r\n
+0x800c0005 | The system cannot locate the resource specified.\r\n
+0x800c0006 | The system cannot locate the object specified.\r\n
+0x800c0007 | No data is available for the requested resource.\r\n
+0x800c0008 | The download of the specified resource has failed.\r\n
+0x800c0009 | Authentication is required to access this resource.\r\n
+0x800c000a | The server could not recognize the provided mime type.\r\n
+0x800c000b | The operation was timed out.\r\n
+0x800c000c | The server did not understand the request, or the request was invalid.\r\n
+0x800c000d | The specified protocol is unknown.\r\n
+0x800c000e | A security problem occurred.\r\n
+0x800c000f | The system could not load the persisted data.\r\n
+0x800c0010 | Unable to instantiate the object.\r\n
+0x800c0014 | A redirection problem occurred.\r\n
+0x800c0015 | The requested resource is a directory, not a file.\r\n
+0x800c0019 | Security certificate required to access this resource is invalid.\r\n
+0x90000001 | Microsoft-Windows-URLMon\r\n
+0xd0000001 | FINDINGRESOURCE\r\n
+0xd0000002 | CONNECTING\r\n
+0xd0000003 | REDIRECTING\r\n
+0xd0000004 | BEGINDOWNLOADDATA\r\n
+0xd0000005 | DOWNLOADINGDATA\r\n
+0xd0000006 | ENDDOWNLOADDATA\r\n
+0xd0000007 | BEGINDOWNLOADCOMPONENTS\r\n
+0xd0000008 | INSTALLINGCOMPONENTS\r\n
+0xd0000009 | ENDDOWNLOADCOMPONENTS\r\n
+0xd000000a | USINGCACHEDCOPY\r\n
+0xd000000b | SENDINGREQUEST\r\n
+0xd000000c | CLASSIDAVAILABLE\r\n
+0xd000000d | MIMETYPEAVAILABLE\r\n
+0xd000000e | CACHEFILENAMEAVAILABLE\r\n
+0xd000000f | BEGINSYNCOPERATION\r\n
+0xd0000010 | ENDSYNCOPERATION\r\n
+0xd0000011 | BEGINUPLOADDATA\r\n
+0xd0000012 | UPLOADINGDATA\r\n
+0xd0000013 | ENDUPLOADDATA\r\n
+0xd0000014 | PROTOCOLCLASSID\r\n
+0xd0000015 | ENCODING\r\n
+0xd0000016 | VERIFIEDMIMETYPEAVAILABLE\r\n
+0xd0000017 | CLASSINSTALLLOCATION\r\n
+0xd0000018 | DECODING\r\n
+0xd0000019 | LOADINGMIMEHANDLER\r\n
+0xd000001a | CONTENTDISPOSITIONATTACH\r\n
+0xd000001b | FILTERREPORTMIMETYPE\r\n
+0xd000001c | CLSIDCANINSTANTIATE\r\n
+0xd000001d | IUNKNOWNAVAILABLE\r\n
+0xd000001e | DIRECTBIND\r\n
+0xd000001f | RAWMIMETYPE\r\n
+0xd0000020 | PROXYDETECTING\r\n
+0xd0000021 | ACCEPTRANGES\r\n
+0xd0000022 | COOKIE_SENT\r\n
+0xd0000023 | COMPACT_POLICY_RECEIVED\r\n
+0xd0000024 | COOKIE_SUPPRESSED\r\n
+0xd0000025 | COOKIE_STATE_UNKNOWN\r\n
+0xd0000026 | COOKIE_STATE_ACCEPT\r\n
+0xd0000027 | COOKIE_STATE_REJECT\r\n
+0xd0000028 | COOKIE_STATE_PROMPT\r\n
+0xd0000029 | COOKIE_STATE_LEASH\r\n
+0xd000002a | COOKIE_STATE_DOWNGRADE\r\n
+0xd000002b | POLICY_HREF\r\n
+0xd000002c | P3P_HEADER\r\n
+0xd000002d | SESSION_COOKIE_RECEIVED\r\n
+0xd000002e | PERSISTENT_COOKIE_RECEIVED\r\n
+0xd000002f | SESSION_COOKIES_ALLOWED\r\n
+0xd0000030 | CACHECONTROL\r\n
+0xd0000031 | CONTENTDISPOSITIONFILENAME\r\n
+0xd0000032 | MIMETEXTPLAINMISMATCH\r\n
+0xd0000033 | PUBLISHERAVAILABLE\r\n
+0xd0000034 | DISPLAYNAMEAVAILABLE\r\n
+0xd0000035 | SSLUX_NAVBLOCKED\r\n
+0xd0000036 | SERVER_MIMETYPEAVAILABLE\r\n
+0xd0000037 | SNIFFED_CLASSIDAVAILABLE\r\n
+0xd0000038 | PROGRESS\r\n
+0xd0000039 | PRIVACIE_ALLOWED_BY_USER\r\n
+0xd000003a | ERROR\r\n
+0xd000003b | INTERNAL\r\n
+0xd000003c | INTERNALASYNC\r\n
+0xd000003d | RESULT\r\n
+0xd000003e | MIMETEXTPLAINAMBIGUOUSBINARY\r\n
+0xd000003f | CONTENTLENGTH\r\n
+0xd0000040 | REDIRECT_STATUS_CODE\r\n
+0xd0000041 | DIRECTINVOKE\r\n
+0xd0000042 | INTERMEDIATECODE_AVAILABLE\r\n
+0xd0000043 | PRIVACIE_MONITORED\r\n
+0xd0000044 | CLASSIDAVAILABLE_PRIVATE\r\n
+0xd0000045 | CVLIST_HTTP2_RESTRICTION\r\n
+0xd0000046 | DUO_USED\r\n
+0xd0000047 | DOWNLOADDESTINATIONPATH\r\n
+0xd0000048 | WRITEFILE\r\n
+0xd0000049 | ENDWRITEFILE\r\n

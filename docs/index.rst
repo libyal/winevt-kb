@@ -14,6 +14,11 @@ The source code is available from the `project page <https://github.com/libyal/w
    sources/eventlog-providers/index
 
 .. toctree::
+   :maxdepth: 1
+
+   sources/message_files/index
+
+.. toctree::
    :maxdepth: 2
 
    API documentation <sources/api/winevtrc>

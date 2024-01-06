@@ -1,0 +1,63 @@
+## wfpcapture.sys
+
+Path: %SystemRoot%\system32\drivers\WFPCapture.sys
+
+### 10.0.14393.0, 10.0.17763.1
+
+Message identifier | Message string
+--- | ---
+0x50000004 | Information\r\n
+0x50000005 | Verbose\r\n
+0x90000001 |  Microsoft-Pef-WFP-MessageProvider/Operational\r\n
+0x90000002 | System\r\n
+0xb00007d0 | The generic ETW message fragment that ORT can reassemble.\r\n
+0xb0002711 | Driver Load\r\n
+0xb0002712 | Driver Unload\r\n
+0xb0002713 | Callout Register\r\n
+0xb0002714 | Callout Unregister\r\n
+0xb0002715 | Callout Notify Filter Add\r\n
+0xb0002716 | Callout Notify Filter Delete\r\n
+0xb0004e21 | An error was encountered while loading the driver.\r\n
+0xb0004e22 | An error was encountered while unloading the driver.\r\n
+0xb0004e23 | An error was encountered while registering a callout.\r\n
+0xb0004e24 | An error was encountered while unregistering a callout.\r\n
+0xb0004e25 | An error was encountered in a classify function.\r\n
+0xb000ea6b | The Transport Layer Message for IPv4. The Transport header is in the MessageFrame.\r\n
+0xb000ea75 | The Transport Layer Message for IPv6. The Transport header is in the MessageFrame.\r\n
+0xb000ea7f | The ALE Layer Message for IPv4.\r\n
+0xb000ea89 | The Transport Layer Message for IPv6.\r\n
+0xb000ea92 | A packet has been discarded.\r\n
+0xd0000001 | CALLOUT_INBOUND_TRANSPORT_V4\r\n
+0xd0000002 | CALLOUT_OUTBOUND_TRANSPORT_V4\r\n
+0xd0000003 | CALLOUT_INBOUND_TRANSPORT_V6\r\n
+0xd0000004 | CALLOUT_OUTBOUND_TRANSPORT_V6\r\n
+0xd0000005 | CALLOUT_ALE_AUTH_CONNECT_V4\r\n
+0xd0000006 | CALLOUT_ALE_AUTH_CONNECT_V6\r\n
+0xd0000007 | CALLOUT_ALE_AUTH_RECV_ACCEPT_V4\r\n
+0xd0000008 | CALLOUT_ALE_AUTH_RECV_ACCEPT_V6\r\n
+0xd0000009 | CALLOUT_INBOUND_IPPACKET_V4_DISCARD\r\n
+0xd000000a | CALLOUT_INBOUND_IPPACKET_V6_DISCARD\r\n
+0xd000000b | CALLOUT_OUTBOUND_IPPACKET_V4_DISCARD\r\n
+0xd000000c | CALLOUT_OUTBOUND_IPPACKET_V6_DISCARD\r\n
+0xd000000d | CALLOUT_IPFORWARD_V4_DISCARD\r\n
+0xd000000e | CALLOUT_IPFORWARD_V6_DISCARD\r\n
+0xd000000f | CALLOUT_INBOUND_TRANSPORT_V4_DISCARD\r\n
+0xd0000010 | CALLOUT_INBOUND_TRANSPORT_V6_DISCARD\r\n
+0xd0000011 | CALLOUT_OUTBOUND_TRANSPORT_V4_DISCARD\r\n
+0xd0000012 | CALLOUT_OUTBOUND_TRANSPORT_V6_DISCARD\r\n
+0xd0000013 | CALLOUT_DATAGRAM_DATA_V4_DISCARD\r\n
+0xd0000014 | CALLOUT_DATAGRAM_DATA_V6_DISCARD\r\n
+0xd0000015 | CALLOUT_INBOUND_ICMP_ERROR_V4_DISCARD\r\n
+0xd0000016 | CALLOUT_INBOUND_ICMP_ERROR_V6_DISCARD\r\n
+0xd0000017 | CALLOUT_OUTBOUND_ICMP_ERROR_V4_DISCARD\r\n
+0xd0000018 | CALLOUT_OUTBOUND_ICMP_ERROR_V6_DISCARD\r\n
+0xd0000019 | CALLOUT_ALE_RESOURCE_ASSIGNMENT_V4_DISCARD\r\n
+0xd000001a | CALLOUT_ALE_RESOURCE_ASSIGNMENT_V6_DISCARD\r\n
+0xd000001b | CALLOUT_ALE_AUTH_LISTEN_V4_DISCARD\r\n
+0xd000001c | CALLOUT_ALE_AUTH_LISTEN_V6_DISCARD\r\n
+0xd000001d | CALLOUT_ALE_AUTH_RECV_ACCEPT_V4_DISCARD\r\n
+0xd000001e | CALLOUT_ALE_AUTH_RECV_ACCEPT_V6_DISCARD\r\n
+0xd000001f | CALLOUT_ALE_AUTH_CONNECT_V4_DISCARD\r\n
+0xd0000020 | CALLOUT_ALE_AUTH_CONNECT_V6_DISCARD\r\n
+0xd0000021 | CALLOUT_ALE_FLOW_ESTABLISHED_V4_DISCARD\r\n
+0xd0000022 | CALLOUT_ALE_FLOW_ESTABLISHED_V6_DISCARD\r\n
