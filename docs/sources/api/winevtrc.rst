@@ -36,6 +36,14 @@ winevtrc.eventlog\_providers module
    :undoc-members:
    :show-inheritance:
 
+winevtrc.exporter module
+------------------------
+
+.. automodule:: winevtrc.exporter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 winevtrc.extractor module
 -------------------------
 

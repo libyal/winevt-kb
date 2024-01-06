@@ -6,6 +6,8 @@ Seen on:
 * Windows 2003
 * Windows 2008
 * Windows 2012
+* Windows 2016
+* Windows 2019
 * Windows 7
 * Windows 8.0
 * Windows 8.1

@@ -3,6 +3,7 @@
 Seen on:
 * Windows 10 (1511, 1607, 1703, 1709, 1803, 1809, 1903, 1909, 2004, 20H2)
 * Windows 11 (21H2)
+* Windows 2019
 * Windows 7
 * Windows 8.0
 * Windows 8.1
@@ -24,6 +25,10 @@ Seen on:
     </tr>
     <tr>
       <td><b>Log source(s):</b></td>
+      <td>Microsoft-Windows-WMPNSS-Service</td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
       <td>WMPNetworkSvc</td>
     </tr>
     <tr>

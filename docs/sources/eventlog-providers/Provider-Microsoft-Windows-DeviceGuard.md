@@ -2,6 +2,8 @@
 
 Seen on:
 * Windows 10 (1607, 1703, 1709, 1803, 1809)
+* Windows 2016
+* Windows 2019
 
 <table border="1" class="docutils">
   <tbody>
