@@ -39,6 +39,7 @@ class EventLogProvider(containers_interface.AttributeContainer):
     name (str): name of the provider.
     parameter_message_files (set[str]): paths of the parameter message
         files.
+      windows_version (str): Windows version.
   """
 
   CONTAINER_TYPE = 'windows_eventlog_provider'
@@ -51,7 +52,8 @@ class EventLogProvider(containers_interface.AttributeContainer):
       'log_sources': 'List[str]',
       'log_types': 'List[str]',
       'name': 'str',
-      'parameter_message_files': 'List[str]'}
+      'parameter_message_files': 'List[str]',
+      'windows_version': 'str'}
 
   def __init__(self):
     """Initializes the Windows Event Log provider."""
@@ -64,6 +66,7 @@ class EventLogProvider(containers_interface.AttributeContainer):
     self.log_types = []
     self.name = None
     self.parameter_message_files = set()
+    self.windows_version = None
 
   @property
   def log_source(self):

@@ -16,10 +16,10 @@ from dfwinreg import registry as dfwinreg_registry
 from winevtrc import extractor
 from winevtrc import resources
 
-from tests import test_lib as shared_test_lib
+from tests import test_lib
 
 
-class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
+class EventMessageStringExtractorTest(test_lib.BaseTestCase):
   """Tests for the Windows Event Log message resource extractor."""
 
   # pylint: disable=protected-access
@@ -74,6 +74,16 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     # TODO: improve test.
     self.assertIsNone(windows_version)
 
+  # TODO: add tests for _GetMUIMessageResourceFile
+
+  def testGetNormalizedPath(self):
+    """Tests the _GetNormalizedPath function."""
+    extractor_object = self._CreateTestEventMessageStringExtractor()
+
+    normalized_path = extractor_object._GetNormalizedPath(
+        '%SystemDrive%\\Windows\\System32\\IoLogMsg.dll')
+    self.assertEqual(normalized_path, '%SystemRoot%\\System32\\IoLogMsg.dll')
+
   def testGetSystemRoot(self):
     """Tests the _GetSystemRoot function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
@@ -108,6 +118,8 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
     event_log_providers = list(extractor_object.CollectEventLogProviders())
 
     self.assertEqual(len(event_log_providers), 974)
+
+  # TODO: test CollectSystemEnvironmentVariables
 
   def testGetMessageResourceFile(self):
     """Tests the GetMessageResourceFile function."""
@@ -177,6 +189,8 @@ class EventMessageStringExtractorTest(shared_test_lib.BaseTestCase):
         '$(runtime.windows)\\immersivecontrolpanel\\systemsettings.exe')
     self.assertEqual(normalized_path, (
         '%SystemRoot%\\immersivecontrolpanel\\systemsettings.exe'))
+
+  # TODO: test ScanForWindowsVolume
 
 
 if __name__ == '__main__':

@@ -87,8 +87,6 @@ class SQLite3OutputWriter(object):
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
-    # TODO: track Windows version in database
-
     database_filename = message_resource_file.windows_path
     _, _, database_filename = database_filename.rpartition('\\')
     database_filename = database_filename.lower()
@@ -396,6 +394,8 @@ def Main():
       for event_log_provider in extractor_object.CollectEventLogProviders():
         name = event_log_provider.name or event_log_provider.log_source
         logging.info(f'Processing Event Log provider: {name:s}')
+
+        event_log_provider.windows_version = windows_version
         output_writer.WriteEventLogProvider(event_log_provider)
 
         if event_log_provider.event_message_files:

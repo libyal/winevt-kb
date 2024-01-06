@@ -8,10 +8,10 @@ import unittest
 from winevtrc import database
 from winevtrc import errors
 
-from tests import test_lib as shared_test_lib
+from tests import test_lib
 
 
-class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
+class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
   """Tests for the SQLite database file."""
 
   def testOpenClose(self):
@@ -37,7 +37,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     table_name = 'event_log_providers'
     column_names = ['log_source', 'log_type', 'provider_guid']
 
-    with shared_test_lib.TempDirectory() as temporary_directory:
+    with test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_file.Open(test_file_path)
 
@@ -54,7 +54,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
     table_name = 'event_log_providers'
     column_names = ['log_source', 'log_type', 'provider_guid']
 
-    with shared_test_lib.TempDirectory() as temporary_directory:
+    with test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_file.Open(test_file_path, read_only=True)
 
@@ -115,7 +115,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
         'LocationNotifications', 'Application',
         '{5b93cdfa-5f51-45e0-9fde-296983129e6c}']
 
-    with shared_test_lib.TempDirectory() as temporary_directory:
+    with test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_file.Open(test_file_path)
 
@@ -145,7 +145,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
         'LocationNotifications', 'Application',
         '{5b93cdfa-5f51-45e0-9fde-296983129e6c}']
 
-    with shared_test_lib.TempDirectory() as temporary_directory:
+    with test_lib.TempDirectory() as temporary_directory:
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_file.Open(test_file_path, read_only=True)
 
@@ -155,7 +155,7 @@ class SQLite3DatabaseFileTest(shared_test_lib.BaseTestCase):
       database_file.Close()
 
 
-class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
+class ResourcesSQLite3DatabaseReaderTest(test_lib.BaseTestCase):
   """Tests for the resources SQLite database reader."""
 
   # pylint: disable=protected-access
@@ -216,7 +216,7 @@ class ResourcesSQLite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
     database_reader.Close()
 
 
-class ResourcesSQLite3DatabaseWriterTest(shared_test_lib.BaseTestCase):
+class ResourcesSQLite3DatabaseWriterTest(test_lib.BaseTestCase):
   """Tests for the resources SQLite database writer."""
 
   # pylint: disable=protected-access

@@ -115,6 +115,12 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           first_path_segment == '%systemdrive%'):
         path_segments[0] = ''
 
+      # Check if the second path segment is "Windows".
+      if (len(path_segments) >= 2 and path_segments[0] == '' and
+          path_segments[1].lower() == 'windows'):
+        path_segments.pop(0)
+        path_segments[0] = '%SystemRoot%'
+
     return '\\'.join(path_segments) or '\\'
 
   def _GetSystemRoot(self):
