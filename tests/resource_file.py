@@ -424,42 +424,6 @@ class MessageResourceFileTest(test_lib.BaseTestCase):
     mui_language = message_resource_file.GetMUILanguage()
     self.assertIsNone(mui_language)
 
-  def testGetStringTableResourceNoWrc(self):
-    """Tests the GetStringTableResource function."""
-    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    message_resource_file = resource_file.MessageResourceFile(
-        'C:\\Windows\\System32\\nowrc_test.dll')
-
-    with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
-
-      try:
-        resource = message_resource_file.GetStringTableResource()
-        self.assertIsNone(resource)
-
-      finally:
-        message_resource_file.Close()
-
-  def testGetStringTableResourceWrc(self):
-    """Tests the GetStringTableResource function."""
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    message_resource_file = resource_file.MessageResourceFile(
-        'C:\\Windows\\System32\\wrc_test.dll')
-
-    with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
-
-      try:
-        string_resource = message_resource_file.GetStringTableResource()
-        self.assertIsNotNone(string_resource)
-
-      finally:
-        message_resource_file.Close()
-
   def testHasMessageTableResourceNoWrc(self):
     """Tests the HasMessageTableResource function."""
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
@@ -491,42 +455,6 @@ class MessageResourceFileTest(test_lib.BaseTestCase):
 
       try:
         result = message_resource_file.HasMessageTableResource()
-        self.assertTrue(result)
-
-      finally:
-        message_resource_file.Close()
-
-  def testHasStringTableResourceNoWrc(self):
-    """Tests the HasStringTableResource function."""
-    test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    message_resource_file = resource_file.MessageResourceFile(
-        'C:\\Windows\\System32\\nowrc_test.dll')
-
-    with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
-
-      try:
-        result = message_resource_file.HasStringTableResource()
-        self.assertFalse(result)
-
-      finally:
-        message_resource_file.Close()
-
-  def testHasStringTableResourceWrc(self):
-    """Tests the HasStringTableResource function."""
-    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    message_resource_file = resource_file.MessageResourceFile(
-        'C:\\Windows\\System32\\wrc_test.dll')
-
-    with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
-
-      try:
-        result = message_resource_file.HasStringTableResource()
         self.assertTrue(result)
 
       finally:

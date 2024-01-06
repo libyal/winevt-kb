@@ -63,11 +63,6 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       self._windows_version = self._GetWindowsVersion()
     return self._windows_version
 
-  @windows_version.setter
-  def windows_version(self, value):
-    """The Windows version (setter)."""
-    self._windows_version = value
-
   def _GetMUIMessageResourceFile(
       self, message_file_path, message_resource_file):
     """Retrieves a MUI Event Log message resource file.
@@ -296,9 +291,8 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           f'Message table resource missing from message file: '
           f'{message_filename:s}'))
 
-      if not message_resource_file.HasStringTableResource():
-        if message_filename not in self.missing_resources_message_filenames:
-          self.missing_resources_message_filenames.append(message_filename)
+      if message_filename not in self.missing_resources_message_filenames:
+        self.missing_resources_message_filenames.append(message_filename)
 
       message_resource_file.Close()
 

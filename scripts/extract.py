@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import sys
+import yaml
 
 from acstore import sqlite_store
 
@@ -76,30 +77,36 @@ class SQLite3OutputWriter(object):
 
   # pylint: disable=unused-argument
   def WriteMessageResourceFile(
-      self, message_resource_file, message_filename, message_file_type):
+      self, windows_version, message_resource_file, message_filename,
+      message_file_type):
     """Writes the Windows Message Resource file.
 
     Args:
+      windows_version (str): Windows version.
       message_resource_file (MessageResourceFile): message resource file.
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
+    # TODO: track Windows version in database
+
     database_filename = message_resource_file.windows_path
     _, _, database_filename = database_filename.rpartition('\\')
     database_filename = database_filename.lower()
-    database_filename = f'{database_filename:s}.db'
-    database_filename = re.sub(r'\.mui', '', database_filename)
+    database_filename = re.sub(r'\.mui', '', f'{database_filename:s}.db')
 
-    self._WriteResources(message_resource_file, database_filename)
+    self._WriteResources(
+        windows_version, message_resource_file, database_filename)
 
     descriptor = resources.MessageFileDatabaseDescriptor(
         database_filename=database_filename, message_filename=message_filename)
     self._database_writer.AddAttributeContainer(descriptor)
 
-  def _WriteResources(self, message_resource_file, database_filename):
+  def _WriteResources(
+      self, windows_version, message_resource_file, database_filename):
     """Writes the resources.
 
     Args:
+      windows_version (str): Windows version.
       message_resource_file (MessageResourceFile): message resource file.
       database_filename (str): name of the message resource file database.
     """
@@ -113,15 +120,14 @@ class SQLite3OutputWriter(object):
     descriptor = resources.MessageFileDescriptor(
         file_version=message_resource_file.file_version,
         message_filename=message_resource_file.windows_path,
-        product_version=message_resource_file.product_version)
+        product_version=message_resource_file.product_version,
+        windows_version=windows_version)
     database_writer.AddAttributeContainer(descriptor)
 
     message_file_identifier = descriptor.GetIdentifier()
 
     self._WriteMessageTables(
         message_resource_file, message_file_identifier, database_writer)
-
-    # TODO: implement WriteStringTables()
 
     database_writer.Close()
 
@@ -176,37 +182,42 @@ class SQLite3OutputWriter(object):
 class StdoutOutputWriter(object):
   """Stdout output writer."""
 
-  def _WriteMessageTable(self, message_table):
+  def _WriteMessageTable(self,  message_resource_file):
     """Writes the Windows Message Resource file message table.
 
     Args:
-      message_table (pywrc.message_table): message table resource.
+      message_resource_file (MessageResourceFile): message resource file.
     """
-    try:
-      number_of_languages = message_table.get_number_of_languages()
-    except IOError as exception:
-      number_of_languages = 0
-      logging.warning(
-          f'Unable to retrieve number of languages with error: {exception!s}.')
+    wrc_resource = message_resource_file.GetMessageTableResource()
+    if not wrc_resource:
+      return
 
-    if number_of_languages > 0:
-      for language_identifier in message_table.language_identifiers:
-        number_of_messages = message_table.get_number_of_messages(
-            language_identifier)
+    if wrc_resource.number_of_items != 1:
+      logging.warning((
+          f'More than 1 message table resource item in message file: '
+          f'{message_resource_file.windows_path:s}.'))
 
-        if number_of_messages > 0:
-          print('Message table:')
-          print(f'LCID\t\t: 0x{language_identifier:08x}')
-          for message_index in range(0, number_of_messages):
-            message_identifier = message_table.get_message_identifier(
-                language_identifier, message_index)
-            message_string = message_table.get_string(
-                language_identifier, message_index)
+    wrc_resource_item = wrc_resource.items[0]
+    for wrc_resource_sub_item in wrc_resource_item.sub_items:
+      language_identifier = wrc_resource_sub_item.identifier
 
-            ouput_string = f'0x{message_identifier:08x}\t: {message_string:s}'
-            print(ouput_string.encode('utf8'))
+      resource_data = wrc_resource_sub_item.read()
 
-          print('')
+      message_table_resource = pywrc.message_table_resource()
+      message_table_resource.copy_from_byte_stream(resource_data)
+
+      number_of_messages = message_table_resource.get_number_of_messages()
+      if number_of_messages > 0:
+        print('Message table:')
+        print(f'LCID\t\t: 0x{language_identifier:08x}')
+        for message_index in range(0, number_of_messages):
+          message_identifier = message_table_resource.get_message_identifier(
+              message_index)
+          message_string = message_table_resource.get_string(message_index)
+
+          print(f'0x{message_identifier:08x}\t: {message_string:s}')
+
+        print('')
 
   def Close(self):
     """Closes the output writer object."""
@@ -231,17 +242,26 @@ class StdoutOutputWriter(object):
 
     print(f'Source\t\t: {log_source:s}')
     print(f'Event Log type\t: {log_type:s}')
-    print(f'Categories\t: {event_log_provider.category_message_files:s}')
-    print(f'Messages\t: {event_log_provider.event_message_files:s}')
-    print(f'Parameters\t: {event_log_provider.parameter_message_files:s}')
+
+    message_files = ';'.join(event_log_provider.category_message_files)
+    print(f'Categories\t: {message_files:s}')
+
+    message_files = ';'.join(event_log_provider.event_message_files)
+    print(f'Messages\t: {message_files:s}')
+
+    message_files = ';'.join(event_log_provider.parameter_message_files)
+    print(f'Parameters\t: {message_files:s}')
+
     print('')
 
   # pylint: disable=unused-argument
   def WriteMessageResourceFile(
-      self, message_resource_file, message_filename, message_file_type):
+      self, windows_version, message_resource_file, message_filename,
+      message_file_type):
     """Writes the Windows Message Resource file.
 
     Args:
+      windows_version (str): Windows version.
       message_resource_file (MessageResourceFile): message resource file.
       message_filename (str): message filename.
       message_file_type (str): message file type.
@@ -254,8 +274,7 @@ class StdoutOutputWriter(object):
     print(f'File version\t: {file_version:s}')
     print(f'Product version\t: {product_version:s}')
 
-    message_table = message_resource_file.GetMessageTableResource()
-    self._WriteMessageTable(message_table)
+    self._WriteMessageTable( message_resource_file)
 
 
 def Main():
@@ -300,6 +319,14 @@ def Main():
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
 
+  try:
+    with open(options.source, 'r', encoding='utf-8') as file_object:
+      source_definitions = list(yaml.safe_load_all(file_object))
+
+  except (SyntaxError, UnicodeDecodeError):
+    source_definitions = [{
+        'source': options.source, 'windows_version': options.windows_version}]
+
   if options.database:
     if not os.path.exists(options.database):
       os.mkdir(options.database)
@@ -313,9 +340,12 @@ def Main():
   else:
     output_writer = StdoutOutputWriter()
 
+  if not output_writer.Open():
+    print('Unable to open output writer.')
+    print('')
+    return False
+
   mediator = dfvfs_command_line.CLIVolumeScannerMediator()
-  extractor_object = extractor.EventMessageStringExtractor(
-      debug=options.debug, mediator=mediator)
 
   volume_scanner_options = dfvfs_volume_scanner.VolumeScannerOptions()
   volume_scanner_options.partitions = ['all']
@@ -323,105 +353,116 @@ def Main():
   volume_scanner_options.volumes = ['none']
 
   try:
-    result = extractor_object.ScanForWindowsVolume(
-        options.source, options=volume_scanner_options)
-  except dfvfs_errors.ScannerError:
-    result = False
+    for source_definition in source_definitions:
+      source_path = source_definition['source']
+      logging.info(f'Processing: {source_path:s}')
 
-  if not result:
-    print((f'Unable to retrieve the volume with the Windows directory from: '
-           f'{options.source:s}.'))
-    print('')
-    return False
+      extractor_object = extractor.EventMessageStringExtractor(
+          debug=options.debug, mediator=mediator)
 
-  if not extractor_object.windows_version:
-    if not options.windows_version:
-      print('Unable to determine Windows version.')
+      try:
+        result = extractor_object.ScanForWindowsVolume(
+            source_path, options=volume_scanner_options)
+      except dfvfs_errors.ScannerError:
+        result = False
 
-      if options.database:
-        print('Database output requires a Windows version, specify one with '
-              '--windows-version.')
+      if not result:
+        print((f'Unable to retrieve the volume with the Windows directory '
+               f'from: {source_path:s}.'))
         print('')
         return False
 
-    extractor_object.windows_version = options.windows_version
+      if extractor_object.windows_version:
+        windows_version = extractor_object.windows_version
+        logging.info(f'Detected Windows version: {windows_version:s}')
 
-  if not output_writer.Open():
-    print('Unable to open output writer.')
-    print('')
-    return False
+        if source_definition['windows_version']:
+          windows_version = source_definition['windows_version']
 
-  try:
-    logging.info(
-        f'Detected Windows version: {extractor_object.windows_version:s}')
+      else:
+        print('Unable to determine Windows version.')
 
-    extractor_object.CollectSystemEnvironmentVariables()
+        windows_version = source_definition['windows_version']
+        if not windows_version and options.database:
+          print('Database output requires a Windows version, specify one with '
+                '--windows-version.')
+          print('')
+          return False
 
-    # TODO: handle $(runtime.X) notation
+      extractor_object.CollectSystemEnvironmentVariables()
 
-    for event_log_provider in extractor_object.CollectEventLogProviders():
-      name = event_log_provider.name or event_log_provider.log_source
-      logging.info(f'Processing Event Log provider: {name:s}')
-      output_writer.WriteEventLogProvider(event_log_provider)
+      # TODO: handle $(runtime.X) notation
 
-      if event_log_provider.event_message_files:
-        for message_filename in event_log_provider.event_message_files:
-          message_resource_file = extractor_object.GetMessageResourceFile(
-              event_log_provider, message_filename)
+      for event_log_provider in extractor_object.CollectEventLogProviders():
+        name = event_log_provider.name or event_log_provider.log_source
+        logging.info(f'Processing Event Log provider: {name:s}')
+        output_writer.WriteEventLogProvider(event_log_provider)
 
-          if message_resource_file:
-            logging.info(f'Processing event message file: {message_filename:s}')
+        if event_log_provider.event_message_files:
+          for message_filename in event_log_provider.event_message_files:
+            message_resource_file = extractor_object.GetMessageResourceFile(
+                event_log_provider, message_filename)
 
-            output_writer.WriteMessageResourceFile(
-                message_resource_file, message_resource_file.windows_path,
-                definitions.MESSAGE_FILE_TYPE_EVENT)
-            message_resource_file.Close()
+            if message_resource_file:
+              logging.info(
+                  f'Processing event message file: {message_filename:s}')
 
-      if event_log_provider.category_message_files:
-        for message_filename in event_log_provider.category_message_files:
-          message_resource_file = extractor_object.GetMessageResourceFile(
-              event_log_provider, message_filename)
+              output_writer.WriteMessageResourceFile(
+                  windows_version, message_resource_file,
+                  message_resource_file.windows_path,
+                  definitions.MESSAGE_FILE_TYPE_EVENT)
+              message_resource_file.Close()
 
-          if message_resource_file:
-            logging.info(
-                f'Processing category message file: {message_filename:s}')
+        if event_log_provider.category_message_files:
+          for message_filename in event_log_provider.category_message_files:
+            message_resource_file = extractor_object.GetMessageResourceFile(
+                event_log_provider, message_filename)
 
-            output_writer.WriteMessageResourceFile(
-                message_resource_file, message_resource_file.windows_path,
-                definitions.MESSAGE_FILE_TYPE_CATEGORY)
-            message_resource_file.Close()
+            if message_resource_file:
+              logging.info(
+                  f'Processing category message file: {message_filename:s}')
 
-      if event_log_provider.parameter_message_files:
-        for message_filename in event_log_provider.parameter_message_files:
-          message_resource_file = extractor_object.GetMessageResourceFile(
-              event_log_provider, message_filename)
+              output_writer.WriteMessageResourceFile(
+                  windows_version, message_resource_file,
+                  message_resource_file.windows_path,
+                  definitions.MESSAGE_FILE_TYPE_CATEGORY)
+              message_resource_file.Close()
 
-          if message_resource_file:
-            logging.info(
-                f'Processing parameter message file: {message_filename:s}')
+        if event_log_provider.parameter_message_files:
+          for message_filename in event_log_provider.parameter_message_files:
+            message_resource_file = extractor_object.GetMessageResourceFile(
+                event_log_provider, message_filename)
 
-            output_writer.WriteMessageResourceFile(
-                message_resource_file, message_resource_file.windows_path,
-                definitions.MESSAGE_FILE_TYPE_PARAMETER)
-            message_resource_file.Close()
+            if message_resource_file:
+              logging.info(
+                  f'Processing parameter message file: {message_filename:s}')
+
+              output_writer.WriteMessageResourceFile(
+                  windows_version, message_resource_file,
+                  message_resource_file.windows_path,
+                  definitions.MESSAGE_FILE_TYPE_PARAMETER)
+              message_resource_file.Close()
 
   finally:
     output_writer.Close()
 
-  if extractor_object.missing_message_filenames:
-    print('')
-    print('Message resource files not found or without resource section:')
-    for message_filename in extractor_object.missing_message_filenames:
-      print(message_filename)
+  if len(source_definitions) == 1:
+    if extractor_object.missing_message_filenames:
+      print('')
+      print('Message resource files not found or without resource section:')
+      for message_filename in extractor_object.missing_message_filenames:
+        print(message_filename)
 
-  if extractor_object.missing_resources_message_filenames:
-    print('')
-    print('Message resource files without a string and message table resource:')
-    for message_filename in (
-        extractor_object.missing_resources_message_filenames):
-      print(message_filename)
+    if extractor_object.missing_resources_message_filenames:
+      print('')
+      print(('Message resource files without a string and message table '
+             'resource:'))
+      for message_filename in (
+          extractor_object.missing_resources_message_filenames):
+        print(message_filename)
 
-  print('')
+    print('')
+
   return True
 
 

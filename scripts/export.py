@@ -90,8 +90,6 @@ class Exporter(object):
     database_reader.Open(path=message_file_database_path, read_only=True)
 
     self._ExportMessageStrings(message_file, database_reader)
-    # TODO: implement has table check.
-    # self._ExportStrings(message_file, database_reader)
 
     database_reader.Close()
 
@@ -204,36 +202,6 @@ class Exporter(object):
 
         # TODO: is there a better way to determine which string to use.
         # E.g. latest build version?
-
-  def _ExportStrings(self, message_file, database_reader):
-    """Exports the strings in a message file database.
-
-    Args:
-      message_file (MessageFile): message file.
-      database_reader (SQLiteAttributeContainerStore): message file
-          database reader.
-    """
-    for lcid, file_version in database_reader.GetStringTables():
-      message_file.AppendStringTable(lcid, file_version)
-
-    for string_table in message_file.GetStringTables():
-      for file_version in string_table.file_versions:
-        for string_identifier, string in database_reader.GetStrings(
-            string_table.lcid, file_version):
-          stored_string = string_table.strings.get(string_identifier, None)
-
-          if not stored_string:
-            string_table.strings[string_identifier] = string
-
-          elif string != stored_string:
-            logging.warning((
-                f'Found duplicate alternating string: {string_identifier:s} '
-                f'in LCID: {string_table.lcid:s} and version: '
-                f'{file_version:s}.\nPrevious: {stored_string:s}\nNew: '
-                f'{string:s}\n'))
-
-            # TODO: is there a better way to determine which string to use.
-            # E.g. latest build version?
 
   def _GetNormalizedPath(self, path):
     """Retrieves a normalized variant of a path.

@@ -9,7 +9,7 @@ from winevtrc import storage
 from tests import test_lib
 
 
-class JSONStringsListAttributeSerializerTEst(test_lib.BaseTestCase):
+class JSONStringsListAttributeSerializerTest(test_lib.BaseTestCase):
   """Tests for the JSON strings list attribute serializer."""
 
   def testDeserializeValue(self):

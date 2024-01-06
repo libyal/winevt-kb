@@ -134,7 +134,6 @@ class MessageFile(object):
     """
     super(MessageFile, self).__init__()
     self._message_tables_per_language = {}
-    self._string_tables_per_language = {}
 
     self.name = name
     self.windows_path = None
@@ -152,19 +151,6 @@ class MessageFile(object):
 
     self._message_tables_per_language[lcid].file_versions.append(file_version)
 
-  def AppendStringTable(self, lcid, file_version):
-    """Appends a string table.
-
-    Args:
-      lcid (int): language identifier (LCID).
-      file_version (str): Windows Event Log resource file version of the file
-          that contains the string table.
-    """
-    if lcid not in self._string_tables_per_language:
-      self._string_tables_per_language[lcid] = StringTable(lcid)
-
-    self._string_tables_per_language[lcid].file_versions.append(file_version)
-
   def GetMessageTable(self, lcid):
     """Retrieves the message table for a specific language.
 
@@ -176,17 +162,6 @@ class MessageFile(object):
     """
     return self._message_tables_per_language.get(lcid, None)
 
-  def GetStringTable(self, lcid):
-    """Retrieves the string table for a specific language.
-
-    Args:
-      lcid (int): language identifier (LCID).
-
-    Returns:
-      StringTable: string table or None.
-    """
-    return self._string_tables_per_language.get(lcid, None)
-
   def GetMessageTables(self):
     """Retrieves the message tables.
 
@@ -195,15 +170,6 @@ class MessageFile(object):
     """
     for message_table in self._message_tables_per_language.values():
       yield message_table
-
-  def GetStringTables(self):
-    """Retrieves the string tables.
-
-    Yields:
-      StringTable: string table.
-    """
-    for string_table in self._string_tables_per_language.values():
-      yield string_table
 
 
 class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
@@ -239,6 +205,7 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
       file_version (str): file version.
       message_filename (str): message filename.
       product_version (str): product version.
+      windows_version (str): Windows version.
     """
 
   CONTAINER_TYPE = 'message_file'
@@ -246,21 +213,25 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
   SCHEMA = {
       'file_version': 'str',
       'message_filename': 'str',
-      'product_version': 'str'}
+      'product_version': 'str',
+      'windows_version': 'str'}
 
   def __init__(
-      self, file_version=None, message_filename=None, product_version=None):
+      self, file_version=None, message_filename=None, product_version=None,
+      windows_version=None):
     """Initializes a Windows Event Log message file descriptor.
 
     Args:
       file_version (Optional[str]): file version.
       message_filename (Optional[str]): message filename.
       product_version (Optional[str]): product version.
+      windows_version (Optional[str]): Windows version.
     """
     super(MessageFileDescriptor, self).__init__()
     self.file_version = file_version
     self.message_filename = message_filename
     self.product_version = product_version
+    self.windows_version = windows_version
 
 
 class MessageTable(object):
@@ -377,27 +348,6 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
           identifier.
     """
     self._message_file_identifier = message_file_identifier
-
-
-class StringTable(object):
-  """Class that contains the strings per language.
-
-  Attributes:
-    file_versions (list[str]): Windows Event Log resource file versions.
-    lcid (int): language identifier (LCID).
-    strings (list[str]): Windows Event Log resource strings.
-  """
-
-  def __init__(self, lcid):
-    """Initializes the string table.
-
-    Args:
-      lcid (int): language identifier (LCID).
-    """
-    super(StringTable, self).__init__()
-    self.file_versions = []
-    self.lcid = lcid
-    self.strings = {}
 
 
 containers_manager.AttributeContainersManager.RegisterAttributeContainers([

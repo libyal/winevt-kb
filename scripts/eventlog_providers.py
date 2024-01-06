@@ -257,7 +257,6 @@ def Main():
 
   options = argument_parser.parse_args()
 
-  # TODO: support a sources configuration file
   if not options.source:
     print('Source value is missing.')
     print('')
@@ -303,22 +302,19 @@ def Main():
       print('')
       return False
 
-    windows_version = source_definition['windows_version']
-    if windows_version:
-      extractor_object.windows_version = windows_version
-
-    elif extractor_object.windows_version:
-      logging.info(
-          f'Detected Windows version: {extractor_object.windows_version:s}')
-
+    if extractor_object.windows_version:
       windows_version = extractor_object.windows_version
+      logging.info(f'Detected Windows version: {windows_version:s}')
+
+      if source_definition['windows_version']:
+        windows_version = source_definition['windows_version']
 
     else:
       print('Unable to determine Windows version.')
 
-      if options.database:
-        print('Output requires a Windows version, specify one with '
-              '--windows-version.')
+      windows_version = source_definition['windows_version']
+      if not windows_version:
+        print('Windows version required, specify one with --windows-version.')
         print('')
         return False
 
