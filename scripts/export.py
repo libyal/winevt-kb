@@ -10,20 +10,21 @@ import sys
 
 from winevtrc import database
 from winevtrc import definitions
+from winevtrc import documentation
 from winevtrc import exporter
 
 
-class SQLite3OutputWriter(object):
-  """Class that defines a SQLite3 output writer."""
+class DatabaseOutputWriter(exporter.ExporterOutputWriter):
+  """Database output writer."""
 
   def __init__(self, database_path, string_format='wrc'):
-    """Initializes an output writer object.
+    """Initializes a database output writer.
 
     Args:
       database_path (str): path to the database file.
       string_format (Optional[str]): string format.
     """
-    super(SQLite3OutputWriter, self).__init__()
+    super(DatabaseOutputWriter, self).__init__()
     self._database_path = database_path
     self._database_writer = None
     self._string_format = string_format
@@ -56,12 +57,16 @@ class SQLite3OutputWriter(object):
 
     return True
 
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider.
+  def WriteEventLogProvider(self, export_event_log_provider):
+    """Writes an Event Log provider.
 
     Args:
-      event_log_provider (EventLogProvider): Event Log provider.
+      export_event_log_provider (ExportEventLogProvider): Event Log provider.
     """
+    event_log_provider, _ = export_event_log_provider.providers_with_versions[0]
+
+    # TODO: add support for windows_versions.
+
     # TODO: check if already exists.
     self._database_writer.WriteEventLogProvider(event_log_provider)
 
@@ -73,9 +78,13 @@ class SQLite3OutputWriter(object):
     """
     self._database_writer.WriteMessageFile(message_file)
 
+    for message_table in message_file.GetMessageTables():
+      # TODO: track the languages.
+      self._database_writer.WriteMessageTable(message_file, message_table)
+
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_file):
-    """Writes the Windows Message Resource file per Event Log provider.
+    """Writes a mapping between an Event Log provider and a message file.
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
@@ -84,55 +93,88 @@ class SQLite3OutputWriter(object):
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_file, definitions.MESSAGE_FILE_TYPE_EVENT)
 
-  def WriteMessageTable(self, message_file, message_table):
-    """Writes a message table.
+
+class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
+  """Documentation files output writer."""
+
+  def __init__(self, path):
+    """Initializes the documentation output writer.
 
     Args:
-      message_file (MessageFile): message file.
-      message_table (MessageTable): message table.
+      path (str): path to the directory containing the documentation files.
     """
-    self._database_writer.WriteMessageTable(message_file, message_table)
+    super(DocumentationFilesOutputWriter, self).__init__()
+    self._event_log_providers_directory = None
+    self._event_log_providers_index_writer = None
+    self._message_files_directory = None
+    self._message_files_index_writer = None
+    self._path = path
 
+  def Close(self):
+    """Closes the output writer object."""
+    if self._event_log_providers_index_writer:
+      self._event_log_providers_index_writer.Close()
+      self._event_log_providers_index_writer = None
 
-class StdoutOutputWriter(object):
-  """Class that defines a stdout output writer."""
+    self._event_log_providers_directory = None
 
   def Open(self):
-    """Opens the file.
+    """Opens the output writer object.
 
     Returns:
       bool: True if successful or False if not.
     """
+    if not os.path.isdir(self._path):
+      return False
+
+    self._event_log_providers_directory = os.path.join(
+        self._path, 'docs', 'sources', 'eventlog-providers')
+    os.makedirs(self._event_log_providers_directory, exist_ok=True)
+
+    index_rst_file_path = os.path.join(
+        self._event_log_providers_directory, 'index.rst')
+    self._event_log_providers_index_writer = (
+        documentation.EventLogProvidersIndexRstWriter(index_rst_file_path))
+    self._event_log_providers_index_writer.Open()
+
+    self._message_files_directory = os.path.join(
+        self._path, 'docs', 'sources', 'message-files')
+    os.makedirs(self._message_files_directory, exist_ok=True)
+
+    index_rst_file_path = os.path.join(
+        self._message_files_directory, 'index.rst')
+    self._message_files_index_writer = (
+        documentation.MessageFilesIndexRstWriter(index_rst_file_path))
+    self._message_files_index_writer.Open()
+
     return True
 
-  def Close(self):
-    """Closes the file."""
-
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider.
+  def WriteEventLogProvider(self, export_event_log_provider):
+    """Writes an Event Log provider.
 
     Args:
-      event_log_provider (EventLogProvider): Event Log provider.
+      export_event_log_provider (ExportEventLogProvider): Event Log provider.
     """
-    if event_log_provider.name:
-      print(f'Name\t: {event_log_provider.name:s}')
+    name = export_event_log_provider.name
 
-    if event_log_provider.identifier:
-      print(f'Identifier\t: {event_log_provider.identifier:s}')
+    output_filename = f'Provider-{name:s}.md'.replace(
+        ' ', '-').replace('/', '-')
 
-    for index, log_type in enumerate(event_log_provider.log_types):
-      if index == 0:
-        print(f'Log type(s)\t: {log_type:s}')
-      else:
-        print(f'\t\t: {log_type:s}')
+    path = os.path.join(self._event_log_providers_directory, output_filename)
+    markdown_file_writer = documentation.EventLogProviderMarkdownWriter(path)
 
-    for index, log_source in enumerate(event_log_provider.log_sources):
-      if index == 0:
-        print(f'Log source(s)\t: {log_source:s}')
-      else:
-        print(f'\t\t: {log_source:s}')
+    markdown_file_writer.Open()
 
-    # TODO: print more details.
+    try:
+      for event_log_provider, windows_versions in (
+          export_event_log_provider.providers_with_versions):
+        markdown_file_writer.WriteEventLogProvider(
+            event_log_provider, windows_versions)
+
+    finally:
+      markdown_file_writer.Close()
+
+    self._event_log_providers_index_writer.WriteEventLogProvider(name)
 
   def WriteMessageFile(self, message_file):
     """Writes a message file.
@@ -140,13 +182,27 @@ class StdoutOutputWriter(object):
     Args:
       message_file (MessageFile): message file.
     """
-    print(message_file.name)
-    print('Path:\t{message_file.windows_path:s}')
+    name = message_file.name
+
+    output_filename = f'MessageFile-{name:s}.md'.replace(
+        ' ', '-').replace('/', '-')
+
+    path = os.path.join(self._message_files_directory, output_filename)
+    markdown_file_writer = documentation.MessageFileMarkdownWriter(path)
+
+    markdown_file_writer.Open()
+
+    try:
+      markdown_file_writer.WriteMessageFile(message_file)
+    finally:
+      markdown_file_writer.Close()
+
+    self._message_files_index_writer.WriteMessageFile(name)
 
   # pylint: disable=unused-argument
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_file):
-    """Writes the Windows Message Resource file per Event Log provider.
+    """Writes a mapping between an Event Log provider and a message file.
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
@@ -154,11 +210,14 @@ class StdoutOutputWriter(object):
     """
     return
 
-  def WriteMessageTable(self, message_file, message_table):
+
+class StdoutOutputWriter(exporter.ExporterOutputWriter):
+  """Stdout output writer."""
+
+  def _WriteMessageTable(self, message_table):
     """Writes a message table.
 
     Args:
-      message_file (MessageFile): message file.
       message_table (MessageTable): message table.
     """
     language_identifier = int(message_table.lcid, 16)
@@ -176,80 +235,48 @@ class StdoutOutputWriter(object):
 
     print('')
 
-
-class MarkdownFileWriter(object):
-  """Class to represent a Markdown file writer."""
-
-  def __init__(self):
-    """Initializes the Markdown file writer object."""
-    super(MarkdownFileWriter, self).__init__()
-    self._file = None
-
-  def Open(self, filename):
-    """Opens the file.
-
-    Args:
-      filename (str): name of the file.
-
-    Returns:
-      bool: True if successful or False if not.
-    """
-    # Using binary mode to make sure to write Unix end of lines.
-    self._file = open(filename, 'wb')  # pylint: disable=consider-using-with
-    return True
-
   def Close(self):
-    """Closes the file."""
-    self._file.close()
-
-  def WriteLine(self, line):
-    """Writes a line."""
-    self._file.write(f'{line:s}\n'.encode('utf8'))
-
-  def WriteLines(self, lines):
-    """Writes lines."""
-    for line in lines:
-      self.WriteLine(line)
-
-
-class MarkdownOutputWriter(object):
-  """Class that defines a Markdown output writer."""
-
-  def __init__(self, path):
-    """Initializes the Markdown output writer object.
-
-    Args:
-      path (str): path to the directory containing the Markdown files.
-    """
-    super(MarkdownOutputWriter, self).__init__()
-    self._message_file_writer = None
-    self._path = path
-
-  def Close(self):
-    """Closes the output writer object."""
-    if self._message_file_writer:
-      self._message_file_writer.Close()
-      self._message_file_writer = None
+    """Closes the output writer."""
+    return
 
   def Open(self):
-    """Opens the output writer object.
+    """Opens the output writer.
 
     Returns:
       bool: True if successful or False if not.
     """
-    if not os.path.isdir(self._path):
-      return False
     return True
 
-  # pylint: disable=unused-argument
-  def WriteEventLogProvider(self, event_log_provider):
-    """Writes the Event Log provider.
+  def WriteEventLogProvider(self, export_event_log_provider):
+    """Writes an Event Log provider.
 
     Args:
-      event_log_provider (EventLogProvider): Event Log provider.
+      export_event_log_provider (ExportEventLogProvider): Event Log provider.
     """
-    # TODO: print details.
-    return
+    for event_log_provider, _ in (
+        export_event_log_provider.providers_with_versions):
+
+      # TODO: print windows versions.
+
+      if event_log_provider.name:
+        print(f'Name\t: {event_log_provider.name:s}')
+
+      if event_log_provider.identifier:
+        print(f'Identifier\t: {event_log_provider.identifier:s}')
+
+      for index, log_type in enumerate(event_log_provider.log_types):
+        if index == 0:
+          print(f'Log type(s)\t: {log_type:s}')
+        else:
+          print(f'\t\t: {log_type:s}')
+
+      for index, log_source in enumerate(event_log_provider.log_sources):
+        if index == 0:
+          print(f'Log source(s)\t: {log_source:s}')
+        else:
+          print(f'\t\t: {log_source:s}')
+
+      # TODO: print more details.
 
   def WriteMessageFile(self, message_file):
     """Writes a message file.
@@ -257,53 +284,22 @@ class MarkdownOutputWriter(object):
     Args:
       message_file (MessageFile): message file.
     """
-    if self._message_file_writer:
-      self._message_file_writer.Close()
-      self._message_file_writer = None
+    print(message_file.name)
+    print('Path:\t{message_file.windows_path:s}')
 
-    self._message_file_writer = MarkdownFileWriter()
-    path = os.path.join(self._path, f'{message_file.name:s}.md')
+    for message_table in message_file.GetMessageTables():
+      self._WriteMessageTable(message_table)
 
-    if self._message_file_writer.Open(path):
-      self._message_file_writer.WriteLines([
-          f'## {message_file.name:s}',
-          '',
-          'Path: {message_file.windows_path:s}',
-          ''])
-
+  # pylint: disable=unused-argument
   def WriteMessageFilesPerEventLogProvider(
       self, event_log_provider, message_file):
-    """Writes the Windows Message Resource file per Event Log provider.
+    """Writes a mapping between an Event Log provider and a message file.
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
       message_file (MessageFile): message file.
     """
     return
-
-  def WriteMessageTable(self, message_file, message_table):
-    """Writes a message table.
-
-    Args:
-      message_file (MessageFile): message file.
-      message_table (MessageTable): message table.
-    """
-    language_identifier = int(message_table.lcid, 16)
-    language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
-    self._message_file_writer.WriteLines([
-        f'### {language:s} (LCID: {message_table.lcid:s})',
-        '',
-        'Message identifier | Message string',
-        '--- | ---'])
-
-    for identifier, string in message_table.message_strings.items():
-      string = re.sub(r'\n', '\\\\n', string)
-      string = re.sub(r'\r', '\\\\r', string)
-      string = re.sub(r'\t', '\\\\t', string)
-
-      self._message_file_writer.WriteLine(f'0x{identifier:08x} | {string:s}')
-
-    self._message_file_writer.WriteLine('')
 
 
 def Main():
@@ -355,10 +351,10 @@ def Main():
       level=logging.INFO, format='[%(levelname)s] %(message)s')
 
   if options.database:
-    output_writer = SQLite3OutputWriter(
+    output_writer = DatabaseOutputWriter(
         options.database, string_format=options.string_format)
   elif options.wiki:
-    output_writer = MarkdownOutputWriter(options.wiki)
+    output_writer = DocumentationFilesOutputWriter(options.wiki)
   else:
     output_writer = StdoutOutputWriter()
 

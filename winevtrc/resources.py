@@ -76,14 +76,6 @@ class EventLogProvider(containers_interface.AttributeContainer):
     except IndexError:
       return None
 
-  @property
-  def log_type(self):
-    """str: name of the Windows Event Log type."""
-    try:
-      return self.log_types[0]
-    except IndexError:
-      return None
-
   def SetCategoryMessageFilenames(self, category_message_filenames):
     """Sets the category message filenames.
 
