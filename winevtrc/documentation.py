@@ -3,8 +3,6 @@
 
 import re
 
-from winevtrc import definitions
-
 
 class DocumentationFileWriter(object):
   """Documentation file writer."""
@@ -234,10 +232,10 @@ class MessageFileMarkdownWriter(DocumentationFileWriter):
     Args:
       message_table (MessageTable): message table.
     """
-    language_identifier = int(message_table.lcid, 16)
-    language = definitions.LANGUAGES.get(language_identifier, ['', ''])[0]
+    file_versions = ', '.join(message_table.file_versions)
     lines = [
-        f'### {language:s} (LCID: {message_table.lcid:s})',
+        '',
+        f'### {file_versions:s}',
         '',
         'Message identifier | Message string',
         '--- | ---']
@@ -258,13 +256,12 @@ class MessageFileMarkdownWriter(DocumentationFileWriter):
     """Writes a message file.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     lines = [
         f'## {message_file.name:s}',
         '',
         f'Path: {message_file.windows_path:s}',
-        '',
         '']
 
     text = '\n'.join(lines)

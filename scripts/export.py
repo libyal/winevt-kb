@@ -74,7 +74,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     """Writes a message file.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     self._database_writer.WriteMessageFile(message_file)
 
@@ -88,7 +88,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     self._database_writer.WriteMessageFilesPerEventLogProvider(
         event_log_provider, message_file, definitions.MESSAGE_FILE_TYPE_EVENT)
@@ -180,7 +180,7 @@ class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
     """Writes a message file.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     name = message_file.name
 
@@ -206,7 +206,7 @@ class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     return
 
@@ -282,7 +282,7 @@ class StdoutOutputWriter(exporter.ExporterOutputWriter):
     """Writes a message file.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     print(message_file.name)
     print('Path:\t{message_file.windows_path:s}')
@@ -297,7 +297,7 @@ class StdoutOutputWriter(exporter.ExporterOutputWriter):
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
     return
 

@@ -32,6 +32,35 @@ class ExportEventLogProvider(object):
     self.providers_with_versions = []
 
 
+class ExportMessageFile(object):
+  """Windows Event Log message file.
+
+  Attributes:
+    message_tables (list[MessageTable]): message tables.
+    name (str): name.
+    windows_path (str): Windows path.
+  """
+
+  def __init__(self, name):
+    """Initializes the message file.
+
+    Args:
+      name (str): name.
+    """
+    super(ExportMessageFile, self).__init__()
+    self.message_tables = []
+    self.name = name
+    self.windows_path = None
+
+  def GetMessageTables(self):
+    """Retrieves the message tables.
+
+    Yields:
+      MessageTable: message table.
+    """
+    yield from self.message_tables
+
+
 class ExporterOutputWriter(object):
   """Exporter output writer."""
 
@@ -60,7 +89,7 @@ class ExporterOutputWriter(object):
     """Writes a message file.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
 
   @abc.abstractmethod
@@ -70,7 +99,7 @@ class ExporterOutputWriter(object):
 
     Args:
       event_log_provider (EventLogProvider): Event Log provider.
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
     """
 
 
@@ -116,6 +145,80 @@ class Exporter(object):
       return False
 
     return True
+
+  def _DiffMessageString(
+      self, file_version, language_identifier, message_identifier,
+      message_string, other_message_string):
+    """Determines differences in 2 message strings.
+
+    Args:
+      file_version (str): file version.
+      language_identifier (int): language identifier.
+      message_identifier (int): message identifier.
+      message_string (list[str]): message string.
+      other_message_string (list[str]): other message string.
+    """
+    color_green = '\x1b[0;32m'
+    color_red = '\x1b[0;31m'
+    color_end = '\x1b[0m'
+
+    matcher = difflib.SequenceMatcher(
+       None, message_string, other_message_string)
+
+    opcodes = list(matcher.get_opcodes())
+    if opcodes:
+      logging.warning((
+          f'Found duplicate alternating message string: '
+          f'0x{message_identifier:08x} in LCID: 0x{language_identifier:08x} '
+          f'and version: {file_version:s}.'))
+
+    for opcode, first_start, first_end, second_start, second_end in opcodes:
+      first_lines = message_string[first_start:first_end]
+      second_lines = other_message_string[second_start:second_end]
+
+      if opcode == 'insert':
+        for line in second_lines:
+          print(f'{color_green:s}+ {line:s}{color_end:s}')
+
+      elif opcode == 'delete':
+        for line in first_lines:
+          print(f'{color_red:s}- {line:s}{color_end:s}')
+
+      elif opcode == 'replace':
+        for index in range(len(first_lines)):  # pylint: disable=consider-using-enumerate
+          first_line = first_lines[index]
+          second_line = second_lines[index]
+
+          first_output = []
+          second_output = []
+
+          line_matcher = difflib.SequenceMatcher(
+              None, first_line, second_line, autojunk=False)
+          for line_opcode, a0, a1, b0, b1 in line_matcher.get_opcodes():
+            if line_opcode == 'equal':
+              text = first_line[a0:a1]
+              first_output.append(text)
+              second_output.append(text)
+
+            elif opcode == 'insert':
+              text = second_line[b0:b1]
+              second_output.append(f'{color_green:s}{text:s}{color_end:s}')
+
+            elif opcode == 'delete':
+              text = first_line[a0:a1]
+              first_output.append(f'{color_red:s}{text:s}{color_end:s}')
+
+            elif opcode == 'replace':
+              text = second_line[b0:b1]
+              second_output.append(f'{color_green:s}{text:s}{color_end:s}')
+              text = first_line[a0:a1]
+              first_output.append(f'{color_red:s}{text:s}{color_end:s}')
+
+          first_output = ''.join(first_output)
+          second_output = ''.join(second_output)
+
+          print(f'+ {second_output:s}')
+          print(f'- {first_output:s}')
 
   def _ExportEventLogProviders(self, database_reader, output_writer):
     """Exports the Event Log providers from an event provider database.
@@ -165,7 +268,7 @@ class Exporter(object):
     """Exports a message file.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
       message_file_database_path (str): path of the message file database.
     """
     database_reader = sqlite_store.SQLiteAttributeContainerStore()
@@ -197,7 +300,7 @@ class Exporter(object):
 
       # Strip ".db" from the database filename.
       name = descriptor.database_filename[:-3]
-      message_file = resources.MessageFile(name)
+      message_file = ExportMessageFile(name)
       message_file.windows_path = descriptor.message_filename
 
       self._ExportMessageFile(message_file, message_file_database_path)
@@ -220,10 +323,12 @@ class Exporter(object):
     """Exports the message strings from a message file database.
 
     Args:
-      message_file (MessageFile): message file.
+      message_file (ExportMessageFile): message file.
       database_reader (SQLiteAttributeContainerStore): message file
           database reader.
     """
+    extracted_message_tables_per_file_versions = {}
+
     for extracted_message_table in database_reader.GetAttributeContainers(
         resources.MessageTableDescriptor.CONTAINER_TYPE):
       extracted_message_file_identifier = (
@@ -233,53 +338,73 @@ class Exporter(object):
               resources.MessageFileDescriptor.CONTAINER_TYPE,
               extracted_message_file_identifier))
 
-      message_file.AppendMessageTable(
-          f'0x{extracted_message_table.language_identifier:08x}',
-          extracted_message_file.file_version)
+      # pylint: disable=consider-using-generator
+      file_version_tuple = tuple([
+          int(number, 10)
+          for number in extracted_message_file.file_version.split('.')])
+      extracted_message_tables_per_file_versions[file_version_tuple] = (
+          extracted_message_table)
 
-    for extracted_message_string in database_reader.GetAttributeContainers(
-        resources.MessageStringDescriptor.CONTAINER_TYPE):
-      extracted_message_table_identifier = (
-          extracted_message_string.GetMessageTableIdentifier())
-      extracted_message_table = (
-          database_reader.GetAttributeContainerByIdentifier(
-              resources.MessageTableDescriptor.CONTAINER_TYPE,
-              extracted_message_table_identifier))
+    message_tables = []
+    for file_version_tuple, extracted_message_table in sorted(
+        extracted_message_tables_per_file_versions.items()):
+      file_version = '.'.join([f'{number:d}' for number in file_version_tuple])
 
-      language_identifier = (
-          f'0x{extracted_message_table.language_identifier:08x}')
+      message_table = resources.MessageTable(
+          extracted_message_table.language_identifier)
+      message_table.file_versions.append(file_version)
 
-      message_table = message_file.GetMessageTable(language_identifier)
-      message_identifier = extracted_message_string.identifier
-      extracted_message_text = extracted_message_string.text
+      table_identifier = extracted_message_table.GetIdentifier()
+      identifier_string = table_identifier.CopyToString()
+      filter_expression = f'_message_table_identifier=="{identifier_string:s}"'
 
-      message_string = message_table.message_strings.get(
-          message_identifier, None)
-      if not message_string:
-        message_table.message_strings[message_identifier] = (
-            extracted_message_text)
+      for extracted_message_string in database_reader.GetAttributeContainers(
+          resources.MessageStringDescriptor.CONTAINER_TYPE,
+          filter_expression=filter_expression):
+        message_table.message_strings[extracted_message_string.identifier] = (
+            extracted_message_string.text)
 
-      elif message_string != extracted_message_text:
-        extracted_message_file_identifier = (
-            extracted_message_table.GetMessageFileIdentifier())
-        extracted_message_file = (
-            database_reader.GetAttributeContainerByIdentifier(
-                resources.MessageFileDescriptor.CONTAINER_TYPE,
-                extracted_message_file_identifier))
+      message_tables.append((file_version, message_table))
 
-        file_version = extracted_message_file.file_version
+    file_version, message_table = message_tables[0]
+    language_identifier = message_table.language_identifier
 
-        differ = difflib.Differ()
-        diff_list = list(differ.compare(
-            [message_string], [extracted_message_text]))
-        diff_list = '\n'.join(diff_list)
-        logging.warning((
-            f'Found duplicate alternating message string: '
-            f'0x{message_identifier:08x} in LCID: {language_identifier:s} and '
-            f'version: {file_version:s}.\n{diff_list:s}\n'))
+    # TODO: handle multiple language identifiers.
+    message_file.message_tables = [message_table]
+    for other_file_version, other_message_table in message_tables[1:]:
+      if message_table.message_strings == other_message_table.message_strings:
+        message_table.file_versions.append(other_file_version)
+      else:
+        message_identifiers = set(message_table.message_strings.keys())
+        message_identifiers.update(set(
+            other_message_table.message_strings.keys()))
+        for message_identifier in message_identifiers:
+          message_string = message_table.message_strings.get(
+              message_identifier, None)
+          other_message_string = other_message_table.message_strings.get(
+              message_identifier, None)
 
-        # TODO: is there a better way to determine which string to use.
-        # E.g. latest build version?
+          if not message_string:
+            logging.warning((
+                f'Message string: 0x{message_identifier:08x} was added in '
+                f'LCID: 0x{language_identifier:08x} and version: '
+                f'{other_file_version:s}.'))
+
+          elif not other_message_string:
+            logging.warning((
+                f'Message string: 0x{message_identifier:08x} was removed in '
+                f'LCID: 0x{language_identifier:08x} and version: '
+                f'{other_file_version:s}.'))
+
+          elif message_string != other_message_string:
+            self._DiffMessageString(
+                file_version, message_table.language_identifier,
+                message_identifier, [message_string], [other_message_string])
+
+        file_version = other_file_version
+        message_table = other_message_table
+
+        message_file.message_tables.append(message_table)
 
   def Export(self, source_path, output_writer):
     """Exports the strings extracted from message files.

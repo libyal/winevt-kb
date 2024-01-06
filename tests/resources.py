@@ -73,24 +73,5 @@ class EventLogProviderTest(test_lib.BaseTestCase):
         expected_parameter_message_files)
 
 
-class MessageFileTest(test_lib.BaseTestCase):
-  """Tests for the Windows Event Log message file."""
-
-  def testMessageTable(self):
-    """Tests the AppendMessageTable and GetMessageTable functions."""
-    message_file = resources.MessageFile('test')
-
-    message_file.AppendMessageTable(5, '1.2.3.4')
-
-    message_table = message_file.GetMessageTable(5)
-    self.assertIsNotNone(message_table)
-
-    message_table = message_file.GetMessageTable(6)
-    self.assertIsNone(message_table)
-
-    message_tables = list(message_file.GetMessageTables())
-    self.assertEqual(len(message_tables), 1)
-
-
 if __name__ == '__main__':
   unittest.main()

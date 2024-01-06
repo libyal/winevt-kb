@@ -113,60 +113,6 @@ class EventLogProvider(containers_interface.AttributeContainer):
     self.parameter_message_files = set(parameter_message_filenames)
 
 
-class MessageFile(object):
-  """Windows Event Log message file.
-
-  Attributes:
-    name (str): name.
-    windows_path (str): Windows path.
-  """
-
-  def __init__(self, name):
-    """Initializes the message file.
-
-    Args:
-      name (str): name.
-    """
-    super(MessageFile, self).__init__()
-    self._message_tables_per_language = {}
-
-    self.name = name
-    self.windows_path = None
-
-  def AppendMessageTable(self, lcid, file_version):
-    """Appends a message table.
-
-    Args:
-      lcid (int): language identifier (LCID).
-      file_version (str): Windows Event Log resource file version of the file
-          that contains the message table.
-    """
-    if lcid not in self._message_tables_per_language:
-      self._message_tables_per_language[lcid] = MessageTable(lcid)
-
-    self._message_tables_per_language[lcid].file_versions.append(file_version)
-
-  def GetMessageTable(self, lcid):
-    """Retrieves the message table for a specific language.
-
-    Args:
-      lcid (int): language identifier (LCID).
-
-    Returns:
-      MessageTable: message table or None.
-    """
-    return self._message_tables_per_language.get(lcid, None)
-
-  def GetMessageTables(self):
-    """Retrieves the message tables.
-
-    Yields:
-      MessageTable: message table.
-    """
-    for message_table in self._message_tables_per_language.values():
-      yield message_table
-
-
 class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
   """Windows Event Log message file database descriptor.
 
@@ -234,12 +180,12 @@ class MessageTable(object):
 
   Attributes:
     file_versions (list[str]): Windows Event Log resource file versions.
-    lcid (int): language identifier (LCID).
+    language_identifier (int): language identifier (LCID).
     message_strings (dict[int, str]): Windows Event Log resource message
        strings per identifier.
   """
 
-  def __init__(self, lcid):
+  def __init__(self, language_identifier):
     """Initializes the message table.
 
     Args:
@@ -247,8 +193,13 @@ class MessageTable(object):
     """
     super(MessageTable, self).__init__()
     self.file_versions = []
-    self.lcid = lcid
+    self.language_identifier = language_identifier
     self.message_strings = {}
+
+  @property
+  def lcid(self):
+    """int: language identifier (LCID)."""
+    return self.language_identifier
 
 
 class MessageStringDescriptor(containers_interface.AttributeContainer):
