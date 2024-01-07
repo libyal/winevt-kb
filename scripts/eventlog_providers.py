@@ -16,6 +16,34 @@ from winevtrc import documentation
 from winevtrc import extractor
 
 
+def CompareEventLogProviders(event_log_provider, other_event_log_provider):
+  """Compares 2 Event Log providers to determine if they are equivalent.
+
+  Args:
+    event_log_provider (EventLogProvider): Event Log provider.
+    other_event_log_provider (EventLogProvider): other Event Log provider.
+
+  Returns:
+    bool: True if the Event Log providers are equivalent, False otherwise.
+  """
+  if event_log_provider.identifier != other_event_log_provider.identifier:
+    return False
+
+  message_files = other_event_log_provider.category_message_files
+  if event_log_provider.category_message_files != message_files:
+    return False
+
+  message_files = other_event_log_provider.event_message_files
+  if event_log_provider.event_message_files != message_files:
+    return False
+
+  message_files = other_event_log_provider.parameter_message_files
+  if event_log_provider.parameter_message_files != message_files:
+    return False
+
+  return True
+
+
 def Main():
   """The main program function.
 
@@ -68,6 +96,8 @@ def Main():
   volume_scanner_options.volumes = ['none']
 
   event_log_providers_per_version = []
+  providers_per_log_source = {}
+
   for source_definition in source_definitions:
     source_path = source_definition['source']
     logging.info(f'Processing: {source_path:s}')
@@ -113,6 +143,8 @@ def Main():
         log_sources = sorted(event_log_provider.log_sources)
         name = log_sources[0]
 
+      providers_per_log_source[name] = []
+
       # pylint: disable=consider-using-set-comprehension
 
       event_log_provider.category_message_files = set([
@@ -133,10 +165,6 @@ def Main():
       event_log_providers_per_version.append(
           (windows_version, event_log_providers))
 
-  providers_per_log_source = {
-      log_source: [] for log_source in event_log_providers.keys()
-      for _, event_log_providers in event_log_providers_per_version}
-
   for name, providers in sorted(providers_per_log_source.items()):
     for windows_version, event_log_providers in event_log_providers_per_version:
       event_log_provider = event_log_providers.get(name, None)
@@ -146,23 +174,8 @@ def Main():
       is_equivalent = False
       for provider_and_versions in providers:
         result_event_log_provider = provider_and_versions['event_log_provider']
-        is_equivalent = True
-
-        if event_log_provider.identifier != (
-            result_event_log_provider.identifier):
-          is_equivalent = False
-
-        elif event_log_provider.category_message_files != (
-            result_event_log_provider.category_message_files):
-          is_equivalent = False
-
-        elif event_log_provider.event_message_files != (
-            result_event_log_provider.event_message_files):
-          is_equivalent = False
-
-        elif event_log_provider.parameter_message_files != (
-            result_event_log_provider.parameter_message_files):
-          is_equivalent = False
+        is_equivalent = CompareEventLogProviders(
+            result_event_log_provider, event_log_provider)
 
         if is_equivalent:
           provider_and_versions['windows_versions'].append(windows_version)

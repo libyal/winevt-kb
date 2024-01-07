@@ -16,7 +16,7 @@ The source code is available from the `project page <https://github.com/libyal/w
 .. toctree::
    :maxdepth: 1
 
-   sources/message_files/index
+   sources/message-files/index
 
 .. toctree::
    :maxdepth: 2
