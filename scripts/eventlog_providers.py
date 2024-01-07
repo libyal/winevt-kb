@@ -148,16 +148,13 @@ def Main():
       # pylint: disable=consider-using-set-comprehension
 
       event_log_provider.category_message_files = set([
-          extractor_object.GetNormalizedMessageFilePath(path).lower()
-          for path in event_log_provider.category_message_files])
+          path.lower() for path in event_log_provider.category_message_files])
 
       event_log_provider.event_message_files = set([
-          extractor_object.GetNormalizedMessageFilePath(path).lower()
-          for path in event_log_provider.event_message_files])
+          path.lower() for path in event_log_provider.event_message_files])
 
       event_log_provider.parameter_message_files = set([
-          extractor_object.GetNormalizedMessageFilePath(path).lower()
-          for path in event_log_provider.parameter_message_files])
+          path.lower() for path in event_log_provider.parameter_message_files])
 
       event_log_providers[name] = event_log_provider
 

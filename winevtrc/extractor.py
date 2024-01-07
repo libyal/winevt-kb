@@ -216,14 +216,27 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
   def CollectEventLogProviders(self):
     """Retrieves the Event Log providers.
 
-    Returns:
-      generator[EventLogProvider]: Event Log providers generator.
+    Yields:
+      EventLogProvider: Event Log provider.
     """
     # TODO: have CLI argument control this mode.
     # all_control_sets = False
 
     collector = eventlog_providers.EventLogProvidersCollector()
-    return collector.Collect(self._registry)
+    for event_log_provider in collector.Collect(self._registry):
+      event_log_provider.category_message_files = [
+          self.GetNormalizedMessageFilePath(path)
+          for path in event_log_provider.category_message_files]
+
+      event_log_provider.event_message_files = [
+          self.GetNormalizedMessageFilePath(path)
+          for path in event_log_provider.event_message_files]
+
+      event_log_provider.parameter_message_files = [
+          self.GetNormalizedMessageFilePath(path)
+          for path in event_log_provider.parameter_message_files]
+
+      yield event_log_provider
 
   def CollectSystemEnvironmentVariables(self):
     """Collects the system environment variables."""
