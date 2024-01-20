@@ -118,6 +118,12 @@ class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
 
     self._event_log_providers_directory = None
 
+    if self._message_files_index_writer:
+      self._message_files_index_writer.Close()
+      self._message_files_index_writer = None
+
+    self._message_files_directory = None
+
   def Open(self):
     """Opens the output writer object.
 
