@@ -110,8 +110,11 @@ def Main():
     wrc_stream.set_virtual_address(exe_section.virtual_address)
     wrc_stream.open_file_object(exe_section)
 
-    wrc_resource = wrc_stream.get_resource_by_name('WEVT_TEMPLATE')
-    if wrc_resource:
+    message_table_wrc_resource = wrc_stream.get_resource_by_identifier(0x0b)
+    wevt_template_wrc_resource = wrc_stream.get_resource_by_name(
+        'WEVT_TEMPLATE')
+
+    if wevt_template_wrc_resource:
       # Note that symbols do not appear to be stored in the binary format.
 
       print('\n'.join([
@@ -128,7 +131,7 @@ def Main():
            'trace">'),
           '    <instrumentation>']))
 
-      for wrc_resource_item in wrc_resource.items:
+      for wrc_resource_item in wevt_template_wrc_resource.items:
         for wrc_resource_sub_item in wrc_resource_item.sub_items:
           resource_data = wrc_resource_sub_item.read()
 
@@ -174,11 +177,17 @@ def Main():
                       print((f'                        template='
                              f'"{{{template_identifier:s}}}"'))
 
-                  print('\n'.join([
-                      (f'                        message='
-                       f'"$(string.MessageTable.'
-                       f'0x{wevt_event.message_identifier:08x})">'),
-                      '                    </event>']))
+                  if message_table_wrc_resource:
+                    print((f'                        message='
+                           f'"$(string.MessageTable.'
+                           f'0x{wevt_event.message_identifier:08x})">'))
+                  else:
+                    # TODO: it is current unknown what the $mc.symbolid syntax
+                    # looks like in practice.
+                    print((f'                        message='
+                           f'"$(mc.0x{wevt_event.message_identifier:08x})">'))
+
+                  print('                    </event>')
 
                 print('                </events>')
 
@@ -252,11 +261,10 @@ def Main():
 
       print('    </instrumentation>')
 
-      wrc_resource = wrc_stream.get_resource_by_identifier(0x0b)
-      if wrc_resource:
+      if message_table_wrc_resource:
         print('    <localization>')
 
-        wrc_resource_item = wrc_resource.items[0]
+        wrc_resource_item = message_table_wrc_resource.items[0]
         for wrc_resource_sub_item in wrc_resource_item.sub_items:
           language_identifier = wrc_resource_sub_item.identifier
 

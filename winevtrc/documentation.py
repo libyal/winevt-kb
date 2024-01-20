@@ -8,7 +8,7 @@ class DocumentationFileWriter(object):
   """Documentation file writer."""
 
   def __init__(self, path):
-    """Initializes a documenation file writer."""
+    """Initializes a documentation file writer."""
     super(DocumentationFileWriter, self).__init__()
     self._file_object = None
     self._path = path
