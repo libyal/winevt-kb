@@ -10,6 +10,9 @@ import pyexe
 import pyfwevt
 import pywrc
 
+from winevtrc import dfvfs_helpers
+from winevtrc import file_system
+
 
 def Main():
   """The main program function.
@@ -24,18 +27,30 @@ def Main():
       '-d', '--debug', dest='debug', action='store_true', default=False,
       help='enable debug output.')
 
+  dfvfs_helpers.AddDFVFSCLIArguments(argument_parser)
+
   argument_parser.add_argument(
       'source', nargs='?', action='store', metavar='PATH', default=None, help=(
           'path of the PE/COFF resource file.'))
 
   options = argument_parser.parse_args()
 
-  if not options.source:
-    print('Source file missing.')
-    print('')
-    argument_parser.print_help()
-    print('')
-    return False
+  if dfvfs_helpers and getattr(options, 'image', None):
+    file_system_helper = dfvfs_helpers.ParseDFVFSCLIArguments(options)
+    if not file_system_helper:
+      print('No supported file system found in storage media image.')
+      print('')
+      return False
+
+  else:
+    if not options.source:
+      print('Source file missing.')
+      print('')
+      argument_parser.print_help()
+      print('')
+      return False
+
+    file_system_helper = file_system.NativeFileSystemHelper()
 
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -101,8 +116,10 @@ def Main():
       0x23: 'win:Utf8',
       0x24: 'win:Pkcs7WithTypeInfo'}
 
+  file_object = file_system_helper.OpenFileByPath(options.source)
+
   exe_file = pyexe.file()
-  exe_file.open(options.source)
+  exe_file.open_file_object(file_object)
 
   exe_section = exe_file.get_section_by_name('.rsrc')
   if exe_section:
