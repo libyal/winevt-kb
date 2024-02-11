@@ -20,6 +20,14 @@ winevtrc.definitions module
    :undoc-members:
    :show-inheritance:
 
+winevtrc.dfvfs\_helpers module
+------------------------------
+
+.. automodule:: winevtrc.dfvfs_helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 winevtrc.documentation module
 -----------------------------
 
@@ -56,6 +64,14 @@ winevtrc.extractor module
 -------------------------
 
 .. automodule:: winevtrc.extractor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+winevtrc.file\_system module
+----------------------------
+
+.. automodule:: winevtrc.file_system
    :members:
    :undoc-members:
    :show-inheritance:

@@ -119,7 +119,7 @@ class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
   Attributes:
       database_filename (str): database filename.
       message_filename (str): message filename.
-    """
+  """
 
   CONTAINER_TYPE = 'message_file_database'
 
@@ -147,7 +147,7 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
       message_filename (str): message filename.
       product_version (str): product version.
       windows_version (str): Windows version.
-    """
+  """
 
   CONTAINER_TYPE = 'message_file'
 
@@ -208,7 +208,7 @@ class MessageStringDescriptor(containers_interface.AttributeContainer):
   Attributes:
       identifier (int): message identifier.
       text (str): message text.
-    """
+  """
 
   CONTAINER_TYPE = 'message_string'
 
@@ -256,7 +256,7 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
 
   Attributes:
       language_identifier (int): language identifier (LCID).
-    """
+  """
 
   CONTAINER_TYPE = 'message_table'
 
