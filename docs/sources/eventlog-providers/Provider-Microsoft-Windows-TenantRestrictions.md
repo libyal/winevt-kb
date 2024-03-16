@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\cloudidsvc.dll</td>
+      <td>%SystemRoot%\system32\cloudidsvc.dll</td>
     </tr>
   </tbody>
 </table>

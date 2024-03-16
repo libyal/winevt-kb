@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%programfiles%\windows sidebar\sidebar.exe</td>
+      <td>%PROGRAMFILES%\Windows Sidebar\Sidebar.exe</td>
     </tr>
   </tbody>
 </table>

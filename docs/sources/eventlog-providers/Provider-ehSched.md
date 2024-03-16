@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\ehome\ehsched.exe</td>
+      <td>%SystemRoot%\ehome\ehSched.exe</td>
     </tr>
   </tbody>
 </table>

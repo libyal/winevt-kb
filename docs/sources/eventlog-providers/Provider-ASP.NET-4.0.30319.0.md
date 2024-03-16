@@ -15,11 +15,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework\v4.0.30319\aspnet_rc.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\aspnet_rc.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework\v4.0.30319\aspnet_rc.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\aspnet_rc.dll</td>
     </tr>
   </tbody>
 </table>

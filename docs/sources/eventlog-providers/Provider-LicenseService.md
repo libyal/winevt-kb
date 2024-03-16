@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\llsrpc.dll</td>
+      <td>%SystemRoot%\System32\llsrpc.dll</td>
     </tr>
   </tbody>
 </table>

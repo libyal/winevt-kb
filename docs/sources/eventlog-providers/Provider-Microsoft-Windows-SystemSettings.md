@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\immersivecontrolpanel\systemsettings.exe</td>
+      <td>%SystemRoot%\ImmersiveControlPanel\SystemSettings.exe</td>
     </tr>
   </tbody>
 </table>

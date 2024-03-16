@@ -15,11 +15,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\msdtcprx.dll</td>
+      <td>%SystemRoot%\System32\MSDTCPRX.DLL</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\msdtcprx.dll</td>
+      <td>%SystemRoot%\System32\MSDTCPRX.DLL</td>
     </tr>
   </tbody>
 </table>
@@ -42,19 +42,19 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRES.DLL</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\System32\comres.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\ws03res.dll</td>
+      <td>%SystemRoot%\System32\ws03res.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\xpsp2res.dll</td>
+      <td>%SystemRoot%\System32\xpsp2res.dll</td>
     </tr>
   </tbody>
 </table>
@@ -76,19 +76,19 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRES.DLL</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\xpsp2res.dll</td>
+      <td>%SystemRoot%\system32\xpsp2res.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRES.DLL</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\xpsp2res.dll</td>
+      <td>%SystemRoot%\system32\xpsp2res.dll</td>
     </tr>
   </tbody>
 </table>

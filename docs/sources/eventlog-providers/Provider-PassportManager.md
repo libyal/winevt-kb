@@ -15,11 +15,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\msppmalr.dll</td>
+      <td>%SystemRoot%\system32\msppmalr.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\msppmalr.dll</td>
+      <td>%SystemRoot%\system32\msppmalr.dll</td>
     </tr>
   </tbody>
 </table>

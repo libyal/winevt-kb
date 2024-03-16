@@ -26,11 +26,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\certadm.dll</td>
+      <td>%SystemRoot%\system32\certadm.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\certadm.dll</td>
+      <td>%SystemRoot%\system32\certadm.dll</td>
     </tr>
   </tbody>
 </table>

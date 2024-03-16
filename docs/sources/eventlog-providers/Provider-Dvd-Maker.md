@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%programfiles%\dvd maker\dvdmaker.exe</td>
+      <td>%ProgramFiles%\DVD Maker\DVDMaker.exe</td>
     </tr>
   </tbody>
 </table>

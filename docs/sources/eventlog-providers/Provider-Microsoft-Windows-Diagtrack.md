@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\utcresources.dll</td>
+      <td>%SystemRoot%\system32\UtcResources.dll</td>
     </tr>
   </tbody>
 </table>
@@ -38,7 +38,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\diagtrack.dll</td>
+      <td>%SystemRoot%\system32\diagtrack.dll</td>
     </tr>
   </tbody>
 </table>

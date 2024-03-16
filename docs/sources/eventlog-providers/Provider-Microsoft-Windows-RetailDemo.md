@@ -24,7 +24,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\rdxservice.dll</td>
+      <td>%SystemRoot%\system32\RDXService.dll</td>
     </tr>
   </tbody>
 </table>

@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\winstore\winstoreui.dll</td>
+      <td>%SystemRoot%\WinStore\WinStoreUI.dll</td>
     </tr>
   </tbody>
 </table>

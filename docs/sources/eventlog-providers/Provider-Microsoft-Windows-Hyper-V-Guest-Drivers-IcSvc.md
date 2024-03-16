@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\icsvcext.dll</td>
+      <td>%SystemRoot%\system32\icsvcext.dll</td>
     </tr>
   </tbody>
 </table>
@@ -39,7 +39,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\icsvc.dll</td>
+      <td>%SystemRoot%\system32\icsvc.dll</td>
     </tr>
   </tbody>
 </table>

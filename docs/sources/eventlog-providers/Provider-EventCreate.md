@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\eventcreate.exe</td>
+      <td>%SystemRoot%\System32\EventCreate.exe</td>
     </tr>
   </tbody>
 </table>

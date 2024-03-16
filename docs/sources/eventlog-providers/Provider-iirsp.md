@@ -2,11 +2,11 @@
 
 Seen on:
 * Windows 2003
+* Windows XP 64-bit
+* Windows Vista
 * Windows 2008
 * Windows 7
 * Windows 8.0
-* Windows Vista
-* Windows XP 64-bit
 
 <table border="1" class="docutils">
   <tbody>
@@ -20,7 +20,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\iologmsg.dll</td>
+      <td>%SystemRoot%\System32\IoLogMsg.dll</td>
     </tr>
   </tbody>
 </table>

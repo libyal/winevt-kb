@@ -11,8 +11,8 @@ import yaml
 
 from acstore import sqlite_store
 
-from dfvfs.helpers import command_line as dfvfs_command_line
-from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
+from dfimagetools.helpers import command_line as dfimagetools_command_line
+
 from dfvfs.lib import errors as dfvfs_errors
 
 import pywrc
@@ -299,6 +299,9 @@ def Main():
       dest='windows_version', action='store', metavar='Windows XP',
       default=None, help='string that identifies the Windows version.')
 
+  # TODO: add source group
+  dfimagetools_command_line.AddStorageMediaImageCLIArguments(argument_parser)
+
   argument_parser.add_argument(
       'source', nargs='?', action='store', metavar='/mnt/c/',
       default=None, help=(
@@ -343,12 +346,8 @@ def Main():
     print('')
     return False
 
-  mediator = dfvfs_command_line.CLIVolumeScannerMediator()
-
-  volume_scanner_options = dfvfs_volume_scanner.VolumeScannerOptions()
-  volume_scanner_options.partitions = ['all']
-  volume_scanner_options.snapshots = ['none']
-  volume_scanner_options.volumes = ['none']
+  mediator, volume_scanner_options = (
+      dfimagetools_command_line.ParseStorageMediaImageCLIArguments(options))
 
   try:
     for source_definition in source_definitions:

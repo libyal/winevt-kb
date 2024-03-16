@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\racagent.exe</td>
+      <td>%SystemRoot%\system32\racagent.exe</td>
     </tr>
   </tbody>
 </table>

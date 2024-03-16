@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\dnsapi.dll</td>
+      <td>%SystemRoot%\system32\dnsapi.dll</td>
     </tr>
   </tbody>
 </table>

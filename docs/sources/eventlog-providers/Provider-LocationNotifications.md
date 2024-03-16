@@ -25,7 +25,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\locationnotifications.exe</td>
+      <td>%SystemRoot%\System32\LocationNotifications.exe</td>
     </tr>
   </tbody>
 </table>

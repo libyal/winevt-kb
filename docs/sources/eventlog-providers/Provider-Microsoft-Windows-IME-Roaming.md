@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\ime\shared\imeroaming.dll</td>
+      <td>%SystemRoot%\system32\IME\Shared\ImeRoaming.dll</td>
     </tr>
   </tbody>
 </table>

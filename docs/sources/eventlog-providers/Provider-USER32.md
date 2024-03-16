@@ -1,12 +1,12 @@
 ## USER32
 
 Seen on:
+* Windows XP 32-bit
 * Windows 2003
+* Windows XP 64-bit
+* Windows Vista
 * Windows 2008
 * Windows 7
-* Windows Vista
-* Windows XP 32-bit
-* Windows XP 64-bit
 
 <table border="1" class="docutils">
   <tbody>
@@ -20,7 +20,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\user32.dll</td>
+      <td>%SystemRoot%\System32\user32.dll</td>
     </tr>
   </tbody>
 </table>

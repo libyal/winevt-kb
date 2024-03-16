@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\peerdistsvc.dll</td>
+      <td>%SystemRoot%\system32\peerdistsvc.dll</td>
     </tr>
   </tbody>
 </table>
@@ -40,7 +40,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\peerdist.dll</td>
+      <td>%SystemRoot%\system32\peerdist.dll</td>
     </tr>
   </tbody>
 </table>

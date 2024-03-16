@@ -1,8 +1,8 @@
 ## System.Runtime.Serialization 3.0.0.0
 
 Seen on:
-* Windows 7
 * Windows Vista
+* Windows 7
 
 <table border="1" class="docutils">
   <tbody>
@@ -16,11 +16,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework64\v3.0\windows communication foundation\servicemodelevents.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework64\v3.0\Windows Communication Foundation\ServiceModelEvents.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework64\v3.0\windows communication foundation\servicemodelevents.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework64\v3.0\Windows Communication Foundation\ServiceModelEvents.dll</td>
     </tr>
   </tbody>
 </table>

@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\microsoft-windows-system-events.dll</td>
+      <td>%SystemRoot%\system32\Microsoft-Windows-System-Events.dll</td>
     </tr>
   </tbody>
 </table>

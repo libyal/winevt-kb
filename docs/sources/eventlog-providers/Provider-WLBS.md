@@ -15,19 +15,19 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\wlbs.sys</td>
+      <td>%SystemRoot%\System32\drivers\wlbs.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\netcfgx.dll</td>
+      <td>%SystemRoot%\System32\netcfgx.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\netevent.dll</td>
+      <td>%SystemRoot%\System32\netevent.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\wbem\nlbmprov.dll</td>
+      <td>%SystemRoot%\System32\wbem\nlbmprov.dll</td>
     </tr>
   </tbody>
 </table>

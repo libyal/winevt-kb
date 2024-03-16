@@ -23,7 +23,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\nvdimmn.sys</td>
+      <td>%SystemRoot%\system32\drivers\nvdimmn.sys</td>
     </tr>
   </tbody>
 </table>

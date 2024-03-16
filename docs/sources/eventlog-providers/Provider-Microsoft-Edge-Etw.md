@@ -23,7 +23,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>\program files (x86)\microsoft\edge\application\87.0.664.60\msedge.dll</td>
+      <td>\Program Files (x86)\Microsoft\Edge\Application\87.0.664.60\msedge.dll</td>
     </tr>
   </tbody>
 </table>
@@ -53,7 +53,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>\program files (x86)\microsoft\edge\application\84.0.522.52\msedge.dll</td>
+      <td>\Program Files (x86)\Microsoft\Edge\Application\84.0.522.52\msedge.dll</td>
     </tr>
   </tbody>
 </table>

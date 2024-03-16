@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\w03a2409.dll</td>
+      <td>%SystemRoot%\System32\w03a2409.dll</td>
     </tr>
   </tbody>
 </table>
@@ -37,7 +37,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\xpsp3res.dll</td>
+      <td>%SystemRoot%\System32\xpsp3res.dll</td>
     </tr>
   </tbody>
 </table>

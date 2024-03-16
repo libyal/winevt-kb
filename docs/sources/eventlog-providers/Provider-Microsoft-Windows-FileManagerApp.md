@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\filemanager\filemanagerapp.dll</td>
+      <td>%SystemRoot%\FileManager\FileManagerApp.dll</td>
     </tr>
   </tbody>
 </table>

@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\ehome\ehrecvr.exe</td>
+      <td>%SystemRoot%\ehome\ehRecvr.exe</td>
     </tr>
   </tbody>
 </table>

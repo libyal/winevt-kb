@@ -15,11 +15,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\sp3res.dll</td>
+      <td>%SystemRoot%\System32\sp3res.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\w32time.dll</td>
+      <td>%SystemRoot%\System32\w32time.dll</td>
     </tr>
   </tbody>
 </table>
@@ -42,11 +42,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\w32time.dll</td>
+      <td>%SystemRoot%\System32\w32time.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\ws03res.dll</td>
+      <td>%SystemRoot%\System32\ws03res.dll</td>
     </tr>
   </tbody>
 </table>
@@ -68,7 +68,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\w32time.dll</td>
+      <td>%SystemRoot%\system32\w32time.dll</td>
     </tr>
   </tbody>
 </table>

@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\windows.management.secureassessment.diagnostics.dll</td>
+      <td>%SystemRoot%\system32\Windows.Management.SecureAssessment.Diagnostics.dll</td>
     </tr>
   </tbody>
 </table>

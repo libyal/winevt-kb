@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\mprmsg.dll</td>
+      <td>%SystemRoot%\System32\mprmsg.dll</td>
     </tr>
   </tbody>
 </table>
@@ -25,8 +25,8 @@ Seen on:
 
 Seen on:
 * Windows 2003
-* Windows Vista
 * Windows XP 64-bit
+* Windows Vista
 
 <table border="1" class="docutils">
   <tbody>
@@ -40,11 +40,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\mprmsg.dll</td>
+      <td>%SystemRoot%\System32\mprmsg.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\ws03res.dll</td>
+      <td>%SystemRoot%\System32\ws03res.dll</td>
     </tr>
   </tbody>
 </table>

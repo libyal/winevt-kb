@@ -24,11 +24,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\ialpss2i_i2c.sys</td>
+      <td>%SystemRoot%\System32\IoLogMsg.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\iologmsg.dll</td>
+      <td>%SystemRoot%\system32\drivers\iaLPSS2i_I2C.sys</td>
     </tr>
   </tbody>
 </table>

@@ -1,9 +1,9 @@
 ## Microsoft-Windows-EtwCollector
 
 Seen on:
-* Windows 10 (1511)
 * Windows 2012
 * Windows 8.1
+* Windows 10 (1511)
 
 <table border="1" class="docutils">
   <tbody>
@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\ieetwcollectorres.dll</td>
+      <td>%SystemRoot%\system32\ieetwcollectorres.dll</td>
     </tr>
   </tbody>
 </table>

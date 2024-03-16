@@ -23,7 +23,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\driverstore\filerepository\usb4devicerouter.inf_amd64_8d9a17bd8e5b4b11\usb4devicerouter.sys</td>
+      <td>%SystemRoot%\System32\DriverStore\FileRepository\usb4devicerouter.inf_amd64_8d9a17bd8e5b4b11\Usb4DeviceRouter.sys</td>
     </tr>
   </tbody>
 </table>

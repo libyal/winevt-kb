@@ -1,15 +1,16 @@
 ## Microsoft-Windows-DxgKrnl
 
 Seen on:
-* Windows 10 (1511, 1607, 1703, 1709, 1803, 1809, 1903, 1909, 2004, 20H2)
-* Windows 11 (21H2)
+* Windows Vista
 * Windows 2008
-* Windows 2012
-* Windows 2016
-* Windows 2019
 * Windows 7
+* Windows 2012
 * Windows 8.0
 * Windows 8.1
+* Windows 10 (1511, 1607, 1703, 1709, 1803, 1809, 1903, 1909, 2004, 20H2)
+* Windows 2016
+* Windows 2019
+* Windows 11 (21H2)
 
 <table border="1" class="docutils">
   <tbody>
@@ -23,25 +24,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\dxgkrnl.sys</td>
-    </tr>
-  </tbody>
-</table>
-
-&nbsp;
-
-Seen on:
-* Windows Vista
-
-<table border="1" class="docutils">
-  <tbody>
-    <tr>
-      <td><b>Name:</b></td>
-      <td>Microsoft-Windows-DxgKrnl</td>
-    </tr>
-    <tr>
-      <td><b>Identifier:</b></td>
-      <td>{802ec45a-1e99-4b83-9920-87c98277ba9d}</td>
+      <td>%SystemRoot%\system32\drivers\dxgkrnl.sys</td>
     </tr>
   </tbody>
 </table>

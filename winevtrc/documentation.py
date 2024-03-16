@@ -3,6 +3,8 @@
 
 import re
 
+from winevtrc import versions
+
 
 class DocumentationFileWriter(object):
   """Documentation file writer."""
@@ -41,6 +43,8 @@ class DocumentationFileWriter(object):
 class EventLogProviderMarkdownWriter(DocumentationFileWriter):
   """Event Log provider Markdown file writer."""
 
+  _WINDOWS_VERSIONS_KEY_FUNCTION = versions.WindowsVersions.KeyFunction
+
   def WriteEventLogProvider(self, event_log_provider, windows_versions):
     """Writes an Event Log provider to a Markdown file.
 
@@ -77,11 +81,15 @@ class EventLogProviderMarkdownWriter(DocumentationFileWriter):
 
       lines.append('Seen on:')
 
-      for prefix, versions in versions_per_prefix.items():
-        line = f'* {prefix:s}'
-        if versions:
-          versions_string = ', '.join(versions)
-          line = f'{line:s} ({versions_string:s})'
+      for prefix, sub_versions in sorted(
+          versions_per_prefix.items(),
+          key=lambda item: self._WINDOWS_VERSIONS_KEY_FUNCTION(item[0])):
+        if not sub_versions:
+          line = f'* {prefix:s}'
+        else:
+          sub_versions_string = ', '.join(sub_versions)
+          line = f'* {prefix:s} ({sub_versions_string:s})'
+
         lines.append(line)
 
       lines.append('')

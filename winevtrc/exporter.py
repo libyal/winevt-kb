@@ -129,19 +129,31 @@ class Exporter(object):
        event_log_provider.identifier != other_event_log_provider.identifier):
       return False
 
-    message_files = other_event_log_provider.category_message_files
-    if event_log_provider.category_message_files and (
-       event_log_provider.category_message_files != message_files):
+    category_message_files = {
+        message_file.lower()
+        for message_file in event_log_provider.category_message_files}
+    message_files = {
+        message_file.lower()
+        for message_file in other_event_log_provider.category_message_files}
+    if category_message_files and category_message_files != message_files:
       return False
 
-    message_files = other_event_log_provider.event_message_files
-    if event_log_provider.event_message_files and (
-       event_log_provider.event_message_files != message_files):
+    event_message_files = {
+        message_file.lower()
+        for message_file in event_log_provider.event_message_files}
+    message_files = {
+        message_file.lower()
+        for message_file in other_event_log_provider.event_message_files}
+    if event_message_files and event_message_files != message_files:
       return False
 
-    message_files = other_event_log_provider.parameter_message_files
-    if event_log_provider.parameter_message_files and (
-       event_log_provider.parameter_message_files != message_files):
+    parameter_message_files = {
+        message_file.lower()
+        for message_file in event_log_provider.parameter_message_files}
+    message_files = {
+        message_file.lower()
+        for message_file in other_event_log_provider.parameter_message_files}
+    if parameter_message_files and parameter_message_files != message_files:
       return False
 
     return True
@@ -261,7 +273,9 @@ class Exporter(object):
         export_event_log_provider.providers_with_versions.append((
             event_log_provider, [event_log_provider.windows_version]))
 
-    for export_event_log_provider in providers_per_log_source.values():
+    for export_event_log_provider in sorted(
+        providers_per_log_source.values(),
+        key=lambda export_event_log_provider: export_event_log_provider.name):
       output_writer.WriteEventLogProvider(export_event_log_provider)
 
   def _ExportMessageFile(self, message_file, message_file_database_path):

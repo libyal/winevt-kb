@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\oobefldr.dll</td>
+      <td>%SystemRoot%\System32\OobeFldr.dll</td>
     </tr>
   </tbody>
 </table>

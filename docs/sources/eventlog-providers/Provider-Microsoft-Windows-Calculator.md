@@ -2,8 +2,8 @@
 
 Seen on:
 * Windows 2008
-* Windows 2012
 * Windows 7
+* Windows 2012
 * Windows 8.0
 * Windows 8.1
 
@@ -19,7 +19,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\calc.exe</td>
+      <td>%SystemRoot%\system32\calc.exe</td>
     </tr>
   </tbody>
 </table>
@@ -42,7 +42,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\win32calc.exe</td>
+      <td>%SystemRoot%\system32\win32calc.exe</td>
     </tr>
   </tbody>
 </table>

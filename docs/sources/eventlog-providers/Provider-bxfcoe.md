@@ -17,11 +17,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\bxfcoe.sys</td>
+      <td>%SystemRoot%\System32\drivers\bxfcoe.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\iologmsg.dll</td>
+      <td>%SystemRoot%\System32\iologmsg.dll</td>
     </tr>
   </tbody>
 </table>

@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>\program files\windows media player\wmpdmccore.dll</td>
+      <td>\Program Files\Windows Media Player\wmpdmccore.dll</td>
     </tr>
   </tbody>
 </table>

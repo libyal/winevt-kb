@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\hvsievaluator.exe</td>
+      <td>%SystemRoot%\system32\hvsievaluator.exe</td>
     </tr>
   </tbody>
 </table>

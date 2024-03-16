@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\nvmedisk.sys</td>
+      <td>%SystemRoot%\system32\drivers\nvmedisk.sys</td>
     </tr>
   </tbody>
 </table>

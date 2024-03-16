@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\synth3dvsc.sys</td>
+      <td>%SystemRoot%\System32\Drivers\Synth3dVsc.sys</td>
     </tr>
   </tbody>
 </table>

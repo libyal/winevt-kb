@@ -1,8 +1,8 @@
 ## Cdm
 
 Seen on:
-* Windows 2003
 * Windows XP 32-bit
+* Windows 2003
 * Windows XP 64-bit
 
 <table border="1" class="docutils">

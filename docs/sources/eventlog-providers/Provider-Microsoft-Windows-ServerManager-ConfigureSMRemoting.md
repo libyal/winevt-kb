@@ -25,7 +25,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\configure-smremoting.exe</td>
+      <td>%SystemRoot%\system32\Configure-SMRemoting.exe</td>
     </tr>
   </tbody>
 </table>

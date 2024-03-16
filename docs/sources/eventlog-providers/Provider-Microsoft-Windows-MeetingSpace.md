@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%programfiles%\windows collaboration\wincollabres.dll</td>
+      <td>%programfiles%\Windows Collaboration\WinCollabRes.dll</td>
     </tr>
   </tbody>
 </table>

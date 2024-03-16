@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\lsm.exe</td>
+      <td>%SystemRoot%\system32\lsm.exe</td>
     </tr>
   </tbody>
 </table>

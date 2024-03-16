@@ -2,8 +2,8 @@
 
 Seen on:
 * Windows 10 (1809, 1903, 1909, 2004, 20H2)
-* Windows 11 (21H2)
 * Windows 2019
+* Windows 11 (21H2)
 
 <table border="1" class="docutils">
   <tbody>
@@ -17,15 +17,15 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\bthport.sys</td>
+      <td>%SystemRoot%\System32\Drivers\BthUsb.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\drivers\bthusb.sys</td>
+      <td>%SystemRoot%\System32\Drivers\Bthport.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\iologmsg.dll</td>
+      <td>%SystemRoot%\System32\IoLogMsg.dll</td>
     </tr>
   </tbody>
 </table>

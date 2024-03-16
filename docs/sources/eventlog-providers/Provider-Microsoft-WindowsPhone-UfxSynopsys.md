@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\ufxsynopsys.sys</td>
+      <td>%SystemRoot%\System32\drivers\ufxsynopsys.sys</td>
     </tr>
   </tbody>
 </table>

@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\napipsec.dll</td>
+      <td>%SystemRoot%\System32\napipsec.dll</td>
     </tr>
   </tbody>
 </table>

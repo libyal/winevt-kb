@@ -1,8 +1,8 @@
 ## Microsoft-Windows-KeyboardFilter
 
 Seen on:
-* Windows 11 (21H2)
 * Windows 8.1
+* Windows 11 (21H2)
 
 <table border="1" class="docutils">
   <tbody>
@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\keyboardfiltersvc.dll</td>
+      <td>%SystemRoot%\system32\KeyboardFilterSvc.dll</td>
     </tr>
   </tbody>
 </table>

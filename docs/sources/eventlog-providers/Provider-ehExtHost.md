@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\ehome\ehepgres.dll</td>
+      <td>%SystemRoot%\ehome\ehepgres.dll</td>
     </tr>
   </tbody>
 </table>

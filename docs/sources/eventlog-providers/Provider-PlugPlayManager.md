@@ -2,10 +2,10 @@
 
 Seen on:
 * Windows 2000
+* Windows XP 32-bit
+* Windows Vista
 * Windows 2008
 * Windows 7
-* Windows Vista
-* Windows XP 32-bit
 
 <table border="1" class="docutils">
   <tbody>
@@ -19,7 +19,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\umpnpmgr.dll</td>
+      <td>%SystemRoot%\System32\umpnpmgr.dll</td>
     </tr>
   </tbody>
 </table>
@@ -42,11 +42,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\umpnpmgr.dll</td>
+      <td>%SystemRoot%\System32\umpnpmgr.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\ws03res.dll</td>
+      <td>%SystemRoot%\System32\ws03res.dll</td>
     </tr>
   </tbody>
 </table>

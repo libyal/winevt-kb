@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\ntmsevt.dll</td>
+      <td>%SystemRoot%\System32\NTMSEVT.DLL</td>
     </tr>
   </tbody>
 </table>
@@ -39,7 +39,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\ntmsevt</td>
+      <td>%SystemRoot%\System32\ntmsevt</td>
     </tr>
   </tbody>
 </table>

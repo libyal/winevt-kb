@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\kdcsvc.dll</td>
+      <td>%SystemRoot%\System32\kdcsvc.dll</td>
     </tr>
   </tbody>
 </table>

@@ -17,11 +17,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\e1i63x64.sys</td>
+      <td>%SystemRoot%\System32\drivers\e1i63x64.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\netevent.dll</td>
+      <td>%SystemRoot%\System32\netevent.dll</td>
     </tr>
   </tbody>
 </table>
@@ -43,11 +43,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\e1i6332.sys</td>
+      <td>%SystemRoot%\System32\drivers\e1i6332.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\netevent.dll</td>
+      <td>%SystemRoot%\System32\netevent.dll</td>
     </tr>
   </tbody>
 </table>
@@ -69,7 +69,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\netevent.dll</td>
+      <td>%SystemRoot%\System32\netevent.dll</td>
     </tr>
   </tbody>
 </table>

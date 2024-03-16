@@ -2,8 +2,8 @@
 
 Seen on:
 * Windows 2000
-* Windows 2003
 * Windows XP 32-bit
+* Windows 2003
 * Windows XP 64-bit
 
 <table border="1" class="docutils">
@@ -18,7 +18,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\advapi32.dll</td>
+      <td>%SystemRoot%\System32\advapi32.dll</td>
     </tr>
   </tbody>
 </table>

@@ -15,15 +15,15 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\wuaucpl.cpl.mui</td>
+      <td>%SystemRoot%\system32\wuaucpl.cpl.mui</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\wuaucpl.cpl</td>
+      <td>%SystemRoot%\system32\wuaucpl.cpl</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\wuaucpl.cpl.mui</td>
+      <td>%SystemRoot%\system32\wuaucpl.cpl.mui</td>
     </tr>
   </tbody>
 </table>
@@ -46,11 +46,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\wuaucpl.cpl</td>
+      <td>%SystemRoot%\system32\wuaucpl.cpl</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\wuaucpl.cpl</td>
+      <td>%SystemRoot%\system32\wuaucpl.cpl</td>
     </tr>
   </tbody>
 </table>

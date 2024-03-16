@@ -1,8 +1,8 @@
 ## ServiceModel 3.0.0.0
 
 Seen on:
-* Windows 7
 * Windows Vista
+* Windows 7
 
 <table border="1" class="docutils">
   <tbody>
@@ -16,15 +16,15 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\msaudite.dll</td>
+      <td>%SystemRoot%\System32\MsAuditE.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework64\v3.0\windows communication foundation\servicemodelevents.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework64\v3.0\Windows Communication Foundation\ServiceModelEvents.dll</td>
     </tr>
     <tr>
       <td><b>Parameter message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework64\v3.0\windows communication foundation\servicemodelevents.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework64\v3.0\Windows Communication Foundation\ServiceModelEvents.dll</td>
     </tr>
   </tbody>
 </table>

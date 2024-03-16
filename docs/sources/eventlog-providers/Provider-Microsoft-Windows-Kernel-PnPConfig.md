@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\microsoft-windows-kernel-pnp-events.dll</td>
+      <td>%SystemRoot%\system32\microsoft-windows-kernel-pnp-events.dll</td>
     </tr>
   </tbody>
 </table>

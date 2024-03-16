@@ -25,7 +25,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\rdmsinst.dll</td>
+      <td>%SystemRoot%\system32\RdmsInst.dll</td>
     </tr>
   </tbody>
 </table>

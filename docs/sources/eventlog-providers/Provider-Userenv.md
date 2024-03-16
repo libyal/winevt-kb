@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\userenv.dll</td>
+      <td>%SystemRoot%\System32\userenv.dll</td>
     </tr>
   </tbody>
 </table>
@@ -39,15 +39,15 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\userenv.dll</td>
+      <td>%SystemRoot%\System32\userenv.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\xpsp1res.dll</td>
+      <td>%SystemRoot%\System32\xpsp1res.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\xpsp2res.dll</td>
+      <td>%SystemRoot%\System32\xpsp2res.dll</td>
     </tr>
   </tbody>
 </table>

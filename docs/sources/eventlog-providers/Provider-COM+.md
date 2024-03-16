@@ -15,15 +15,15 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\comsvcs.dll</td>
+      <td>%SystemRoot%\System32\COMSVCS.DLL</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\comsvcs.dll</td>
+      <td>%SystemRoot%\System32\COMSVCS.DLL</td>
     </tr>
     <tr>
       <td><b>Parameter message file(s):</b></td>
-      <td>%systemroot%\system32\comsvcs.dll</td>
+      <td>%SystemRoot%\System32\COMSVCS.DLL</td>
     </tr>
   </tbody>
 </table>
@@ -45,23 +45,23 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRes.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\System32\comres.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\w03a2409.dll</td>
+      <td>%SystemRoot%\System32\ws03res.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\ws03res.dll</td>
+      <td>%SystemRoot%\system32\W03A2409.dll</td>
     </tr>
     <tr>
       <td><b>Parameter message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRes.dll</td>
     </tr>
   </tbody>
 </table>
@@ -83,15 +83,15 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRes.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRes.dll</td>
     </tr>
     <tr>
       <td><b>Parameter message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\COMRes.dll</td>
     </tr>
   </tbody>
 </table>
@@ -113,19 +113,19 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\comres.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\comres.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\ws03res.dll</td>
+      <td>%SystemRoot%\system32\ws03res.dll</td>
     </tr>
     <tr>
       <td><b>Parameter message file(s):</b></td>
-      <td>%systemroot%\system32\comres.dll</td>
+      <td>%SystemRoot%\system32\comres.dll</td>
     </tr>
   </tbody>
 </table>

@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>\program files (x86)\microsoft\edgeupdate\1.3.137.103\msedgeupdate.dll</td>
+      <td>\Program Files (x86)\Microsoft\EdgeUpdate\1.3.137.103\msedgeupdate.dll</td>
     </tr>
   </tbody>
 </table>
@@ -37,7 +37,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>\program files (x86)\microsoft\edgeupdate\1.3.139.59\msedgeupdate.dll</td>
+      <td>\Program Files (x86)\Microsoft\EdgeUpdate\1.3.139.59\msedgeupdate.dll</td>
     </tr>
   </tbody>
 </table>
@@ -59,7 +59,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>\program files (x86)\microsoft\edgeupdate\1.3.153.47\msedgeupdate.dll</td>
+      <td>\Program Files (x86)\Microsoft\EdgeUpdate\1.3.153.47\msedgeupdate.dll</td>
     </tr>
   </tbody>
 </table>

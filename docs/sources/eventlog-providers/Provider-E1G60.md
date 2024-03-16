@@ -1,8 +1,8 @@
 ## E1G60
 
 Seen on:
-* Windows 7
 * Windows Vista
+* Windows 7
 
 <table border="1" class="docutils">
   <tbody>
@@ -16,11 +16,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\e1g6032e.sys</td>
+      <td>%SystemRoot%\System32\drivers\E1G6032E.sys</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\netevent.dll</td>
+      <td>%SystemRoot%\System32\netevent.dll</td>
     </tr>
   </tbody>
 </table>

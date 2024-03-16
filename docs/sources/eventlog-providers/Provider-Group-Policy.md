@@ -1,9 +1,9 @@
 ## Group Policy
 
 Seen on:
+* Windows Vista
 * Windows 2008
 * Windows 7
-* Windows Vista
 
 <table border="1" class="docutils">
   <tbody>
@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\gpapi.dll</td>
+      <td>%SystemRoot%\System32\gpapi.dll</td>
     </tr>
   </tbody>
 </table>

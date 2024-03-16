@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\phoneproviders.dll</td>
+      <td>%SystemRoot%\System32\PhoneProviders.dll</td>
     </tr>
   </tbody>
 </table>

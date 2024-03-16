@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\cluster\vsstask.dll</td>
+      <td>%SystemRoot%\Cluster\VSSTask.dll</td>
     </tr>
   </tbody>
 </table>

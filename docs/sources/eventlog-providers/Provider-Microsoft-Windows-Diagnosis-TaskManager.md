@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\taskmgr.exe</td>
+      <td>%SystemRoot%\System32\taskmgr.exe</td>
     </tr>
   </tbody>
 </table>

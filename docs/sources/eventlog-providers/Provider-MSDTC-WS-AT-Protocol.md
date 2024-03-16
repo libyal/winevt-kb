@@ -1,8 +1,8 @@
 ## MSDTC WS-AT Protocol
 
 Seen on:
-* Windows 7
 * Windows Vista
+* Windows 7
 
 <table border="1" class="docutils">
   <tbody>
@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\microsoft.net\framework64\v2.0.50727\eventlogmessages.dll</td>
+      <td>%SystemRoot%\Microsoft.NET\Framework64\v2.0.50727\EventLogMessages.dll</td>
     </tr>
   </tbody>
 </table>

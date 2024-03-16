@@ -24,7 +24,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\ehstorauthn.exe</td>
+      <td>%SystemRoot%\System32\EhStorAuthn.exe</td>
     </tr>
   </tbody>
 </table>

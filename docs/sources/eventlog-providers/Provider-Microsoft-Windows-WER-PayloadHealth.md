@@ -2,8 +2,8 @@
 
 Seen on:
 * Windows 10 (1809, 1903, 1909, 2004, 20H2)
-* Windows 11 (21H2)
 * Windows 2019
+* Windows 11 (21H2)
 
 <table border="1" class="docutils">
   <tbody>
@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\wer.dll</td>
+      <td>%SystemRoot%\system32\wer.dll</td>
     </tr>
   </tbody>
 </table>

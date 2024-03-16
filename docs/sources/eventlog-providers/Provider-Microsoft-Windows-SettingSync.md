@@ -1,10 +1,10 @@
 ## Microsoft-Windows-SettingSync
 
 Seen on:
+* Windows 8.1
 * Windows 10 (1511, 1607, 1703, 1709, 1803, 1809, 1903, 1909, 2004, 20H2)
 * Windows 2016
 * Windows 2019
-* Windows 8.1
 
 <table border="1" class="docutils">
   <tbody>
@@ -18,7 +18,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\settingsynccore.dll</td>
+      <td>%SystemRoot%\system32\SettingSyncCore.dll</td>
     </tr>
   </tbody>
 </table>
@@ -40,7 +40,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\settingsync.dll</td>
+      <td>%SystemRoot%\system32\SettingSync.dll</td>
     </tr>
   </tbody>
 </table>

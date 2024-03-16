@@ -1,8 +1,8 @@
 ## BITS
 
 Seen on:
-* Windows 2003
 * Windows XP 32-bit
+* Windows 2003
 * Windows XP 64-bit
 
 <table border="1" class="docutils">
@@ -17,11 +17,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Category message file(s):</b></td>
-      <td>%systemroot%\system32\xpob2res.dll</td>
+      <td>%SystemRoot%\system32\xpob2res.dll</td>
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\xpob2res.dll</td>
+      <td>%SystemRoot%\system32\xpob2res.dll</td>
     </tr>
   </tbody>
 </table>

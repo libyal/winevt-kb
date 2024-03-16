@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\microsoft-windows-power-cad-events.dll</td>
+      <td>%SystemRoot%\System32\microsoft-windows-power-cad-events.dll</td>
     </tr>
   </tbody>
 </table>

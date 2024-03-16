@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\settingshandlers_storagesense.dll</td>
+      <td>%SystemRoot%\system32\SettingsHandlers_StorageSense.dll</td>
     </tr>
   </tbody>
 </table>

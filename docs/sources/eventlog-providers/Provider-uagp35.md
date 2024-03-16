@@ -15,11 +15,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\drivers\uagp35.sys</td>
+      <td>%SystemRoot%\System32\IoLogMsg.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\iologmsg.dll</td>
+      <td>%SystemRoot%\System32\drivers\uagp35.sys</td>
     </tr>
   </tbody>
 </table>

@@ -18,7 +18,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\wsmselrr.dll</td>
+      <td>%SystemRoot%\system32\WsmSelrr.dll</td>
     </tr>
   </tbody>
 </table>

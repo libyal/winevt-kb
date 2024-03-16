@@ -16,7 +16,7 @@ class JSONStringsListAttributeSerializerTest(test_lib.BaseTestCase):
     """Tests the DeserializeValue function."""
     serializer = storage.JSONStringsListAttributeSerializer()
 
-    value = serializer.DeserializeValue('[1, 2, 3]')
+    value = serializer.DeserializeValue([1, 2, 3])
     self.assertIsInstance(value, list)
     self.assertEqual(value, [1, 2, 3])
 
@@ -25,8 +25,8 @@ class JSONStringsListAttributeSerializerTest(test_lib.BaseTestCase):
     serializer = storage.JSONStringsListAttributeSerializer()
 
     value = serializer.SerializeValue([1, 2, 3])
-    self.assertIsInstance(value, str)
-    self.assertEqual(value, '[1, 2, 3]')
+    self.assertIsInstance(value, list)
+    self.assertEqual(value, [1, 2, 3])
 
 
 if __name__ == '__main__':

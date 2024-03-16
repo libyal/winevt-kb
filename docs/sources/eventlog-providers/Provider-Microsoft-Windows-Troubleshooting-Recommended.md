@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\mitigationclient.dll</td>
+      <td>%SystemRoot%\system32\MitigationClient.dll</td>
     </tr>
   </tbody>
 </table>

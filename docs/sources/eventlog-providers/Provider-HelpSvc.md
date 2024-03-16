@@ -1,8 +1,8 @@
 ## HelpSvc
 
 Seen on:
-* Windows 2003
 * Windows XP 32-bit
+* Windows 2003
 * Windows XP 64-bit
 
 <table border="1" class="docutils">
@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\pchealth\helpctr\binaries\hcappres.dll</td>
+      <td>%SystemRoot%\PCHealth\HelpCtr\Binaries\HCAppRes.dll</td>
     </tr>
   </tbody>
 </table>

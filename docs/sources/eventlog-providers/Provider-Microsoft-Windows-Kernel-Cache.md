@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\microsoft-windows-kernel-cc-events.dll</td>
+      <td>%SystemRoot%\system32\microsoft-windows-kernel-cc-events.dll</td>
     </tr>
   </tbody>
 </table>

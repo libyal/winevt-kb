@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\apilogen.dll</td>
+      <td>%SystemRoot%\system32\apilogen.dll</td>
     </tr>
   </tbody>
 </table>

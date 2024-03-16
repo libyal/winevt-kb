@@ -1,9 +1,9 @@
 ## Microsoft-Windows-HotStart
 
 Seen on:
+* Windows Vista
 * Windows 7
 * Windows 8.0
-* Windows Vista
 
 <table border="1" class="docutils">
   <tbody>
@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\hotstartuseragent.dll</td>
+      <td>%SystemRoot%\System32\HotStartUserAgent.dll</td>
     </tr>
   </tbody>
 </table>

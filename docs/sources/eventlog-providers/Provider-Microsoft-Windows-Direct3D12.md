@@ -17,7 +17,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\d3d12.dll</td>
+      <td>%SystemRoot%\system32\d3d12.dll</td>
     </tr>
   </tbody>
 </table>
@@ -39,7 +39,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\d3d12core.dll</td>
+      <td>%SystemRoot%\system32\d3d12Core.dll</td>
     </tr>
   </tbody>
 </table>

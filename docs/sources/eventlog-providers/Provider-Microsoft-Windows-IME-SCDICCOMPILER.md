@@ -15,7 +15,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\ime\imesc\imscdiccompiler.exe</td>
+      <td>%SystemRoot%\system32\IME\IMESC\IMSCDICCOMPILER.EXE</td>
     </tr>
   </tbody>
 </table>

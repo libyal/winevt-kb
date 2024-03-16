@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Attribute container store."""
 
-import json
-
 from acstore import interface as acstore_interface
 from acstore.helpers import schema as acstore_schema_helper
 
@@ -14,23 +12,23 @@ class JSONStringsListAttributeSerializer(acstore_interface.AttributeSerializer):
     """Deserializes a value.
 
     Args:
-      value (str): serialized value.
+      value (list[str]): serialized value.
 
     Returns:
       list[str]: runtime value.
     """
-    return json.loads(value)
+    return value
 
   def SerializeValue(self, value):
     """Serializes a value.
 
     Args:
-      value (str): runtime value.
+      value (list[str]): runtime value.
 
     Returns:
       list[str]: serialized value.
     """
-    return json.dumps(value)
+    return value
 
 
 acstore_schema_helper.SchemaHelper.RegisterDataTypes({

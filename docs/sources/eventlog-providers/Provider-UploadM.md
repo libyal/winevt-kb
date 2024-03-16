@@ -16,7 +16,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\pchealth\uploadlb\binaries\uploadm.exe</td>
+      <td>%SystemRoot%\PCHealth\UploadLB\Binaries\UploadM.exe</td>
     </tr>
   </tbody>
 </table>

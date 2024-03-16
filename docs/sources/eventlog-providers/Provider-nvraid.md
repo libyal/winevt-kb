@@ -2,8 +2,8 @@
 
 Seen on:
 * Windows 2008
-* Windows 2012
 * Windows 7
+* Windows 2012
 * Windows 8.0
 * Windows 8.1
 

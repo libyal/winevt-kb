@@ -15,11 +15,11 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\inetsrv\svcext.dll</td>
+      <td>%SystemRoot%\System32\inetsrv\svcext.dll</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td>%systemroot%\system32\sp4iis.exe</td>
+      <td>%SystemRoot%\System32\sp4iis.exe</td>
     </tr>
   </tbody>
 </table>

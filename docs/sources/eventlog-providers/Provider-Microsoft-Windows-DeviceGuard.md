@@ -25,7 +25,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\dggpext.dll</td>
+      <td>%SystemRoot%\system32\dggpext.dll</td>
     </tr>
   </tbody>
 </table>
@@ -56,7 +56,7 @@ Seen on:
     </tr>
     <tr>
       <td><b>Event message file(s):</b></td>
-      <td>%systemroot%\system32\manageci.dll</td>
+      <td>%SystemRoot%\system32\ManageCI.dll</td>
     </tr>
   </tbody>
 </table>
