@@ -18,7 +18,7 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
 
   def testBasenamePath(self):
     """Tests the BasenamePath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -28,11 +28,11 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
     test_helper.OpenFileSystem(path_spec)
 
     basename = test_helper.BasenamePath(test_file_path)
-    self.assertEqual(basename, 'utmp-linux_libc6')
+    self.assertEqual(basename, 'wrc_test.dll')
 
   def testCheckFileExistsByPath(self):
     """Tests the CheckFileExistsByPath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -46,7 +46,7 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
 
   def testDirnamePath(self):
     """Tests the DirnamePath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -60,7 +60,7 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
 
   def testGetFileSizeByPath(self):
     """Tests the GetFileSizeByPath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -70,11 +70,11 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
     test_helper.OpenFileSystem(path_spec)
 
     file_size = test_helper.GetFileSizeByPath(test_file_path)
-    self.assertEqual(file_size, 5376)
+    self.assertEqual(file_size, 9728)
 
   def testJoinPath(self):
     """Tests the JoinPath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -90,7 +90,7 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
 
   def testListDirectory(self):
     """Tests the ListDirectory function."""
-    test_file_path = self._GetTestFilePath(['unified_logging'])
+    test_file_path = self._GetTestFilePath([''])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -100,17 +100,22 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
     test_helper.OpenFileSystem(path_spec)
 
     expected_directory_entries = [
-        '0000000000000030.tracev3',
-        '0000000000000f85.tracev3',
-        'timesync',
-        'uuidtext']
+        'SOFTWARE',
+        'SYSTEM',
+        'defragsvc.dll.db',
+        'message_file.db',
+        'nowrc_test.dll',
+        'winevt-kb.db',
+        'winevt-rc.db',
+        'wrc_test.dll',
+        'wrc_test.mui.dll']
 
     directory_entries = sorted(test_helper.ListDirectory(test_file_path))
     self.assertEqual(directory_entries, expected_directory_entries)
 
   def testOpenFileByPath(self):
     """Tests the OpenFileByPath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)
@@ -126,7 +131,7 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
 
   def testSplitPath(self):
     """Tests the SplitPath function."""
-    test_file_path = self._GetTestFilePath(['utmp-linux_libc6'])
+    test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_helper = dfvfs_helpers.DFVFSFileSystemHelper(None)

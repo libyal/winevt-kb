@@ -64,38 +64,38 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     return self._windows_version
 
   def _GetMUIWindowsResourceFile(
-      self, message_file_path, message_resource_file):
+      self, message_file_path, windows_resource_file):
     """Retrieves a MUI Event Log message resource file.
 
     Args:
       message_file_path (str): path of the message file.
-      message_resource_file (WindowsResourceFile): language neutral message
+      windows_resource_file (WindowsResourceFile): language neutral message
           resource file.
 
     Returns:
       WindowsResourceFile: MUI message resource file or None if not available.
     """
-    mui_language = message_resource_file.GetMUILanguage()
+    mui_language = windows_resource_file.GetMUILanguage()
     if not mui_language:
       return None
 
     path, _, name = message_file_path.rpartition('\\')
 
     mui_message_file_path = '\\'.join([path, mui_language, f'{name:s}.mui'])
-    mui_message_resource_file = self._OpenWindowsResourceFile(
+    mui_windows_resource_file = self._OpenWindowsResourceFile(
         mui_message_file_path)
 
-    if not mui_message_resource_file:
+    if not mui_windows_resource_file:
       mui_message_file_path = '\\'.join([path, f'{name:s}.mui'])
-      mui_message_resource_file = self._OpenWindowsResourceFile(
+      mui_windows_resource_file = self._OpenWindowsResourceFile(
           mui_message_file_path)
 
-    if mui_message_resource_file:
+    if mui_windows_resource_file:
       logging.info((
           f'Message file: {message_file_path:s} references MUI message file: '
           f'{mui_message_file_path:s}'))
 
-    return mui_message_resource_file
+    return mui_windows_resource_file
 
   def _GetNormalizedPath(self, path):
     """Retrieves a normalized variant of a path.
@@ -173,8 +173,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """Opens the message resource file specified by the Windows path.
 
     Args:
-      windows_path (str): Windows path containing the message resource
-          filename.
+      windows_path (str): Windows path of the Windows resource file.
 
     Returns:
       WindowsResourceFile: message resource file or None.
@@ -285,11 +284,11 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           if path_spec:
             break
 
-    message_resource_file = None
+    windows_resource_file = None
     if path_spec:
-      message_resource_file = self._OpenWindowsResourceFileByPathSpec(path_spec)
+      windows_resource_file = self._OpenWindowsResourceFileByPathSpec(path_spec)
 
-    if not message_resource_file:
+    if not windows_resource_file:
       logging.warning(f'Missing message file: {message_filename:s}')
 
       if message_filename not in self.missing_message_filenames:
@@ -297,34 +296,34 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
       return None
 
-    if not message_resource_file.HasMessageTableResource():
+    if not windows_resource_file.HasMessageTableResource():
       # Windows Vista and later use a MUI resource to redirect to
       # a language specific message file.
-      mui_message_resource_file = self._GetMUIWindowsResourceFile(
-          normalized_message_file_path, message_resource_file)
-      if mui_message_resource_file:
-        message_resource_file.Close()
+      mui_windows_resource_file = self._GetMUIWindowsResourceFile(
+          normalized_message_file_path, windows_resource_file)
+      if mui_windows_resource_file:
+        windows_resource_file.Close()
 
-        message_resource_file = mui_message_resource_file
+        windows_resource_file = mui_windows_resource_file
 
-    if not message_resource_file.HasMessageTableResource():
+    if not windows_resource_file.HasMessageTableResource():
       logging.warning((
-          f'Message table resource missing from message file: '
+          f'Message table resource missing from resouce file: '
           f'{message_filename:s}'))
 
       if message_filename not in self.missing_resources_message_filenames:
         self.missing_resources_message_filenames.append(message_filename)
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
       return None
 
-    message_resource_file.windows_path = normalized_message_file_path
+    windows_resource_file.windows_path = normalized_message_file_path
 
     lookup_path = normalized_message_file_path.lower()
     self._processed_message_filenames.append(lookup_path)
 
-    return message_resource_file
+    return windows_resource_file
 
   def GetNormalizedMessageFilePath(self, path):
     """Retrieves a normalized variant of a message file path.
