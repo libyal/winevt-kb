@@ -63,37 +63,36 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       self._windows_version = self._GetWindowsVersion()
     return self._windows_version
 
-  def _GetMUIWindowsResourceFile(
-      self, message_file_path, windows_resource_file):
-    """Retrieves a MUI Event Log message resource file.
+  def _GetMUIWindowsResourceFile(self, windows_path, windows_resource_file):
+    """Retrieves a MUI resource file.
 
     Args:
-      message_file_path (str): path of the message file.
-      windows_resource_file (WindowsResourceFile): language neutral message
-          resource file.
+      windows_path (str): Windows path of the language neutral resource file.
+      windows_resource_file (WindowsResourceFile): language neutral resource
+          file.
 
     Returns:
-      WindowsResourceFile: MUI message resource file or None if not available.
+      WindowsResourceFile: MUI resource file or None if not available.
     """
     mui_language = windows_resource_file.GetMUILanguage()
     if not mui_language:
       return None
 
-    path, _, name = message_file_path.rpartition('\\')
+    path, _, name = windows_path.rpartition('\\')
 
-    mui_message_file_path = '\\'.join([path, mui_language, f'{name:s}.mui'])
+    mui_windows_path = '\\'.join([path, mui_language, f'{name:s}.mui'])
     mui_windows_resource_file = self._OpenWindowsResourceFile(
-        mui_message_file_path)
+        mui_windows_path)
 
     if not mui_windows_resource_file:
-      mui_message_file_path = '\\'.join([path, f'{name:s}.mui'])
+      mui_windows_path = '\\'.join([path, f'{name:s}.mui'])
       mui_windows_resource_file = self._OpenWindowsResourceFile(
-          mui_message_file_path)
+          mui_windows_path)
 
     if mui_windows_resource_file:
       logging.info((
-          f'Message file: {message_file_path:s} references MUI message file: '
-          f'{mui_message_file_path:s}'))
+          f'Resource file: {windows_path:s} references MUI resource file: '
+          f'{mui_windows_path:s}'))
 
     return mui_windows_resource_file
 
