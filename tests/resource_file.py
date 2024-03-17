@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the Windows Message Resource (WRC) file class."""
+"""Tests for the Windows Resource (WRC) file class."""
 
 import unittest
 
@@ -129,8 +129,8 @@ class TestWrcStream(object):
     return self.resources.get(name, None)
 
 
-class MessageResourceFileTest(test_lib.BaseTestCase):
-  """Tests for the Windows Message Resource file object."""
+class WindowsResourceFileTest(test_lib.BaseTestCase):
+  """Tests for the Windows Resource file object."""
 
   # pylint: disable=protected-access
 
@@ -205,47 +205,47 @@ class MessageResourceFileTest(test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       try:
-        resource = message_resource_file._GetVersionInformation()
+        resource = windows_resource_file._GetVersionInformation()
         self.assertIsNone(resource)
 
       finally:
-        message_resource_file.Close()
+        windows_resource_file.Close()
 
   def testGetVersionInformationWrc(self):
     """Tests the _GetVersionInformation function."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
-      message_resource_file._GetVersionInformation()
+      windows_resource_file._GetVersionInformation()
 
-      self.assertEqual(message_resource_file.file_version, '1.0.0.0')
-      self.assertEqual(message_resource_file.product_version, '1.0.0.0')
+      self.assertEqual(windows_resource_file.file_version, '1.0.0.0')
+      self.assertEqual(windows_resource_file.product_version, '1.0.0.0')
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\test.dll')
 
     # Test with an empty WRC stream.
     wrc_stream = TestWrcStream()
-    message_resource_file._wrc_stream = wrc_stream
+    windows_resource_file._wrc_stream = wrc_stream
 
-    message_resource_file._GetVersionInformation()
-    self.assertIsNone(message_resource_file.file_version)
-    self.assertIsNone(message_resource_file.product_version)
+    windows_resource_file._GetVersionInformation()
+    self.assertIsNone(windows_resource_file.file_version)
+    self.assertIsNone(windows_resource_file.product_version)
 
     # Test with empty version information.
     wrc_resource = TestWrcResource()
@@ -260,75 +260,75 @@ class MessageResourceFileTest(test_lib.BaseTestCase):
     wrc_resource_sub_item.resource_data = (
         self._VERSION_INFORMATION_RESOURCE_DATA)
 
-    message_resource_file._GetVersionInformation()
-    self.assertEqual(message_resource_file.file_version, '0.0.0.0')
-    self.assertEqual(message_resource_file.product_version, '2.0.0.0')
+    windows_resource_file._GetVersionInformation()
+    self.assertEqual(windows_resource_file.file_version, '0.0.0.0')
+    self.assertEqual(windows_resource_file.product_version, '2.0.0.0')
 
   def testGetVersionInformationResourceNoWrc(self):
     """Tests the _GetVersionInformationResource function."""
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       version_information_resource = (
-          message_resource_file._GetVersionInformationResource())
+          windows_resource_file._GetVersionInformationResource())
 
       self.assertIsNone(version_information_resource)
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
   def testGetVersionInformationResourceWrc(self):
     """Tests the _GetVersionInformationResource function."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       version_information_resource = (
-          message_resource_file._GetVersionInformationResource())
+          windows_resource_file._GetVersionInformationResource())
 
       self.assertIsNotNone(version_information_resource)
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
   def testFileVersionProperty(self):
     """Tests the file_version property."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
-      self.assertEqual(message_resource_file.file_version, '1.0.0.0')
+      self.assertEqual(windows_resource_file.file_version, '1.0.0.0')
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
   def testProductVersionProperty(self):
     """Tests the product_version property."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
-      self.assertEqual(message_resource_file.product_version, '1.0.0.0')
+      self.assertEqual(windows_resource_file.product_version, '1.0.0.0')
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
   # TODO: add open/close test on non PE/COFF file.
 
@@ -337,91 +337,91 @@ class MessageResourceFileTest(test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
-        message_resource_file.OpenFileObject(file_object)
+        windows_resource_file.OpenFileObject(file_object)
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
   def testOpenFileObjectAndCloseWrc(self):
     """Tests the OpenFileObject and Close functions."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       with self.assertRaises(IOError):
-        message_resource_file.OpenFileObject(file_object)
+        windows_resource_file.OpenFileObject(file_object)
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
   def testGetMessageTableResourceNoWrc(self):
     """Tests the GetMessageTableResource function."""
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       try:
-        resource = message_resource_file.GetMessageTableResource()
+        resource = windows_resource_file.GetMessageTableResource()
         self.assertIsNone(resource)
 
       finally:
-        message_resource_file.Close()
+        windows_resource_file.Close()
 
   def testGetMessageTableResourceWrc(self):
     """Tests the GetMessageTableResource function."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       try:
-        message_table_resource = message_resource_file.GetMessageTableResource()
+        message_table_resource = windows_resource_file.GetMessageTableResource()
         self.assertIsNotNone(message_table_resource)
 
       finally:
-        message_resource_file.Close()
+        windows_resource_file.Close()
 
   def testGetMUILanguage(self):
     """Tests the GetMUILanguage function."""
     test_file_path = self._GetTestFilePath(['wrc_test.mui.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
-      mui_language = message_resource_file.GetMUILanguage()
+      mui_language = windows_resource_file.GetMUILanguage()
       self.assertEqual(mui_language, 'en-US')
 
-      message_resource_file.Close()
+      windows_resource_file.Close()
 
     # Test with an empty WRC stream.
     wrc_stream = TestWrcStream()
 
-    message_resource_file._wrc_stream = wrc_stream
+    windows_resource_file._wrc_stream = wrc_stream
 
-    mui_language = message_resource_file.GetMUILanguage()
+    mui_language = windows_resource_file.GetMUILanguage()
     self.assertIsNone(mui_language)
 
   def testHasMessageTableResourceNoWrc(self):
@@ -429,36 +429,36 @@ class MessageResourceFileTest(test_lib.BaseTestCase):
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\nowrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       try:
-        result = message_resource_file.HasMessageTableResource()
+        result = windows_resource_file.HasMessageTableResource()
         self.assertFalse(result)
 
       finally:
-        message_resource_file.Close()
+        windows_resource_file.Close()
 
   def testHasMessageTableResourceWrc(self):
     """Tests the HasMessageTableResource function."""
     test_file_path = self._GetTestFilePath(['wrc_test.dll'])
     self._SkipIfPathNotExists(test_file_path)
 
-    message_resource_file = resource_file.MessageResourceFile(
+    windows_resource_file = resource_file.WindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
 
     with open(test_file_path, 'rb') as file_object:
-      message_resource_file.OpenFileObject(file_object)
+      windows_resource_file.OpenFileObject(file_object)
 
       try:
-        result = message_resource_file.HasMessageTableResource()
+        result = windows_resource_file.HasMessageTableResource()
         self.assertTrue(result)
 
       finally:
-        message_resource_file.Close()
+        windows_resource_file.Close()
 
 
 if __name__ == '__main__':

@@ -65,7 +65,6 @@ class EventLogProviderMarkdownWriter(DocumentationFileWriter):
           '']
 
     if windows_versions:
-      # TODO: combine Windows versions into a more compact string
       versions_per_prefix = {}
       for version in sorted(windows_versions):
         for prefix in ('Windows 10', 'Windows 11', None):

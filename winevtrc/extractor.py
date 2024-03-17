@@ -63,17 +63,17 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       self._windows_version = self._GetWindowsVersion()
     return self._windows_version
 
-  def _GetMUIMessageResourceFile(
+  def _GetMUIWindowsResourceFile(
       self, message_file_path, message_resource_file):
     """Retrieves a MUI Event Log message resource file.
 
     Args:
       message_file_path (str): path of the message file.
-      message_resource_file (MessageResourceFile): language neutral message
+      message_resource_file (WindowsResourceFile): language neutral message
           resource file.
 
     Returns:
-      MessageResourceFile: MUI message resource file or None if not available.
+      WindowsResourceFile: MUI message resource file or None if not available.
     """
     mui_language = message_resource_file.GetMUILanguage()
     if not mui_language:
@@ -82,12 +82,12 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     path, _, name = message_file_path.rpartition('\\')
 
     mui_message_file_path = '\\'.join([path, mui_language, f'{name:s}.mui'])
-    mui_message_resource_file = self._OpenMessageResourceFile(
+    mui_message_resource_file = self._OpenWindowsResourceFile(
         mui_message_file_path)
 
     if not mui_message_resource_file:
       mui_message_file_path = '\\'.join([path, f'{name:s}.mui'])
-      mui_message_resource_file = self._OpenMessageResourceFile(
+      mui_message_resource_file = self._OpenWindowsResourceFile(
           mui_message_file_path)
 
     if mui_message_resource_file:
@@ -151,23 +151,25 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """
     system_root = self._GetSystemRoot()
 
-    # Window NT variants.
+    # Windows NT variants.
     kernel_executable_path = '\\'.join([
         system_root, 'System32', 'ntoskrnl.exe'])
-    message_file = self._OpenMessageResourceFile(kernel_executable_path)
+    windows_resource_file = self._OpenWindowsResourceFile(
+        kernel_executable_path)
 
-    if not message_file:
-      # Window 9x variants.
+    if not windows_resource_file:
+      # Windows 9x variants.
       kernel_executable_path = '\\'.join([
           system_root, 'System32', '\\kernel32.dll'])
-      message_file = self._OpenMessageResourceFile(kernel_executable_path)
+      windows_resource_file = self._OpenWindowsResourceFile(
+          kernel_executable_path)
 
-    if not message_file:
+    if not windows_resource_file:
       return None
 
-    return message_file.file_version
+    return windows_resource_file.file_version
 
-  def _OpenMessageResourceFile(self, windows_path):
+  def _OpenWindowsResourceFile(self, windows_path):
     """Opens the message resource file specified by the Windows path.
 
     Args:
@@ -175,22 +177,22 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           filename.
 
     Returns:
-      MessageResourceFile: message resource file or None.
+      WindowsResourceFile: message resource file or None.
     """
     path_spec = self._path_resolver.ResolvePath(windows_path)
     if path_spec is None:
       return None
 
-    return self._OpenMessageResourceFileByPathSpec(path_spec)
+    return self._OpenWindowsResourceFileByPathSpec(path_spec)
 
-  def _OpenMessageResourceFileByPathSpec(self, path_spec):
+  def _OpenWindowsResourceFileByPathSpec(self, path_spec):
     """Opens the message resource file specified by the path specification.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      MessageResourceFile: message resource file or None.
+      WindowsResourceFile: message resource file or None.
     """
     windows_path = self._path_resolver.GetWindowsPath(path_spec)
     if windows_path is None:
@@ -206,7 +208,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     if file_object is None:
       return None
 
-    message_file = resource_file.MessageResourceFile(
+    message_file = resource_file.WindowsResourceFile(
         windows_path, ascii_codepage=self.ascii_codepage,
         preferred_language_identifier=self.preferred_language_identifier)
     message_file.OpenFileObject(file_object)
@@ -256,7 +258,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       message_filename (str): message filename.
 
     Returns:
-      MessageResourceFile: message resource file or None if not available or
+      WindowsResourceFile: message resource file or None if not available or
           already processed.
     """
     normalized_message_file_path = self.GetNormalizedMessageFilePath(
@@ -285,7 +287,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     message_resource_file = None
     if path_spec:
-      message_resource_file = self._OpenMessageResourceFileByPathSpec(path_spec)
+      message_resource_file = self._OpenWindowsResourceFileByPathSpec(path_spec)
 
     if not message_resource_file:
       logging.warning(f'Missing message file: {message_filename:s}')
@@ -298,7 +300,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     if not message_resource_file.HasMessageTableResource():
       # Windows Vista and later use a MUI resource to redirect to
       # a language specific message file.
-      mui_message_resource_file = self._GetMUIMessageResourceFile(
+      mui_message_resource_file = self._GetMUIWindowsResourceFile(
           normalized_message_file_path, message_resource_file)
       if mui_message_resource_file:
         message_resource_file.Close()

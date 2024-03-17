@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Windows Message Resource file."""
+"""Windows Resource file."""
 
 import logging
 
@@ -7,21 +7,20 @@ import pyexe
 import pywrc
 
 
-class MessageResourceFile(object):
-  """Windows Message Resource file.
+class WindowsResourceFile(object):
+  """Windows Resource file.
 
   Attributes:
-    windows_path (str): Windows path of the message resource file.
+    windows_path (str): Windows path of the resource file.
   """
 
-  _STRING_TABLE_RESOURCE_IDENTIFIER = 0x06
   _MESSAGE_TABLE_RESOURCE_IDENTIFIER = 0x0b
   _VERSION_INFORMATION_RESOURCE_IDENTIFIER = 0x10
 
   def __init__(
       self, windows_path, ascii_codepage='cp1252',
       preferred_language_identifier=0x0409):
-    """Initializes the Windows Message Resource file.
+    """Initializes the Windows Resource file.
 
     Args:
       windows_path (str): normalized version of the Windows path.
@@ -29,7 +28,7 @@ class MessageResourceFile(object):
       preferred_language_identifier (Optional[int]): preferred language
           identifier (LCID).
     """
-    super(MessageResourceFile, self).__init__()
+    super(WindowsResourceFile, self).__init__()
     self._ascii_codepage = ascii_codepage
     self._exe_file = pyexe.file()
     self._exe_file.set_ascii_codepage(self._ascii_codepage)
@@ -73,7 +72,7 @@ class MessageResourceFile(object):
     if file_version != product_version:
       logging.warning((
           f'Mismatch between file version: {self._file_version:s} and product '
-          f'version: {self._product_version:s} in message file: '
+          f'version: {self._product_version:s} in resource file: '
           f'{self.windows_path:s}.'))
 
   def _GetVersionInformationResource(self):
@@ -127,7 +126,7 @@ class MessageResourceFile(object):
     return self._product_version
 
   def Close(self):
-    """Closes the Windows Message Resource file.
+    """Closes the Windows Resource file.
 
     Raises:
       IOError: if not open.
@@ -216,7 +215,7 @@ class MessageResourceFile(object):
     return bool(wrc_resource)
 
   def OpenFileObject(self, file_object):
-    """Opens the Windows Message Resource file using a file-like object.
+    """Opens the Windows Resource file using a file-like object.
 
     Args:
       file_object (file): file-like object.

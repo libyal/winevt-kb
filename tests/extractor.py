@@ -99,17 +99,17 @@ class EventMessageStringExtractorTest(test_lib.BaseTestCase):
     # TODO: improve test.
     self.assertIsNone(windows_version)
 
-  def testOpenMessageResourceFile(self):
-    """Tests the _OpenMessageResourceFile function."""
+  def testOpenWindowsResourceFile(self):
+    """Tests the _OpenWindowsResourceFile function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
     # TODO: improve test.
 
-    message_resource_file = extractor_object._OpenMessageResourceFile(
+    message_resource_file = extractor_object._OpenWindowsResourceFile(
         'C:\\Windows\\System32\\wrc_test.dll')
     self.assertIsNone(message_resource_file)
 
-  # TODO: test _OpenMessageResourceFileByPathSpec
+  # TODO: test _OpenWindowsResourceFileByPathSpec
 
   def testCollectEventLogProviders(self):
     """Tests the CollectEventLogProviders function."""
