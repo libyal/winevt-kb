@@ -3,6 +3,7 @@
 
 import pathlib
 import os
+import sys
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -83,7 +84,9 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
     test_helper.OpenFileSystem(path_spec)
 
-    path_segments = os.path.split(test_file_path)
+    # Make sure path segments is a list, since os.path.split() can return a
+    # tuple.
+    path_segments = list(os.path.split(test_file_path))
 
     path = test_helper.JoinPath(path_segments)
     self.assertEqual(path, test_file_path)
@@ -144,6 +147,10 @@ class DFVFSFileSystemHelperTest(test_lib.BaseTestCase):
     expected_path_segments.pop(0)
 
     path_segments = test_helper.SplitPath(test_file_path)
+    if sys.platform.startswith('win'):
+      # Remove drive letter for comparison.
+      path_segments.pop(0)
+
     self.assertEqual(path_segments, expected_path_segments)
 
 

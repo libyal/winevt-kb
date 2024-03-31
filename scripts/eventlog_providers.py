@@ -84,7 +84,7 @@ def Main():
     with open(options.source, 'r', encoding='utf-8') as file_object:
       source_definitions = list(yaml.safe_load_all(file_object))
 
-  except (SyntaxError, UnicodeDecodeError):
+  except (SyntaxError, UnicodeDecodeError, yaml.parser.ParserError):
     source_definitions = [{
         'source': options.source, 'windows_version': options.windows_version}]
 
