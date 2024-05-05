@@ -1,7 +1,6 @@
 PyYAML >= 3.10
 acstore >= 20230101
 artifacts >= 20220219
-cffi >= 1.9.1
 dfdatetime >= 20221112
 dfimagetools >= 20220129
 dfvfs >= 20240115
