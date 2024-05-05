@@ -309,18 +309,17 @@ class StdoutOutputWriter(exporter.ExporterOutputWriter):
 
 
 def Main():
-  """The main program function.
+  """Entry point of console script to export extracted strings.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Export strings extracted from message files.'))
 
   argument_parser.add_argument(
-      'source', nargs='?', action='store', metavar='./winevt-db/',
-      default=None, help=(
-          'directory that contains the SQLite3 with the extracted strings.'))
+      'source', nargs='?', action='store', metavar='./winevt-db/', default=None,
+      help='directory that contains the SQLite3 with the extracted strings.')
 
   # TODO: replace by --output
   argument_parser.add_argument(
@@ -346,12 +345,12 @@ def Main():
     print('')
     argument_parser.print_help()
     print('')
-    return False
+    return 1
 
   if not os.path.isdir(options.source):
     print('Invalid source.')
     print('')
-    return False
+    return 1
 
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -367,7 +366,7 @@ def Main():
   if not output_writer.Open():
     print('Unable to open output writer.')
     print('')
-    return False
+    return 1
 
   try:
     exporter_object = exporter.Exporter()
@@ -376,11 +375,8 @@ def Main():
   finally:
     output_writer.Close()
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

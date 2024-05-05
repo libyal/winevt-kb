@@ -282,10 +282,10 @@ class StdoutOutputWriter(object):
 
 
 def Main():
-  """The main program function.
+  """Entry point of console script to represent events a process tree.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   args_parser = argparse.ArgumentParser(description=(
       'Represents process start and stop events as a process tree.'))
@@ -302,12 +302,12 @@ def Main():
     print('')
     args_parser.print_help()
     print('')
-    return False
+    return 1
 
   if not os.path.isfile(options.source):
     print('Invalid source.')
     print('')
-    return False
+    return 1
 
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -317,7 +317,7 @@ def Main():
   if not output_writer.Open():
     print('Unable to open output writer.')
     print('')
-    return False
+    return 1
 
   process_tree = ProcessTree()
   process_tree.Generate(options.source)
@@ -326,11 +326,8 @@ def Main():
 
   output_writer.Close()
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

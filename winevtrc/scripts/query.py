@@ -10,10 +10,10 @@ from winevtrc import database
 
 
 def Main():
-  """The main program function.
+  """Entry point of console script to query a winevt-kb database.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Export strings extracted from message files.'))
@@ -42,7 +42,7 @@ def Main():
     print('')
     argument_parser.print_help()
     print('')
-    return False
+    return 1
 
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -65,7 +65,7 @@ def Main():
 
     if message_identifier is None:
       print(f'Unsupported message identifier: {options.message_identifier:s}')
-      return False
+      return 1
 
   if not getattr(options, 'event_provider', None):
     print('Event Log providers:')
@@ -88,11 +88,8 @@ def Main():
 
   database_reader.Close()
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

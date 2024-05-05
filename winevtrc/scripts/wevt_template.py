@@ -15,10 +15,10 @@ from winevtrc import file_system
 
 
 def Main():
-  """The main program function.
+  """Entry point of console script to parse WEVT_TEMPLATE.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Extracts WEVT_TEMPLATE information from a PE/COFF resource file.'))
@@ -40,7 +40,7 @@ def Main():
     if not file_system_helper:
       print('No supported file system found in storage media image.')
       print('')
-      return False
+      return 1
 
   else:
     if not options.source:
@@ -48,7 +48,7 @@ def Main():
       print('')
       argument_parser.print_help()
       print('')
-      return False
+      return 1
 
     file_system_helper = file_system.NativeFileSystemHelper()
 
@@ -324,11 +324,8 @@ def Main():
 
   exe_file.close()
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

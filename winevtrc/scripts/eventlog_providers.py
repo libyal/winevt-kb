@@ -45,10 +45,10 @@ def CompareEventLogProviders(event_log_provider, other_event_log_provider):
 
 
 def Main():
-  """The main program function.
+  """Entry point of console script to extract Windows Event Log providers.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Extracts Windows Event Log providers from the Windows Registry.'))
@@ -75,7 +75,7 @@ def Main():
     print('')
     argument_parser.print_help()
     print('')
-    return False
+    return 1
 
   logging.basicConfig(
       level=logging.INFO, format='[%(levelname)s] %(message)s')
@@ -115,7 +115,7 @@ def Main():
       print((f'Unable to retrieve the volume with the Windows directory from: '
              f'{source_path:s}.'))
       print('')
-      return False
+      return 1
 
     if extractor_object.windows_version:
       windows_version = extractor_object.windows_version
@@ -131,7 +131,7 @@ def Main():
       if not windows_version:
         print('Windows version required, specify one with --windows-version.')
         print('')
-        return False
+        return 1
 
     extractor_object.CollectSystemEnvironmentVariables()
 
@@ -207,11 +207,8 @@ def Main():
   if not providers_per_log_source:
     print('No Windows Event Log providers found.')
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())
