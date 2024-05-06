@@ -17,6 +17,8 @@ from winevtrc import exporter
 class DatabaseOutputWriter(exporter.ExporterOutputWriter):
   """Database output writer."""
 
+  _VERSION = '20150315'
+
   def __init__(self, database_path, string_format='wrc'):
     """Initializes a database output writer.
 
@@ -32,7 +34,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
   def _WriteMetadata(self):
     """Writes the metadata."""
     self._database_writer.WriteMetadataAttribute(
-        'version', '20150315')
+        'version', self._VERSION)
     self._database_writer.WriteMetadataAttribute(
         'string_format', self._string_format)
 

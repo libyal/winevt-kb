@@ -669,6 +669,8 @@ class ResourcesSQLite3DatabaseWriter(object):
     return self._PLACE_HOLDER_SPECIFIER_RE.sub(
         PlaceHolderSpecifierReplacer, message_string)
 
+  # pylint: disable=unused-argument
+
   def _WriteMessage(
       self, message_file, language_identifier, message_identifier,
       message_string, table_name, has_table):
@@ -698,16 +700,14 @@ class ResourcesSQLite3DatabaseWriter(object):
         stored_message_string = values['message_string']
         if message_string != stored_message_string:
           logging.warning((
-              f'Message string mismatch for LCID: {language_identifier:s}, '
-              f'file version: {message_file.file_version:s}, message '
-              f'identifier: {message_identifier:s}.\nFound: '
+              f'Message string mismatch for LCID: 0x{language_identifier:04x}, '
+              f'message identifier: {message_identifier:s}.\nFound: '
               f'{message_string:s}\nStored: {stored_message_string:s}\n'))
 
       elif number_of_values != 0:
         logging.warning((
             f'More than one message string found for LCID: '
-            f'{language_identifier:s}, file version: '
-            f'{message_file.file_version:s}, message identifier: '
+            f'0x{language_identifier:04x}, message identifier: '
             f'{message_identifier:s}.'))
 
       # TODO: warn if new message has been found.
@@ -740,7 +740,7 @@ class ResourcesSQLite3DatabaseWriter(object):
 
     else:
       condition = (
-          f'lcid = "{language_identifier:s}" AND '
+          f'lcid = {language_identifier:d} AND '
           f'message_file_key = "{message_file_key:d}"')
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
@@ -892,7 +892,8 @@ class ResourcesSQLite3DatabaseWriter(object):
         logging.warning(
             f'Missing message file key for: {message_file.windows_path:s}')
 
-      table_name = f'message_table_{message_file_key:d}_{message_table.lcid:s}'
+      table_name = (
+          f'message_table_{message_file_key:d}_0x{message_table.lcid:08x}')
 
       has_table = self._database_file.HasTable(table_name)
       if not has_table:
