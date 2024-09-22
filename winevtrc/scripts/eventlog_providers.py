@@ -136,6 +136,7 @@ def Main():
     extractor_object.CollectSystemEnvironmentVariables()
 
     event_log_providers = {}
+    original_message_file_paths = {}
 
     for event_log_provider in extractor_object.CollectEventLogProviders():
       name = event_log_provider.name
@@ -145,16 +146,35 @@ def Main():
 
       providers_per_log_source[name] = []
 
-      # pylint: disable=consider-using-set-comprehension
+      message_files = set()
+      for path in event_log_provider.category_message_files:
+        path_lower = path.lower()
+        if path_lower not in original_message_file_paths:
+          original_message_file_paths[path_lower] = path
 
-      event_log_provider.category_message_files = set([
-          path.lower() for path in event_log_provider.category_message_files])
+        message_files.add(path_lower)
 
-      event_log_provider.event_message_files = set([
-          path.lower() for path in event_log_provider.event_message_files])
+      event_log_provider.category_message_files = message_files
 
-      event_log_provider.parameter_message_files = set([
-          path.lower() for path in event_log_provider.parameter_message_files])
+      message_files = set()
+      for path in event_log_provider.event_message_files:
+        path_lower = path.lower()
+        if path_lower not in original_message_file_paths:
+          original_message_file_paths[path_lower] = path
+
+        message_files.add(path_lower)
+
+      event_log_provider.event_message_files = message_files
+
+      message_files = set()
+      for path in event_log_provider.parameter_message_files:
+        path_lower = path.lower()
+        if path_lower not in original_message_file_paths:
+          original_message_file_paths[path_lower] = path
+
+        message_files.add(path_lower)
+
+      event_log_provider.parameter_message_files = message_files
 
       event_log_providers[name] = event_log_provider
 
@@ -200,9 +220,11 @@ def Main():
       with documentation.EventLogProviderMarkdownWriter(
           markdown_file_path) as markdown_writer:
         for provider_and_versions in providers:
+          event_log_provider = provider_and_versions['event_log_provider']
+          # TODO: preserver original message paths in output
+
           markdown_writer.WriteEventLogProvider(
-              provider_and_versions['event_log_provider'],
-              provider_and_versions['windows_versions'])
+              event_log_provider, provider_and_versions['windows_versions'])
 
   if not providers_per_log_source:
     print('No Windows Event Log providers found.')

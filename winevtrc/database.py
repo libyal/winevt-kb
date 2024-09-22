@@ -562,9 +562,16 @@ class ResourcesSQLite3DatabaseWriter(object):
       IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
+    if event_log_provider.identifier:
+      condition = f'provider_guid = "{event_log_provider.identifier:s}"'
+    elif event_log_provider.log_source:
+      condition = f'log_source = "{event_log_provider.log_source:s}"'
+    else:
+      raise IOError('Missing Event Log provider identifier.')
+
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
-    condition = f'log_source = "{event_log_provider.log_source:s}"'
+
     values_list = list(self._database_file.GetValues(
         table_names, column_names, condition))
 
