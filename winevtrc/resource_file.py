@@ -198,17 +198,41 @@ class WindowsResourceFile(object):
 
     return mui_resource
 
-  def HasMessageTableResource(self):
-    """Determines if the resource file as a message table resource.
+  def GetWEVTTemplateResource(self):
+    """Retrieves the WEVT_TEMPLATE resource.
 
     Returns:
-      bool: True if the resource file as a message table resource.
+      pywrc.resource: resource containing the WEVT_TEMPLATE resource or None if
+          not available.
+    """
+    return self._wrc_stream.get_resource_by_name('WEVT_TEMPLATE')
+
+  def HasMessageTableResource(self):
+    """Determines if the resource file has a message table resource.
+
+    Returns:
+      bool: True if the resource file has a message table resource.
     """
     wrc_resource = None
     if self._wrc_stream:
       try:
         wrc_resource = self._wrc_stream.get_resource_by_identifier(
             self._MESSAGE_TABLE_RESOURCE_IDENTIFIER)
+      except IOError:
+        pass
+
+    return bool(wrc_resource)
+
+  def HasWEVTTemplateResource(self):
+    """Determines if the resource file has a WEVT_TEMPLATE resource.
+
+    Returns:
+      bool: True if the resource file has a WEVT_TEMPLATE resource.
+    """
+    wrc_resource = None
+    if self._wrc_stream:
+      try:
+        wrc_resource = self._wrc_stream.get_resource_by_name('WEVT_TEMPLATE')
       except IOError:
         pass
 

@@ -424,6 +424,8 @@ class WindowsResourceFileTest(test_lib.BaseTestCase):
     mui_language = windows_resource_file.GetMUILanguage()
     self.assertIsNone(mui_language)
 
+  # TODO: add GetWEVTTemplateResource
+
   def testHasMessageTableResourceNoWrc(self):
     """Tests the HasMessageTableResource function."""
     test_file_path = self._GetTestFilePath(['nowrc_test.dll'])
@@ -459,6 +461,8 @@ class WindowsResourceFileTest(test_lib.BaseTestCase):
 
       finally:
         windows_resource_file.Close()
+
+  # TODO: add HasWEVTTemplateResource
 
 
 if __name__ == '__main__':

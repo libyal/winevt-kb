@@ -11,6 +11,7 @@ from dfvfs.resolver import resolver as dfvfs_resolver
 
 from dfwinreg import registry as dfwinreg_registry
 
+from winevtrc import decorators
 from winevtrc import eventlog_providers
 from winevtrc import resource_file
 
@@ -23,7 +24,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     missing_message_filenames (list[str]): names of message files that were
         not found or without a resource section.
     missing_resources_message_filenames (list[str]): names of message files,
-        where both a string and a message table resource is missing.
+        where a message table resource is missing.
     preferred_language_identifier (int): preferred language identifier (LCID).
   """
 
@@ -49,6 +50,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     self._debug = debug
     self._registry = None
     self._processed_message_filenames = []
+    self._processed_template_filenames = []
     self._windows_version = None
 
     self.ascii_codepage = 'cp1252'
@@ -62,6 +64,36 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     if self._windows_version is None:
       self._windows_version = self._GetWindowsVersion()
     return self._windows_version
+
+  def _GetMessageResourceFilePath(
+      self, event_log_provider, normalized_file_path, message_filename):
+    """Retrieves the path of an Event Log message resource file.
+
+    Args:
+      event_log_provider (EventLogProvider): Event Log provider.
+      normalized_file_path (str): normalized path of the resource file.
+      message_filename (str): message filename.
+
+    Returns:
+      dfvfs.PathSpec: path specification of the resource file or None if not
+          available.
+    """
+    path_spec = self._path_resolver.ResolvePath(normalized_file_path)
+    if path_spec:
+      file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
+
+      # If normalized_file_path points to a directory try appending the Event
+      # Log provider log source as the file name.
+      if file_entry.IsDirectory():
+        logging.info(f'Message file: {message_filename:s} refers to directory')
+
+        for log_source in event_log_provider.log_sources:
+          resource_file_path = '\\'.join([normalized_file_path, log_source])
+          path_spec = self._path_resolver.ResolvePath(resource_file_path)
+          if path_spec:
+            break
+
+    return path_spec
 
   def _GetMUIWindowsResourceFile(self, windows_path, windows_resource_file):
     """Retrieves a MUI resource file.
@@ -81,20 +113,18 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     path, _, name = windows_path.rpartition('\\')
 
     mui_windows_path = '\\'.join([path, mui_language, f'{name:s}.mui'])
-    mui_windows_resource_file = self._OpenWindowsResourceFile(
-        mui_windows_path)
+    mui_resource_file = self._OpenWindowsResourceFile(mui_windows_path)
 
-    if not mui_windows_resource_file:
+    if not mui_resource_file:
       mui_windows_path = '\\'.join([path, f'{name:s}.mui'])
-      mui_windows_resource_file = self._OpenWindowsResourceFile(
-          mui_windows_path)
+      mui_resource_file = self._OpenWindowsResourceFile(mui_windows_path)
 
-    if mui_windows_resource_file:
+    if mui_resource_file:
       logging.info((
           f'Resource file: {windows_path:s} references MUI resource file: '
           f'{mui_windows_path:s}'))
 
-    return mui_windows_resource_file
+    return mui_resource_file
 
   def _GetNormalizedPath(self, path):
     """Retrieves a normalized variant of a path.
@@ -163,10 +193,10 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       windows_resource_file = self._OpenWindowsResourceFile(
           kernel_executable_path)
 
-    if not windows_resource_file:
-      return None
+    if windows_resource_file:
+      return windows_resource_file.file_version
 
-    return windows_resource_file.file_version
+    return None
 
   def _OpenWindowsResourceFile(self, windows_path):
     """Opens the message resource file specified by the Windows path.
@@ -178,19 +208,19 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       WindowsResourceFile: message resource file or None.
     """
     path_spec = self._path_resolver.ResolvePath(windows_path)
-    if path_spec is None:
-      return None
+    if path_spec:
+      return self._OpenWindowsResourceFileByPathSpec(path_spec)
 
-    return self._OpenWindowsResourceFileByPathSpec(path_spec)
+    return None
 
   def _OpenWindowsResourceFileByPathSpec(self, path_spec):
-    """Opens the message resource file specified by the path specification.
+    """Opens the Windows resource file specified by the path specification.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      WindowsResourceFile: message resource file or None.
+      WindowsResourceFile: Windows resource file or None.
     """
     windows_path = self._path_resolver.GetWindowsPath(path_spec)
     if windows_path is None:
@@ -203,15 +233,15 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           f'Unable to open: {path_spec.comparable:s} with error: {exception!s}')
       file_object = None
 
-    if file_object is None:
-      return None
+    if file_object:
+      message_file = resource_file.WindowsResourceFile(
+          windows_path, ascii_codepage=self.ascii_codepage,
+          preferred_language_identifier=self.preferred_language_identifier)
+      message_file.OpenFileObject(file_object)
 
-    message_file = resource_file.WindowsResourceFile(
-        windows_path, ascii_codepage=self.ascii_codepage,
-        preferred_language_identifier=self.preferred_language_identifier)
-    message_file.OpenFileObject(file_object)
+      return message_file
 
-    return message_file
+    return None
 
   def CollectEventLogProviders(self):
     """Retrieves the Event Log providers.
@@ -225,15 +255,15 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     collector = eventlog_providers.EventLogProvidersCollector()
     for event_log_provider in collector.Collect(self._registry):
       event_log_provider.category_message_files = [
-          self.GetNormalizedMessageFilePath(path)
+          self.GetNormalizedResourceFilePath(path)
           for path in event_log_provider.category_message_files]
 
       event_log_provider.event_message_files = [
-          self.GetNormalizedMessageFilePath(path)
+          self.GetNormalizedResourceFilePath(path)
           for path in event_log_provider.event_message_files]
 
       event_log_provider.parameter_message_files = [
-          self.GetNormalizedMessageFilePath(path)
+          self.GetNormalizedResourceFilePath(path)
           for path in event_log_provider.parameter_message_files]
 
       yield event_log_provider
@@ -259,7 +289,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       WindowsResourceFile: message resource file or None if not available or
           already processed.
     """
-    normalized_message_file_path = self.GetNormalizedMessageFilePath(
+    normalized_message_file_path = self.GetNormalizedResourceFilePath(
         message_filename)
 
     # Skip message file if it was already processed.
@@ -267,26 +297,13 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     if lookup_path in self._processed_message_filenames:
       return None
 
-    path_spec = self._path_resolver.ResolvePath(normalized_message_file_path)
-    if path_spec:
-      file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
+    path_spec = self._GetMessageResourceFilePath(
+        event_log_provider, normalized_message_file_path, message_filename)
 
-      # If normalized_message_file_path points to a directory try appending
-      # the Event Log provider log source as the file name.
-      if file_entry.IsDirectory():
-        logging.info(f'Message file: {message_filename:s} refers to directory')
+    if not path_spec:
+      return None
 
-        for log_source in event_log_provider.log_sources:
-          message_file_path = '\\'.join([
-              normalized_message_file_path, log_source])
-          path_spec = self._path_resolver.ResolvePath(message_file_path)
-          if path_spec:
-            break
-
-    windows_resource_file = None
-    if path_spec:
-      windows_resource_file = self._OpenWindowsResourceFileByPathSpec(path_spec)
-
+    windows_resource_file = self._OpenWindowsResourceFileByPathSpec(path_spec)
     if not windows_resource_file:
       logging.warning(f'Missing message file: {message_filename:s}')
 
@@ -296,18 +313,18 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       return None
 
     if not windows_resource_file.HasMessageTableResource():
-      # Windows Vista and later use a MUI resource to redirect to
-      # a language specific message file.
-      mui_windows_resource_file = self._GetMUIWindowsResourceFile(
+      # Windows Vista and later use a MUI resource file to redirect to
+      # a language specific message resource file.
+      mui_resource_file = self._GetMUIWindowsResourceFile(
           normalized_message_file_path, windows_resource_file)
-      if mui_windows_resource_file:
+      if mui_resource_file:
         windows_resource_file.Close()
 
-        windows_resource_file = mui_windows_resource_file
+        windows_resource_file = mui_resource_file
 
     if not windows_resource_file.HasMessageTableResource():
       logging.warning((
-          f'Message table resource missing from resouce file: '
+          f'Message table resource missing from resource file: '
           f'{message_filename:s}'))
 
       if message_filename not in self.missing_resources_message_filenames:
@@ -324,6 +341,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     return windows_resource_file
 
+  @decorators.deprecated
   def GetNormalizedMessageFilePath(self, path):
     """Retrieves a normalized variant of a message file path.
 
@@ -332,6 +350,17 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     Returns:
       str: normalized path of a message file.
+    """
+    return self.GetNormalizedResourceFilePath(path)
+
+  def GetNormalizedResourceFilePath(self, path):
+    """Retrieves a normalized variant of an Event Log resource file path.
+
+    Args:
+      path (str): path of an Event Log resource file.
+
+    Returns:
+      str: normalized path of an Event Log resource file.
     """
     path_segments = path.split('\\')
     filename = path_segments.pop()
@@ -368,6 +397,62 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     path_segments.append(filename)
     return '\\'.join(path_segments) or '\\'
+
+  def GetTemplateResourceFile(self, template_filename):
+    """Retrieves an Event Log WEVT_TEMPLATE resource file.
+
+    Args:
+      template_filename (str): template filename.
+
+    Returns:
+      WindowsResourceFile: template resource file or None if not available.
+    """
+    normalized_template_file_path = self.GetNormalizedResourceFilePath(
+        template_filename)
+
+    # Skip template file if it was already processed.
+    lookup_path = normalized_template_file_path.lower()
+    if lookup_path in self._processed_template_filenames:
+      return None
+
+    path_spec = self._path_resolver.ResolvePath(normalized_template_file_path)
+    if not path_spec:
+      return None
+
+    windows_resource_file = self._OpenWindowsResourceFileByPathSpec(path_spec)
+    if not windows_resource_file:
+      return None
+
+    if not windows_resource_file.HasWEVTTemplateResource():
+      # Windows 10 and later use .mun files in \\Windows\\SystemResources to
+      # store the template resource.
+      alternate_template_filename = template_filename.rsplit(
+          '\\', maxsplit=1)[-1]
+      alternate_template_file_path = '\\'.join([
+          'Windows', 'SystemResources', f'{alternate_template_filename:s}.mun'])
+
+      path_spec = self._path_resolver.ResolvePath(alternate_template_file_path)
+      if path_spec:
+        logging.warning(
+            f'Using alternate template file: {alternate_template_file_path:s}')
+        alternate_resource_file = self._OpenWindowsResourceFileByPathSpec(
+            path_spec)
+
+        windows_resource_file.Close()
+
+        windows_resource_file = alternate_resource_file
+
+    if not windows_resource_file.HasWEVTTemplateResource():
+      windows_resource_file.Close()
+
+      return None
+
+    windows_resource_file.windows_path = normalized_template_file_path
+
+    lookup_path = normalized_template_file_path.lower()
+    self._processed_template_filenames.append(lookup_path)
+
+    return windows_resource_file
 
   def ScanForWindowsVolume(self, source_path, options=None):
     """Scans for a Windows volume.

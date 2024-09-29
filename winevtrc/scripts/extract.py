@@ -15,6 +15,7 @@ from dfvfs.helpers import command_line as dfvfs_command_line
 from dfvfs.helpers import volume_scanner as dfvfs_volume_scanner
 from dfvfs.lib import errors as dfvfs_errors
 
+import pyfwevt
 import pywrc
 
 from winevtrc import definitions
@@ -37,6 +38,102 @@ class SQLite3OutputWriter(object):
     super(SQLite3OutputWriter, self).__init__()
     self._databases_path = databases_path
     self._database_writer = None
+
+  def _GetDatabaseFilename(self, resource_file):
+    """Determines the filename of the intermediate message resource database.
+
+    Args:
+      resource_file (WindowsResourceFile): message or template resource file.
+    """
+    filename = resource_file.windows_path.rsplit('\\', maxsplit=1)[-1]
+    filename = filename.lower()
+    return re.sub(r'\.mui', '', f'{filename:s}.db')
+
+  def _WriteMessageIdentifierMappings(
+        self, event_log_provider, template_resource_file, database_writer):
+    """Writes the message identifier mappings.
+
+    Args:
+      event_log_provider (EventLogProvider): Event Log provider.
+      template_resource_file (WindowsResourceFile): template resource file.
+      database_writer (acstore.SQLiteAttributeContainerStore): message resource
+          file attribute container store.
+    """
+    wrc_resource = template_resource_file.GetWEVTTemplateResource()
+    if not wrc_resource:
+      return
+
+    if wrc_resource.number_of_items != 1:
+      logging.warning((
+          f'More than 1 WEVT_TEMPLATE resource item in resource file: '
+          f'{template_resource_file.windows_path:s}.'))
+
+    wrc_resource_item = wrc_resource.items[0]
+    for wrc_resource_sub_item in wrc_resource_item.sub_items:
+      resource_data = wrc_resource_sub_item.read()
+
+      wevt_manifest = pyfwevt.manifest()
+      wevt_manifest.copy_from_byte_stream(resource_data)
+
+      for wevt_provider in iter(wevt_manifest.providers):
+        # Ignore unrelated providers in the template resource file.
+        if event_log_provider.identifier != f'{{{wevt_provider.identifier:s}}}':
+          continue
+
+        for wevt_event in wevt_provider.events:
+          if wevt_event.message_identifier != 0xffffffff:
+            descriptor = resources.MessageStringMappingDescriptor(
+                event_identifier=wevt_event.identifier,
+                event_version=wevt_event.version,
+                message_identifier=wevt_event.message_identifier)
+            database_writer.AddAttributeContainer(descriptor)
+
+  def _WriteMessageTables(
+        self, message_resource_file, message_file_identifier, database_writer):
+    """Writes the message tables.
+
+    Args:
+      message_resource_file (WindowsResourceFile): message resource file.
+      message_file_identifier (acstore.AttributeContainerIdentifier): message
+          file attribute container identifier.
+      database_writer (acstore.SQLiteAttributeContainerStore): message resource
+          file attribute container store.
+    """
+    wrc_resource = message_resource_file.GetMessageTableResource()
+    if not wrc_resource:
+      return
+
+    if wrc_resource.number_of_items != 1:
+      logging.warning((
+          f'More than 1 message table resource item in resource file: '
+          f'{message_resource_file.windows_path:s}.'))
+
+    wrc_resource_item = wrc_resource.items[0]
+    for wrc_resource_sub_item in wrc_resource_item.sub_items:
+      language_identifier = wrc_resource_sub_item.identifier
+
+      descriptor = resources.MessageTableDescriptor(
+          language_identifier=language_identifier)
+      descriptor.SetMessageFileIdentifier(message_file_identifier)
+      database_writer.AddAttributeContainer(descriptor)
+
+      message_table_identifier = descriptor.GetIdentifier()
+
+      resource_data = wrc_resource_sub_item.read()
+
+      message_table_resource = pywrc.message_table_resource()
+      message_table_resource.copy_from_byte_stream(resource_data)
+
+      number_of_messages = message_table_resource.get_number_of_messages()
+      for message_index in range(number_of_messages):
+        message_identifier = message_table_resource.get_message_identifier(
+            message_index)
+        message_string = message_table_resource.get_string(message_index)
+
+        descriptor = resources.MessageStringDescriptor(
+            identifier=message_identifier, text=message_string)
+        descriptor.SetMessageTableIdentifier(message_table_identifier)
+        database_writer.AddAttributeContainer(descriptor)
 
   def Close(self):
     """Closes the output writer object."""
@@ -75,6 +172,27 @@ class SQLite3OutputWriter(object):
     """
     self._database_writer.AddAttributeContainer(event_log_provider)
 
+  def WriteMessageIdentifierMappings(
+      self, event_log_provider, template_resource_file):
+    """Writes the message identifier mappings.
+
+    Args:
+      event_log_provider (EventLogProvider): Event Log provider.
+      template_resource_file (WindowsResourceFile): template resource file.
+    """
+    database_filename = self._GetDatabaseFilename(template_resource_file)
+    database_path = os.path.join(self._databases_path, database_filename)
+
+    database_writer = sqlite_store.SQLiteAttributeContainerStore()
+    database_writer.Open(path=database_path, read_only=False)
+
+    try:
+      self._WriteMessageIdentifierMappings(
+          event_log_provider, template_resource_file, database_writer)
+
+    finally:
+      database_writer.Close()
+
   # pylint: disable=unused-argument
   def WriteMessageResourceFile(
       self, windows_version, message_resource_file, message_filename,
@@ -83,98 +201,35 @@ class SQLite3OutputWriter(object):
 
     Args:
       windows_version (str): Windows version.
-      message_resource_file (MessageResourceFile): message resource file.
+      message_resource_file (WindowsResourceFile): message resource file.
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
-    database_filename = message_resource_file.windows_path
-    _, _, database_filename = database_filename.rpartition('\\')
-    database_filename = database_filename.lower()
-    database_filename = re.sub(r'\.mui', '', f'{database_filename:s}.db')
+    database_filename = self._GetDatabaseFilename(message_resource_file)
+    database_path = os.path.join(self._databases_path, database_filename)
 
-    self._WriteResources(
-        windows_version, message_resource_file, database_filename)
+    database_writer = sqlite_store.SQLiteAttributeContainerStore()
+    database_writer.Open(path=database_path, read_only=False)
+
+    try:
+      descriptor = resources.MessageFileDescriptor(
+          file_version=message_resource_file.file_version,
+          message_filename=message_resource_file.windows_path,
+          product_version=message_resource_file.product_version,
+          windows_version=windows_version)
+      database_writer.AddAttributeContainer(descriptor)
+
+      message_file_identifier = descriptor.GetIdentifier()
+
+      self._WriteMessageTables(
+          message_resource_file, message_file_identifier, database_writer)
+
+    finally:
+      database_writer.Close()
 
     descriptor = resources.MessageFileDatabaseDescriptor(
         database_filename=database_filename, message_filename=message_filename)
     self._database_writer.AddAttributeContainer(descriptor)
-
-  def _WriteResources(
-      self, windows_version, message_resource_file, database_filename):
-    """Writes the resources.
-
-    Args:
-      windows_version (str): Windows version.
-      message_resource_file (MessageResourceFile): message resource file.
-      database_filename (str): name of the message resource file database.
-    """
-    messeage_resource_file_database_path = os.path.join(
-        self._databases_path, database_filename)
-
-    database_writer = sqlite_store.SQLiteAttributeContainerStore()
-    database_writer.Open(
-        path=messeage_resource_file_database_path, read_only=False)
-
-    descriptor = resources.MessageFileDescriptor(
-        file_version=message_resource_file.file_version,
-        message_filename=message_resource_file.windows_path,
-        product_version=message_resource_file.product_version,
-        windows_version=windows_version)
-    database_writer.AddAttributeContainer(descriptor)
-
-    message_file_identifier = descriptor.GetIdentifier()
-
-    self._WriteMessageTables(
-        message_resource_file, message_file_identifier, database_writer)
-
-    database_writer.Close()
-
-  def _WriteMessageTables(
-        self, message_resource_file, message_file_identifier, database_writer):
-    """Writes the message tables.
-
-    Args:
-      message_resource_file (MessageResourceFile): message resource file.
-      message_file_identifier (acstore.AttributeContainerIdentifier): message
-          file attribute container identifier.
-      database_writer (acstore.SQLiteAttributeContainerStore): message resource
-          file attribute container store.
-    """
-    wrc_resource = message_resource_file.GetMessageTableResource()
-    if not wrc_resource:
-      return
-
-    if wrc_resource.number_of_items != 1:
-      logging.warning((
-          f'More than 1 message table resource item in message file: '
-          f'{message_resource_file.windows_path:s}.'))
-
-    wrc_resource_item = wrc_resource.items[0]
-    for wrc_resource_sub_item in wrc_resource_item.sub_items:
-      language_identifier = wrc_resource_sub_item.identifier
-
-      descriptor = resources.MessageTableDescriptor(
-          language_identifier=language_identifier)
-      descriptor.SetMessageFileIdentifier(message_file_identifier)
-      database_writer.AddAttributeContainer(descriptor)
-
-      message_table_identifier = descriptor.GetIdentifier()
-
-      resource_data = wrc_resource_sub_item.read()
-
-      message_table_resource = pywrc.message_table_resource()
-      message_table_resource.copy_from_byte_stream(resource_data)
-
-      number_of_messages = message_table_resource.get_number_of_messages()
-      for message_index in range(number_of_messages):
-        message_identifier = message_table_resource.get_message_identifier(
-            message_index)
-        message_string = message_table_resource.get_string(message_index)
-
-        descriptor = resources.MessageStringDescriptor(
-            identifier=message_identifier, text=message_string)
-        descriptor.SetMessageTableIdentifier(message_table_identifier)
-        database_writer.AddAttributeContainer(descriptor)
 
 
 class StdoutOutputWriter(object):
@@ -184,7 +239,7 @@ class StdoutOutputWriter(object):
     """Writes the Windows Message Resource file message table.
 
     Args:
-      message_resource_file (MessageResourceFile): message resource file.
+      message_resource_file (WindowsResourceFile): message resource file.
     """
     wrc_resource = message_resource_file.GetMessageTableResource()
     if not wrc_resource:
@@ -192,7 +247,7 @@ class StdoutOutputWriter(object):
 
     if wrc_resource.number_of_items != 1:
       logging.warning((
-          f'More than 1 message table resource item in message file: '
+          f'More than 1 message table resource item in resource file: '
           f'{message_resource_file.windows_path:s}.'))
 
     wrc_resource_item = wrc_resource.items[0]
@@ -260,7 +315,7 @@ class StdoutOutputWriter(object):
 
     Args:
       windows_version (str): Windows version.
-      message_resource_file (MessageResourceFile): message resource file.
+      message_resource_file (WindowsResourceFile): message resource file.
       message_filename (str): message filename.
       message_file_type (str): message file type.
     """
@@ -382,8 +437,8 @@ def Main():
 
         windows_version = source_definition['windows_version']
         if not windows_version and options.database:
-          print('Database output requires a Windows version, specify one with '
-                '--windows-version.')
+          print(('Database output requires a Windows version, specify one with '
+                 '--windows-version.'))
           print('')
           return 1
 
@@ -412,6 +467,12 @@ def Main():
                   message_resource_file.windows_path,
                   definitions.MESSAGE_FILE_TYPE_EVENT)
               message_resource_file.Close()
+
+              template_resource_file = extractor_object.GetTemplateResourceFile(
+                  message_filename)
+              if template_resource_file:
+                output_writer.WriteMessageIdentifierMappings(
+                    event_log_provider, template_resource_file)
 
         if event_log_provider.category_message_files:
           for message_filename in event_log_provider.category_message_files:
@@ -450,16 +511,14 @@ def Main():
     if extractor_object.missing_message_filenames:
       print('')
       print('Message resource files not found or without resource section:')
-      for message_filename in extractor_object.missing_message_filenames:
-        print(message_filename)
+      for filename in extractor_object.missing_message_filenames:
+        print(filename)
 
     if extractor_object.missing_resources_message_filenames:
       print('')
-      print(('Message resource files without a string and message table '
-             'resource:'))
-      for message_filename in (
-          extractor_object.missing_resources_message_filenames):
-        print(message_filename)
+      print('Message resource files without a message table resource:')
+      for filename in extractor_object.missing_resources_message_filenames:
+        print(filename)
 
     print('')
 

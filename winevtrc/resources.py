@@ -117,8 +117,8 @@ class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
   """Windows Event Log message file database descriptor.
 
   Attributes:
-      database_filename (str): database filename.
-      message_filename (str): message filename.
+    database_filename (str): database filename.
+    message_filename (str): message filename.
   """
 
   CONTAINER_TYPE = 'message_file_database'
@@ -143,10 +143,10 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
   """Windows Event Log message file descriptor.
 
   Attributes:
-      file_version (str): file version.
-      message_filename (str): message filename.
-      product_version (str): product version.
-      windows_version (str): Windows version.
+    file_version (str): file version.
+    message_filename (str): message filename.
+    product_version (str): product version.
+    windows_version (str): Windows version.
   """
 
   CONTAINER_TYPE = 'message_file'
@@ -175,39 +175,12 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
     self.windows_version = windows_version
 
 
-class MessageTable(object):
-  """Class that contains the messages per language.
-
-  Attributes:
-    file_versions (list[str]): Windows Event Log resource file versions.
-    language_identifier (int): language identifier (LCID).
-    message_strings (dict[int, str]): Windows Event Log resource message
-       strings per identifier.
-  """
-
-  def __init__(self, language_identifier):
-    """Initializes the message table.
-
-    Args:
-      lcid (int): language identifier (LCID).
-    """
-    super(MessageTable, self).__init__()
-    self.file_versions = []
-    self.language_identifier = language_identifier
-    self.message_strings = {}
-
-  @property
-  def lcid(self):
-    """int: language identifier (LCID)."""
-    return self.language_identifier
-
-
 class MessageStringDescriptor(containers_interface.AttributeContainer):
   """Windows Event Log message string descriptor.
 
   Attributes:
-      identifier (int): message identifier.
-      text (str): message text.
+    identifier (int): message identifier.
+    text (str): message text.
   """
 
   CONTAINER_TYPE = 'message_string'
@@ -251,11 +224,69 @@ class MessageStringDescriptor(containers_interface.AttributeContainer):
     self._message_table_identifier = message_table_identifier
 
 
+class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
+  """Windows Event Log message string mapping descriptor.
+
+  Attributes:
+    event_identifier (int): event identifier.
+    event_version (int): event version.
+    message_identifier (int): message identifier.
+  """
+
+  CONTAINER_TYPE = 'message_string_mapping'
+
+  SCHEMA = {
+      'event_identifier': 'int',
+      'event_version': 'int',
+      'message_identifier': 'int'}
+
+  def __init__(
+      self, event_identifier=None, event_version=None, message_identifier=None):
+    """Initializes a Windows Event Log message string mapping descriptor.
+
+    Args:
+      event_identifier (Optional[int]): event identifier.
+      event_version (Optional[int]): event version.
+      message_identifier (Optional[int]): message identifier.
+    """
+    super(MessageStringMappingDescriptor, self).__init__()
+    self.event_identifier = event_identifier
+    self.event_version = event_version
+    self.message_identifier = message_identifier
+
+
+class MessageTable(object):
+  """Class that contains the messages per language.
+
+  Attributes:
+    file_versions (list[str]): Windows Event Log resource file versions.
+    language_identifier (int): language identifier (LCID).
+    message_strings (dict[int, str]): Windows Event Log resource message
+       strings per identifier.
+  """
+
+  def __init__(self, language_identifier):
+    """Initializes the message table.
+
+    Args:
+      lcid (int): language identifier (LCID).
+    """
+    super(MessageTable, self).__init__()
+    self.file_versions = []
+    self.language_identifier = language_identifier
+    self.message_strings = {}
+
+  @property
+  def lcid(self):
+    """int: language identifier (LCID)."""
+    return self.language_identifier
+
+
 class MessageTableDescriptor(containers_interface.AttributeContainer):
   """Windows Event Log message table descriptor.
 
   Attributes:
-      language_identifier (int): language identifier (LCID).
+    language_identifier (int): language identifier (LCID).
   """
 
   CONTAINER_TYPE = 'message_table'
@@ -298,4 +329,5 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
 
 containers_manager.AttributeContainersManager.RegisterAttributeContainers([
     EventLogProvider, MessageFileDatabaseDescriptor, MessageFileDescriptor,
-    MessageStringDescriptor, MessageTableDescriptor])
+    MessageStringDescriptor, MessageStringMappingDescriptor,
+    MessageTableDescriptor])

@@ -137,58 +137,60 @@ class EventMessageStringExtractorTest(test_lib.BaseTestCase):
 
     self.assertIsNone(message_resource_file)
 
-  def testGetNormalizedMessageFilePath(self):
-    """Tests the GetNormalizedMessageFilePath function."""
+  def testGetNormalizedResourceFilePath(self):
+    """Tests the GetNormalizedResourceFilePath function."""
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '%SystemRoot%\\System32\\IoLogMsg.dll')
     self.assertEqual(normalized_path, '%SystemRoot%\\System32\\IoLogMsg.dll')
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '%windir%\\System32\\lsasrv.dll')
     self.assertEqual(normalized_path, '%SystemRoot%\\System32\\lsasrv.dll')
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         'C:\\Windows\\System32\\mscoree.dll')
     self.assertEqual(normalized_path, '%SystemRoot%\\System32\\mscoree.dll')
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         'werfault.exe')
     self.assertEqual(normalized_path, '%SystemRoot%\\System32\\werfault.exe')
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         'system32\\drivers\\WdFilter.sys')
     self.assertEqual(normalized_path, (
         '%SystemRoot%\\System32\\drivers\\WdFilter.sys'))
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\'
         'eventlog_provider.dll')
     self.assertEqual(normalized_path, (
         '\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\'
         'eventlog_provider.dll'))
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '%ProgramFiles%\\Windows Defender\\MpClient.dll')
     self.assertEqual(normalized_path, (
         '%ProgramFiles%\\Windows Defender\\MpClient.dll'))
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '%programdata%\\Microsoft\\Windows Defender\\Definition Updates\\'
         'Default\\MpEngine.dll')
     self.assertEqual(normalized_path, (
         '%programdata%\\Microsoft\\Windows Defender\\Definition Updates\\'
         'Default\\MpEngine.dll'))
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '$(runtime.system32)\\WinML.dll')
     self.assertEqual(normalized_path, '%SystemRoot%\\System32\\WinML.dll')
 
-    normalized_path = extractor_object.GetNormalizedMessageFilePath(
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '$(runtime.windows)\\immersivecontrolpanel\\systemsettings.exe')
     self.assertEqual(normalized_path, (
         '%SystemRoot%\\immersivecontrolpanel\\systemsettings.exe'))
+
+  # TODO: test GetTemplateResourceFile
 
   # TODO: test ScanForWindowsVolume
 
