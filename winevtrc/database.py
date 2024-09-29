@@ -529,6 +529,8 @@ class ResourcesSQLite3DatabaseReader(object):
 class ResourcesSQLite3DatabaseWriter(object):
   """Event Log resources SQLite database writer."""
 
+  _VERSION = '20150315'
+
   # Message string specifiers that are considered white space.
   _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
   # Message string specifiers that expand to text.
@@ -759,20 +761,49 @@ class ResourcesSQLite3DatabaseWriter(object):
       values = [language_identifier, message_file_key]
       self._database_file.InsertValues(table_name, column_names, values)
 
+  def _WriteMetadataAttribute(self, attribute_name, attribute_value):
+    """Writes a metadata attribute.
+
+    Args:
+      attribute_name (str): name of the metadata attribute.
+      attribute_value (str): value of the metadata attribute.
+    """
+    table_name = 'metadata'
+    column_names = ['name', 'value']
+
+    has_table = self._database_file.HasTable(table_name)
+    if not has_table:
+      column_definitions = ['name TEXT', 'value TEXT']
+      self._database_file.CreateTable(table_name, column_definitions)
+      insert_values = True
+
+    else:
+      condition = f'name = "{attribute_name:s}"'
+      values_list = list(self._database_file.GetValues(
+          [table_name], column_names, condition))
+
+      number_of_values = len(values_list)
+      # TODO: check if more than 1 result.
+      insert_values = number_of_values == 0
+
+    if insert_values:
+      values = [attribute_name, attribute_value]
+      self._database_file.InsertValues(table_name, column_names, values)
+
   def Close(self):
     """Closes the database writer."""
     self._database_file.Close()
 
-  def Open(self, filename):
+  def Open(self, path=None, **unused_kwargs):
     """Opens the database writer.
 
     Args:
-      filename (str): filename of the database.
+      path (Optional[str]): path of the database file.
 
     Returns:
       bool: True if successful or False if not.
     """
-    return self._database_file.Open(filename)
+    return self._database_file.Open(path)
 
   def WriteEventLogProvider(self, event_log_provider):
     """Writes the Event Log provider.
@@ -796,6 +827,8 @@ class ResourcesSQLite3DatabaseWriter(object):
         condition = f'provider_guid = "{event_log_provider.identifier:s}"'
       elif event_log_provider.log_source:
         condition = f'log_source = "{event_log_provider.log_source:s}"'
+      else:
+        condition = None
       values_list = list(self._database_file.GetValues(
           [table_name], column_names, condition))
 
@@ -911,36 +944,12 @@ class ResourcesSQLite3DatabaseWriter(object):
       message_strings = message_table.message_strings
       for message_identifier, message_string in message_strings.items():
         self._WriteMessage(
-                message_file, message_table.lcid, f'0x{message_identifier:08x}',
+            message_file, message_table.lcid, f'0x{message_identifier:08x}',
             message_string, table_name, has_table)
 
       self._WriteMessageTableLanguage(message_file_key, message_table.lcid)
 
-  def WriteMetadataAttribute(self, attribute_name, attribute_value):
-    """Writes a metadata attribute.
-
-    Args:
-      attribute_name (str): name of the metadata attribute.
-      attribute_value (str): value of the metadata attribute.
-    """
-    table_name = 'metadata'
-    column_names = ['name', 'value']
-
-    has_table = self._database_file.HasTable(table_name)
-    if not has_table:
-      column_definitions = ['name TEXT', 'value TEXT']
-      self._database_file.CreateTable(table_name, column_definitions)
-      insert_values = True
-
-    else:
-      condition = f'name = "{attribute_name:s}"'
-      values_list = list(self._database_file.GetValues(
-          [table_name], column_names, condition))
-
-      number_of_values = len(values_list)
-      # TODO: check if more than 1 result.
-      insert_values = number_of_values == 0
-
-    if insert_values:
-      values = [attribute_name, attribute_value]
-      self._database_file.InsertValues(table_name, column_names, values)
+  def WriteMetadata(self):
+    """Writes the metadata."""
+    self._WriteMetadataAttribute('version', self._VERSION)
+    self._WriteMetadataAttribute('string_format', self._string_format)

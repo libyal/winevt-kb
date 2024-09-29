@@ -214,8 +214,8 @@ class SQLite3OutputWriter(object):
     try:
       descriptor = resources.MessageFileDescriptor(
           file_version=message_resource_file.file_version,
-          message_filename=message_resource_file.windows_path,
           product_version=message_resource_file.product_version,
+          windows_path=message_resource_file.windows_path,
           windows_version=windows_version)
       database_writer.AddAttributeContainer(descriptor)
 
@@ -228,7 +228,7 @@ class SQLite3OutputWriter(object):
       database_writer.Close()
 
     descriptor = resources.MessageFileDatabaseDescriptor(
-        database_filename=database_filename, message_filename=message_filename)
+        database_filename=database_filename, windows_path=message_filename)
     self._database_writer.AddAttributeContainer(descriptor)
 
 

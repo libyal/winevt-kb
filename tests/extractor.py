@@ -163,16 +163,28 @@ class EventMessageStringExtractorTest(test_lib.BaseTestCase):
         '%SystemRoot%\\System32\\drivers\\WdFilter.sys'))
 
     normalized_path = extractor_object.GetNormalizedResourceFilePath(
+        'C:\\Program Files\\Windows Defender\\MpClient.dll')
+    self.assertEqual(normalized_path, (
+        '%ProgramFiles%\\Windows Defender\\MpClient.dll'))
+
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
+        '%PROGRAMFILES%\\Windows Defender\\MpClient.dll')
+    self.assertEqual(normalized_path, (
+        '%ProgramFiles%\\Windows Defender\\MpClient.dll'))
+
+    normalized_path = extractor_object.GetNormalizedResourceFilePath(
         'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\'
         'eventlog_provider.dll')
     self.assertEqual(normalized_path, (
-        '\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\'
+        '%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\84.0.522.52\\'
         'eventlog_provider.dll'))
 
     normalized_path = extractor_object.GetNormalizedResourceFilePath(
-        '%ProgramFiles%\\Windows Defender\\MpClient.dll')
+        '%PROGRAMFILES(X86)%\\Microsoft\\Edge\\Application\\84.0.522.52\\'
+        'eventlog_provider.dll')
     self.assertEqual(normalized_path, (
-        '%ProgramFiles%\\Windows Defender\\MpClient.dll'))
+        '%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\84.0.522.52\\'
+        'eventlog_provider.dll'))
 
     normalized_path = extractor_object.GetNormalizedResourceFilePath(
         '%programdata%\\Microsoft\\Windows Defender\\Definition Updates\\'

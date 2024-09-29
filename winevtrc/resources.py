@@ -118,25 +118,25 @@ class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
 
   Attributes:
     database_filename (str): database filename.
-    message_filename (str): message filename.
+    windows_path (str): Windows path of the message file.
   """
 
   CONTAINER_TYPE = 'message_file_database'
 
   SCHEMA = {
       'database_filename': 'str',
-      'message_filename': 'str'}
+      'windows_path': 'str'}
 
-  def __init__(self, database_filename=None, message_filename=None):
+  def __init__(self, database_filename=None, windows_path=None):
     """Initializes a Windows Event Log message file database descriptor.
 
     Args:
       database_filename (Optional[str]): database filename.
-      message_filename (Optional[str]): message filename.
+      windows_path (Optional[str]): message filename.
     """
     super(MessageFileDatabaseDescriptor, self).__init__()
     self.database_filename = database_filename
-    self.message_filename = message_filename
+    self.windows_path = windows_path
 
 
 class MessageFileDescriptor(containers_interface.AttributeContainer):
@@ -144,8 +144,8 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
 
   Attributes:
     file_version (str): file version.
-    message_filename (str): message filename.
     product_version (str): product version.
+    windows_path (str): Windows path of the message file.
     windows_version (str): Windows version.
   """
 
@@ -153,25 +153,25 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
 
   SCHEMA = {
       'file_version': 'str',
-      'message_filename': 'str',
       'product_version': 'str',
+      'windows_path': 'str',
       'windows_version': 'str'}
 
   def __init__(
-      self, file_version=None, message_filename=None, product_version=None,
+      self, file_version=None, product_version=None, windows_path=None,
       windows_version=None):
     """Initializes a Windows Event Log message file descriptor.
 
     Args:
       file_version (Optional[str]): file version.
-      message_filename (Optional[str]): message filename.
       product_version (Optional[str]): product version.
+      windows_path (Optional[str]): Windows path of the message file.
       windows_version (Optional[str]): Windows version.
     """
     super(MessageFileDescriptor, self).__init__()
     self.file_version = file_version
-    self.message_filename = message_filename
     self.product_version = product_version
+    self.windows_path = windows_path
     self.windows_version = windows_version
 
 

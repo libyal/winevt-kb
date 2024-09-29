@@ -227,11 +227,12 @@ class ResourcesSQLite3DatabaseWriterTest(test_lib.BaseTestCase):
   # TODO: add test for _ReformatMessageString
   # TODO: add test for _WriteMessage
   # TODO: add test for _WriteMessageTableLanguage
+  # TODO: add test for _WriteMetadataAttribute
   # TODO: add test for WriteEventLogProvider
   # TODO: add test for WriteMessageFile
   # TODO: add test for WriteMessageFilesPerEventLogProvider
   # TODO: add test for WriteMessageTable
-  # TODO: add test for WriteMetadataAttribute
+  # TODO: add test for WriteMetadata
 
 
 if __name__ == '__main__':

@@ -92,27 +92,11 @@ class ExporterOutputWriter(object):
       message_file (ExportMessageFile): message file.
     """
 
-  @abc.abstractmethod
-  def WriteMessageFilesPerEventLogProvider(
-      self, event_log_provider, message_file):
-    """Writes a mapping between an Event Log provider and a message file.
-
-    Args:
-      event_log_provider (EventLogProvider): Event Log provider.
-      message_file (ExportMessageFile): message file.
-    """
-
 
 class Exporter(object):
   """Exports the strings extracted from Windows EventLog message files."""
 
   _EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
-
-  def __init__(self):
-    """Initializes a Windows Event Log message resource exporter."""
-    super(Exporter, self).__init__()
-    # TODO: refactor
-    self._event_log_providers = {}
 
   def _CompareEventLogProviders(
       self, event_log_provider, other_event_log_provider):
@@ -257,9 +241,6 @@ class Exporter(object):
 
         providers_per_log_source[name] = export_event_log_provider
 
-        # TODO: refactor
-        self._event_log_providers[name] = event_log_provider
-
       else:
         for existing_event_log_provider, windows_versions in (
             export_event_log_provider.providers_with_versions):
@@ -315,23 +296,11 @@ class Exporter(object):
       # Strip ".db" from the database filename.
       name = descriptor.database_filename[:-3]
       message_file = ExportMessageFile(name)
-      message_file.windows_path = descriptor.message_filename
+      message_file.windows_path = descriptor.windows_path
 
       self._ExportMessageFile(message_file, message_file_database_path)
 
       output_writer.WriteMessageFile(message_file)
-
-  def _ExportMessageFilesPerEventLogProvider(self, output_writer):
-    """Exports the message files used by an Event Log provider.
-
-    Args:
-      output_writer (ExporterOutputWriter): output writer.
-    """
-    # TODO: refactor
-    for event_log_provider in self._event_log_providers.values():
-      for message_filename in event_log_provider.event_message_files:
-        output_writer.WriteMessageFilesPerEventLogProvider(
-            event_log_provider, message_filename)
 
   def _ExportMessageStrings(self, message_file, database_reader):
     """Exports the message strings from a message file database.
@@ -439,5 +408,3 @@ class Exporter(object):
 
     finally:
       database_reader.Close()
-
-    self._ExportMessageFilesPerEventLogProvider(output_writer)

@@ -8,40 +8,112 @@ import os
 import re
 import sys
 
+from acstore import sqlite_store
+
 from winevtrc import database
 from winevtrc import definitions
 from winevtrc import documentation
 from winevtrc import exporter
+from winevtrc import resources
+
+
+class MessageResourceAttributeContainerStore(
+    sqlite_store.SQLiteAttributeContainerStore):
+  """Message resource attribute container store.
+
+  Attributes:
+    format_version (int): storage format version.
+    serialization_format (str): serialization format.
+  """
+
+  _FORMAT_VERSION = 20240929
+  _APPEND_COMPATIBLE_FORMAT_VERSION = 20240929
+  _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20240929
+  _READ_COMPATIBLE_FORMAT_VERSION = 20240929
+
+  def __init__(self, string_format='wrc'):
+    """Initializes a message resource attribute container store.
+
+    Args:
+      string_format (Optional[str]): string format. The default is the Windows
+          Resource (wrc) format.
+    """
+    super(MessageResourceAttributeContainerStore, self).__init__()
+    self._string_format = string_format
+
+  def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
+    """Reads storage metadata and checks that the values are valid.
+
+    Args:
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
+
+    Raises:
+      IOError: when there is an error querying the attribute container store.
+      OSError: when there is an error querying the attribute container store.
+    """
+    metadata_values = self._ReadMetadata()
+
+    self._CheckStorageMetadata(
+        metadata_values, check_readable_only=check_readable_only)
+
+    string_format = metadata_values.get('string_format', None)
+
+    if not string_format:
+      raise IOError('Missing string format.')
+
+    self._string_format = metadata_values['string_format']
+    self.format_version = metadata_values['format_version']
+    self.serialization_format = metadata_values['serialization_format']
+
+  def _WriteMetadata(self):
+    """Writes metadata.
+
+    Raises:
+      IOError: when there is an error querying the attribute container store.
+      OSError: when there is an error querying the attribute container store.
+    """
+    super(MessageResourceAttributeContainerStore, self)._WriteMetadata()
+    self._WriteMetadataValue('string_format', self._string_format)
 
 
 class DatabaseOutputWriter(exporter.ExporterOutputWriter):
   """Database output writer."""
 
-  _VERSION = '20150315'
-
-  def __init__(self, database_path, string_format='wrc'):
+  def __init__(
+      self, database_path, database_version='20150315', string_format='wrc'):
     """Initializes a database output writer.
 
     Args:
       database_path (str): path to the database file.
+      database_version (Optional[str]): database version.
       string_format (Optional[str]): string format.
     """
     super(DatabaseOutputWriter, self).__init__()
+    self._database_version = database_version
     self._database_path = database_path
     self._database_writer = None
+    self._event_log_providers = {}
     self._string_format = string_format
 
-  def _WriteMetadata(self):
-    """Writes the metadata."""
-    self._database_writer.WriteMetadataAttribute(
-        'version', self._VERSION)
-    self._database_writer.WriteMetadataAttribute(
-        'string_format', self._string_format)
+  def _WriteMessageFilesPerEventLogProvider(self):
+    """Writes mappings between Event Log providers and message files."""
+    for event_log_provider in self._event_log_providers.values():
+      for message_filename in event_log_provider.event_message_files:
+        self._database_writer.WriteMessageFilesPerEventLogProvider(
+            event_log_provider, message_filename,
+            definitions.MESSAGE_FILE_TYPE_EVENT)
 
   def Close(self):
     """Closes the output writer object."""
-    self._database_writer.Close()
-    self._database_writer = None
+    if self._database_writer:
+      if self._database_version == '20150315':
+        self._WriteMessageFilesPerEventLogProvider()
+
+      self._database_writer.Close()
+      self._database_writer = None
+      self._database_path = None
 
   def Open(self):
     """Opens the output writer object.
@@ -52,10 +124,16 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     if os.path.isdir(self._database_path):
       return False
 
-    self._database_writer = database.ResourcesSQLite3DatabaseWriter(
-        string_format=self._string_format)
-    self._database_writer.Open(self._database_path)
-    self._WriteMetadata()
+    if self._database_version == '20150315':
+      self._database_writer = database.ResourcesSQLite3DatabaseWriter(
+          string_format=self._string_format)
+      self._database_writer.Open(path=self._database_path)
+      self._database_writer.WriteMetadata()
+
+    else:
+      self._database_writer = MessageResourceAttributeContainerStore(
+          string_format=self._string_format)
+      self._database_writer.Open(path=self._database_path, read_only=False)
 
     return True
 
@@ -65,12 +143,22 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     Args:
       export_event_log_provider (ExportEventLogProvider): Event Log provider.
     """
-    event_log_provider, _ = export_event_log_provider.providers_with_versions[0]
+    if len(export_event_log_provider.providers_with_versions) > 1:
+      logging.warning((
+          f'More than one definitions for event provider: '
+          f'{export_event_log_provider.name:s} defaulting to first.'))
 
     # TODO: add support for windows_versions.
+    event_log_provider, _ = export_event_log_provider.providers_with_versions[0]
 
-    # TODO: check if already exists.
-    self._database_writer.WriteEventLogProvider(event_log_provider)
+    # TODO: check if event provider already exists.
+
+    if self._database_version == '20150315':
+      self._database_writer.WriteEventLogProvider(event_log_provider)
+
+      self._event_log_providers[event_log_provider.name] = event_log_provider
+    else:
+      self._database_writer.AddAttributeContainer(event_log_provider)
 
   def WriteMessageFile(self, message_file):
     """Writes a message file.
@@ -78,22 +166,35 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     Args:
       message_file (ExportMessageFile): message file.
     """
-    self._database_writer.WriteMessageFile(message_file)
+    if self._database_version == '20150315':
+      self._database_writer.WriteMessageFile(message_file)
 
-    for message_table in message_file.GetMessageTables():
-      # TODO: track the languages.
-      self._database_writer.WriteMessageTable(message_file, message_table)
+      for message_table in message_file.GetMessageTables():
+        self._database_writer.WriteMessageTable(message_file, message_table)
 
-  def WriteMessageFilesPerEventLogProvider(
-      self, event_log_provider, message_file):
-    """Writes a mapping between an Event Log provider and a message file.
+    else:
+      # TODO: add support to handle multiple versions.
+      message_file_descriptor = resources.MessageFileDescriptor(
+          windows_path=message_file.windows_path)
+      self._database_writer.AddAttributeContainer(message_file_descriptor)
 
-    Args:
-      event_log_provider (EventLogProvider): Event Log provider.
-      message_file (ExportMessageFile): message file.
-    """
-    self._database_writer.WriteMessageFilesPerEventLogProvider(
-        event_log_provider, message_file, definitions.MESSAGE_FILE_TYPE_EVENT)
+      message_file_identifier = message_file_descriptor.GetIdentifier()
+
+      for message_table in message_file.GetMessageTables():
+        message_table_descriptor = resources.MessageTableDescriptor(
+            language_identifier=message_table.language_identifier)
+        message_table_descriptor.SetMessageFileIdentifier(
+            message_file_identifier)
+        self._database_writer.AddAttributeContainer(message_table_descriptor)
+
+        message_table_identifier = message_table_descriptor.GetIdentifier()
+
+        for message_identifier, text in message_table.message_strings.items():
+          message_string_descriptor = resources.MessageStringDescriptor(
+              identifier=message_identifier, text=text)
+          message_string_descriptor.SetMessageTableIdentifier(
+              message_table_identifier)
+          self._database_writer.AddAttributeContainer(message_string_descriptor)
 
 
 class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
@@ -207,17 +308,6 @@ class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
 
     self._message_files_index_writer.WriteMessageFile(name)
 
-  # pylint: disable=unused-argument
-  def WriteMessageFilesPerEventLogProvider(
-      self, event_log_provider, message_file):
-    """Writes a mapping between an Event Log provider and a message file.
-
-    Args:
-      event_log_provider (EventLogProvider): Event Log provider.
-      message_file (ExportMessageFile): message file.
-    """
-    return
-
 
 class StdoutOutputWriter(exporter.ExporterOutputWriter):
   """Stdout output writer."""
@@ -298,17 +388,6 @@ class StdoutOutputWriter(exporter.ExporterOutputWriter):
     for message_table in message_file.GetMessageTables():
       self._WriteMessageTable(message_table)
 
-  # pylint: disable=unused-argument
-  def WriteMessageFilesPerEventLogProvider(
-      self, event_log_provider, message_file):
-    """Writes a mapping between an Event Log provider and a message file.
-
-    Args:
-      event_log_provider (EventLogProvider): Event Log provider.
-      message_file (ExportMessageFile): message file.
-    """
-    return
-
 
 def Main():
   """Entry point of console script to export extracted strings.
@@ -328,6 +407,11 @@ def Main():
       '--db', '--database', dest='database', action='store',
       metavar='winevt-rc.db', default=None, help=(
           'filename of the SQLite3 database to write to.'))
+
+  argument_parser.add_argument(
+      '--database_version', '--database-version', dest='database_version',
+      action='store', metavar='VERSION', default='20150315',
+      choices=['20150315', '20240929'], help='the database version.')
 
   argument_parser.add_argument(
       '--string_format', '--string-format', dest='string_format',
@@ -359,7 +443,8 @@ def Main():
 
   if options.database:
     output_writer = DatabaseOutputWriter(
-        options.database, string_format=options.string_format)
+        options.database, database_version=options.database_version,
+        string_format=options.string_format)
   elif options.wiki:
     output_writer = DocumentationFilesOutputWriter(options.wiki)
   else:
