@@ -32,115 +32,33 @@ class ExportEventLogProvider(object):
     self.providers_with_versions = []
 
 
-class ExportMessageFile(object):
-  """Windows Event Log message file.
+class MessageFileAttributeContainerStore(
+    sqlite_store.SQLiteAttributeContainerStore):
+  """Message file attribute container store.
 
   Attributes:
-    message_tables (list[MessageTable]): message tables.
-    name (str): name.
+    format_version (int): storage format version.
+    name (str): name of the the message database.
+    serialization_format (str): serialization format.
     windows_path (str): Windows path.
   """
 
-  def __init__(self, name):
-    """Initializes the message file.
+  def __init__(self, descriptor):
+    """Initializes a message file attribute container store.
 
     Args:
-      name (str): name.
+      descriptor (MessageFileDatabaseDescriptor): message file database
+          descriptor.
     """
-    super(ExportMessageFile, self).__init__()
-    self.message_tables = []
-    self.name = name
-    self.windows_path = None
+    super(MessageFileAttributeContainerStore, self).__init__()
+    # Strip ".db" from the database filename.
+    self.name = descriptor.database_filename[:-3]
+    self.windows_path = descriptor.windows_path
 
-  def GetMessageTables(self):
-    """Retrieves the message tables.
-
-    Yields:
-      MessageTable: message table.
-    """
-    yield from self.message_tables
 
 
 class ExporterOutputWriter(object):
   """Exporter output writer."""
-
-  @abc.abstractmethod
-  def Close(self):
-    """Closes the output writer."""
-
-  @abc.abstractmethod
-  def Open(self):
-    """Opens the output writer.
-
-    Returns:
-      bool: True if successful or False if not.
-    """
-
-  @abc.abstractmethod
-  def WriteEventLogProvider(self, export_event_log_provider):
-    """Writes an Event Log provider.
-
-    Args:
-      export_event_log_provider (ExportEventLogProvider): Event Log provider.
-    """
-
-  @abc.abstractmethod
-  def WriteMessageFile(self, message_file):
-    """Writes a message file.
-
-    Args:
-      message_file (ExportMessageFile): message file.
-    """
-
-
-class Exporter(object):
-  """Exports the strings extracted from Windows EventLog message files."""
-
-  _EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
-
-  def _CompareEventLogProviders(
-      self, event_log_provider, other_event_log_provider):
-    """Compares 2 Event Log providers to determine if they are equivalent.
-
-    Args:
-      event_log_provider (EventLogProvider): Event Log provider.
-      other_event_log_provider (EventLogProvider): other Event Log provider.
-
-    Returns:
-      bool: True if the Event Log providers are equivalent, False otherwise.
-    """
-    if event_log_provider.identifier and (
-       event_log_provider.identifier != other_event_log_provider.identifier):
-      return False
-
-    category_message_files = {
-        message_file.lower()
-        for message_file in event_log_provider.category_message_files}
-    message_files = {
-        message_file.lower()
-        for message_file in other_event_log_provider.category_message_files}
-    if category_message_files and category_message_files != message_files:
-      return False
-
-    event_message_files = {
-        message_file.lower()
-        for message_file in event_log_provider.event_message_files}
-    message_files = {
-        message_file.lower()
-        for message_file in other_event_log_provider.event_message_files}
-    if event_message_files and event_message_files != message_files:
-      return False
-
-    parameter_message_files = {
-        message_file.lower()
-        for message_file in event_log_provider.parameter_message_files}
-    message_files = {
-        message_file.lower()
-        for message_file in other_event_log_provider.parameter_message_files}
-    if parameter_message_files and parameter_message_files != message_files:
-      return False
-
-    return True
 
   def _DiffMessageString(
       self, file_version, language_identifier, message_identifier,
@@ -216,6 +134,186 @@ class Exporter(object):
           print(f'+ {second_output:s}')
           print(f'- {first_output:s}')
 
+  @abc.abstractmethod
+  def Close(self):
+    """Closes the output writer."""
+
+  def _ExportMessageIdentifierMappings(self, message_file):
+    """Retrieves message identifier mappings.
+
+    Args:
+      message_file (MessageFileAttributeContainerStore): message file.
+    """
+    for extracted_mappings in message_file.GetAttributeContainers(
+        resources.MessageStringMappingDescriptor.CONTAINER_TYPE):
+      # TODO: implement
+      _ = extracted_mappings
+
+  def GetMessageTables(self, message_file):
+    """Retrieves message tables.
+
+    Args:
+      message_file (MessageFileAttributeContainerStore): message file.
+
+    Yields:
+      MessageTable: message table.
+    """
+    extracted_message_tables_per_file_versions = {}
+
+    for extracted_message_table in message_file.GetAttributeContainers(
+        resources.MessageTableDescriptor.CONTAINER_TYPE):
+      extracted_message_file_identifier = (
+          extracted_message_table.GetMessageFileIdentifier())
+      extracted_message_file = (
+          message_file.GetAttributeContainerByIdentifier(
+              resources.MessageFileDescriptor.CONTAINER_TYPE,
+              extracted_message_file_identifier))
+
+      # pylint: disable=consider-using-generator
+      file_version_tuple = tuple([
+          int(number, 10)
+          for number in extracted_message_file.file_version.split('.')])
+      extracted_message_tables_per_file_versions[file_version_tuple] = (
+          extracted_message_table)
+
+    message_tables = []
+    for file_version_tuple, extracted_message_table in sorted(
+        extracted_message_tables_per_file_versions.items()):
+      file_version = '.'.join([f'{number:d}' for number in file_version_tuple])
+
+      message_table = resources.MessageTable(
+          extracted_message_table.language_identifier)
+      message_table.file_versions.append(file_version)
+
+      table_identifier = extracted_message_table.GetIdentifier()
+      identifier_string = table_identifier.CopyToString()
+      filter_expression = f'_message_table_identifier=="{identifier_string:s}"'
+
+      for extracted_message_string in (
+          message_file.GetAttributeContainers(
+              resources.MessageStringDescriptor.CONTAINER_TYPE,
+              filter_expression=filter_expression)):
+        message_table.message_strings[extracted_message_string.identifier] = (
+            extracted_message_string.text)
+
+      message_tables.append((file_version, message_table))
+
+    file_version, message_table = message_tables[0]
+    language_identifier = message_table.language_identifier
+
+    # TODO: handle multiple language identifiers.
+    export_message_tables = [message_table]
+    for other_file_version, other_message_table in message_tables[1:]:
+      if message_table.message_strings == other_message_table.message_strings:
+        message_table.file_versions.append(other_file_version)
+      else:
+        message_identifiers = set(message_table.message_strings.keys())
+        message_identifiers.update(set(
+            other_message_table.message_strings.keys()))
+        for message_identifier in message_identifiers:
+          message_string = message_table.message_strings.get(
+              message_identifier, None)
+          other_message_string = other_message_table.message_strings.get(
+              message_identifier, None)
+
+          if not message_string:
+            logging.warning((
+                f'Message string: 0x{message_identifier:08x} was added in '
+                f'LCID: 0x{language_identifier:08x} and version: '
+                f'{other_file_version:s}.'))
+
+          elif not other_message_string:
+            logging.warning((
+                f'Message string: 0x{message_identifier:08x} was removed in '
+                f'LCID: 0x{language_identifier:08x} and version: '
+                f'{other_file_version:s}.'))
+
+          elif message_string != other_message_string:
+            self._DiffMessageString(
+                file_version, message_table.language_identifier,
+                message_identifier, [message_string], [other_message_string])
+
+        file_version = other_file_version
+        message_table = other_message_table
+
+        export_message_tables.append(message_table)
+
+    yield from export_message_tables
+
+  @abc.abstractmethod
+  def Open(self):
+    """Opens the output writer.
+
+    Returns:
+      bool: True if successful or False if not.
+    """
+
+  @abc.abstractmethod
+  def WriteEventLogProvider(self, export_event_log_provider):
+    """Writes an Event Log provider.
+
+    Args:
+      export_event_log_provider (ExportEventLogProvider): Event Log provider.
+    """
+
+  @abc.abstractmethod
+  def WriteMessageFile(self, message_file):
+    """Writes a message file.
+
+    Args:
+      message_file (MessageFileAttributeContainerStore): message file.
+    """
+
+
+class Exporter(object):
+  """Exports the strings extracted from Windows EventLog message files."""
+
+  _EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
+
+  def _CompareEventLogProviders(
+      self, event_log_provider, other_event_log_provider):
+    """Compares 2 Event Log providers to determine if they are equivalent.
+
+    Args:
+      event_log_provider (EventLogProvider): Event Log provider.
+      other_event_log_provider (EventLogProvider): other Event Log provider.
+
+    Returns:
+      bool: True if the Event Log providers are equivalent, False otherwise.
+    """
+    if event_log_provider.identifier and (
+       event_log_provider.identifier != other_event_log_provider.identifier):
+      return False
+
+    category_message_files = {
+        message_file.lower()
+        for message_file in event_log_provider.category_message_files}
+    message_files = {
+        message_file.lower()
+        for message_file in other_event_log_provider.category_message_files}
+    if category_message_files and category_message_files != message_files:
+      return False
+
+    event_message_files = {
+        message_file.lower()
+        for message_file in event_log_provider.event_message_files}
+    message_files = {
+        message_file.lower()
+        for message_file in other_event_log_provider.event_message_files}
+    if event_message_files and event_message_files != message_files:
+      return False
+
+    parameter_message_files = {
+        message_file.lower()
+        for message_file in event_log_provider.parameter_message_files}
+    message_files = {
+        message_file.lower()
+        for message_file in other_event_log_provider.parameter_message_files}
+    if parameter_message_files and parameter_message_files != message_files:
+      return False
+
+    return True
+
   def _ExportEventLogProviders(self, database_reader, output_writer):
     """Exports the Event Log providers from an event provider database.
 
@@ -259,21 +357,8 @@ class Exporter(object):
         key=lambda export_event_log_provider: export_event_log_provider.name):
       output_writer.WriteEventLogProvider(export_event_log_provider)
 
-  def _ExportMessageFile(self, message_file, message_file_database_path):
-    """Exports a message file.
-
-    Args:
-      message_file (ExportMessageFile): message file.
-      message_file_database_path (str): path of the message file database.
-    """
-    database_reader = sqlite_store.SQLiteAttributeContainerStore()
-    database_reader.Open(path=message_file_database_path, read_only=True)
-
-    self._ExportMessageStrings(message_file, database_reader)
-
-    database_reader.Close()
-
-  def _ExportMessageFiles(self, source_path, database_reader, output_writer):
+  def _ExportMessageResourceFiles(
+      self, source_path, database_reader, output_writer):
     """Exports the message files from an event provider database.
 
     Args:
@@ -293,104 +378,16 @@ class Exporter(object):
 
       logging.info(f'Processing: {descriptor.database_filename:s}')
 
-      # Strip ".db" from the database filename.
-      name = descriptor.database_filename[:-3]
-      message_file = ExportMessageFile(name)
-      message_file.windows_path = descriptor.windows_path
+      message_file = MessageFileAttributeContainerStore(descriptor)
+      message_file.Open(message_file_database_path)
 
-      self._ExportMessageFile(message_file, message_file_database_path)
-
-      output_writer.WriteMessageFile(message_file)
-
-  def _ExportMessageStrings(self, message_file, database_reader):
-    """Exports the message strings from a message file database.
-
-    Args:
-      message_file (ExportMessageFile): message file.
-      database_reader (SQLiteAttributeContainerStore): message file
-          database reader.
-    """
-    extracted_message_tables_per_file_versions = {}
-
-    for extracted_message_table in database_reader.GetAttributeContainers(
-        resources.MessageTableDescriptor.CONTAINER_TYPE):
-      extracted_message_file_identifier = (
-          extracted_message_table.GetMessageFileIdentifier())
-      extracted_message_file = (
-          database_reader.GetAttributeContainerByIdentifier(
-              resources.MessageFileDescriptor.CONTAINER_TYPE,
-              extracted_message_file_identifier))
-
-      # pylint: disable=consider-using-generator
-      file_version_tuple = tuple([
-          int(number, 10)
-          for number in extracted_message_file.file_version.split('.')])
-      extracted_message_tables_per_file_versions[file_version_tuple] = (
-          extracted_message_table)
-
-    message_tables = []
-    for file_version_tuple, extracted_message_table in sorted(
-        extracted_message_tables_per_file_versions.items()):
-      file_version = '.'.join([f'{number:d}' for number in file_version_tuple])
-
-      message_table = resources.MessageTable(
-          extracted_message_table.language_identifier)
-      message_table.file_versions.append(file_version)
-
-      table_identifier = extracted_message_table.GetIdentifier()
-      identifier_string = table_identifier.CopyToString()
-      filter_expression = f'_message_table_identifier=="{identifier_string:s}"'
-
-      for extracted_message_string in database_reader.GetAttributeContainers(
-          resources.MessageStringDescriptor.CONTAINER_TYPE,
-          filter_expression=filter_expression):
-        message_table.message_strings[extracted_message_string.identifier] = (
-            extracted_message_string.text)
-
-      message_tables.append((file_version, message_table))
-
-    file_version, message_table = message_tables[0]
-    language_identifier = message_table.language_identifier
-
-    # TODO: handle multiple language identifiers.
-    message_file.message_tables = [message_table]
-    for other_file_version, other_message_table in message_tables[1:]:
-      if message_table.message_strings == other_message_table.message_strings:
-        message_table.file_versions.append(other_file_version)
-      else:
-        message_identifiers = set(message_table.message_strings.keys())
-        message_identifiers.update(set(
-            other_message_table.message_strings.keys()))
-        for message_identifier in message_identifiers:
-          message_string = message_table.message_strings.get(
-              message_identifier, None)
-          other_message_string = other_message_table.message_strings.get(
-              message_identifier, None)
-
-          if not message_string:
-            logging.warning((
-                f'Message string: 0x{message_identifier:08x} was added in '
-                f'LCID: 0x{language_identifier:08x} and version: '
-                f'{other_file_version:s}.'))
-
-          elif not other_message_string:
-            logging.warning((
-                f'Message string: 0x{message_identifier:08x} was removed in '
-                f'LCID: 0x{language_identifier:08x} and version: '
-                f'{other_file_version:s}.'))
-
-          elif message_string != other_message_string:
-            self._DiffMessageString(
-                file_version, message_table.language_identifier,
-                message_identifier, [message_string], [other_message_string])
-
-        file_version = other_file_version
-        message_table = other_message_table
-
-        message_file.message_tables.append(message_table)
+      try:
+        output_writer.WriteMessageFile(message_file)
+      finally:
+        message_file.Close()
 
   def Export(self, source_path, output_writer):
-    """Exports the strings extracted from message files.
+    """Exports message resources.
 
     Args:
       source_path (str): source path.
@@ -404,7 +401,8 @@ class Exporter(object):
 
     try:
       self._ExportEventLogProviders(database_reader, output_writer)
-      self._ExportMessageFiles(source_path, database_reader, output_writer)
+      self._ExportMessageResourceFiles(
+          source_path, database_reader, output_writer)
 
     finally:
       database_reader.Close()

@@ -50,11 +50,10 @@ class SQLite3OutputWriter(object):
     return re.sub(r'\.mui', '', f'{filename:s}.db')
 
   def _WriteMessageIdentifierMappings(
-        self, event_log_provider, template_resource_file, database_writer):
+        self, template_resource_file, database_writer):
     """Writes the message identifier mappings.
 
     Args:
-      event_log_provider (EventLogProvider): Event Log provider.
       template_resource_file (WindowsResourceFile): template resource file.
       database_writer (acstore.SQLiteAttributeContainerStore): message resource
           file attribute container store.
@@ -76,16 +75,13 @@ class SQLite3OutputWriter(object):
       wevt_manifest.copy_from_byte_stream(resource_data)
 
       for wevt_provider in iter(wevt_manifest.providers):
-        # Ignore unrelated providers in the template resource file.
-        if event_log_provider.identifier != f'{{{wevt_provider.identifier:s}}}':
-          continue
-
         for wevt_event in wevt_provider.events:
           if wevt_event.message_identifier != 0xffffffff:
             descriptor = resources.MessageStringMappingDescriptor(
                 event_identifier=wevt_event.identifier,
                 event_version=wevt_event.version,
-                message_identifier=wevt_event.message_identifier)
+                message_identifier=wevt_event.message_identifier,
+                provider_identifier=wevt_provider.identifier)
             database_writer.AddAttributeContainer(descriptor)
 
   def _WriteMessageTables(
@@ -172,12 +168,10 @@ class SQLite3OutputWriter(object):
     """
     self._database_writer.AddAttributeContainer(event_log_provider)
 
-  def WriteMessageIdentifierMappings(
-      self, event_log_provider, template_resource_file):
+  def WriteMessageIdentifierMappings(self, template_resource_file):
     """Writes the message identifier mappings.
 
     Args:
-      event_log_provider (EventLogProvider): Event Log provider.
       template_resource_file (WindowsResourceFile): template resource file.
     """
     database_filename = self._GetDatabaseFilename(template_resource_file)
@@ -188,7 +182,7 @@ class SQLite3OutputWriter(object):
 
     try:
       self._WriteMessageIdentifierMappings(
-          event_log_provider, template_resource_file, database_writer)
+          template_resource_file, database_writer)
 
     finally:
       database_writer.Close()
@@ -472,7 +466,7 @@ def Main():
                   message_filename)
               if template_resource_file:
                 output_writer.WriteMessageIdentifierMappings(
-                    event_log_provider, template_resource_file)
+                    template_resource_file)
 
         if event_log_provider.category_message_files:
           for message_filename in event_log_provider.category_message_files:

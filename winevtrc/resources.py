@@ -231,6 +231,7 @@ class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
     event_identifier (int): event identifier.
     event_version (int): event version.
     message_identifier (int): message identifier.
+    provider_identifier (int): Event Log provider identifier.
   """
 
   CONTAINER_TYPE = 'message_string_mapping'
@@ -241,18 +242,21 @@ class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
       'message_identifier': 'int'}
 
   def __init__(
-      self, event_identifier=None, event_version=None, message_identifier=None):
+      self, event_identifier=None, event_version=None, message_identifier=None,
+      provider_identifier=None):
     """Initializes a Windows Event Log message string mapping descriptor.
 
     Args:
       event_identifier (Optional[int]): event identifier.
       event_version (Optional[int]): event version.
       message_identifier (Optional[int]): message identifier.
+      provider_identifier (Optional[int]): Event Log provider identifier.
     """
     super(MessageStringMappingDescriptor, self).__init__()
     self.event_identifier = event_identifier
     self.event_version = event_version
     self.message_identifier = message_identifier
+    self.provider_identifier = provider_identifier
 
 
 class MessageTable(object):

@@ -591,7 +591,7 @@ class ResourcesSQLite3DatabaseWriter(object):
     """Retrieves the key of a message file.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
 
     Returns:
       int: the message file key or None if no such value.
@@ -686,7 +686,7 @@ class ResourcesSQLite3DatabaseWriter(object):
     """Writes a message to a specific message table.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
       language_identifier (int): language identifier (LCID).
       message_identifier (int): message identifier.
       message_string (str): message string.
@@ -845,7 +845,7 @@ class ResourcesSQLite3DatabaseWriter(object):
     """Writes a message file.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
     """
     table_name = 'message_files'
     column_names = ['path']
@@ -923,7 +923,7 @@ class ResourcesSQLite3DatabaseWriter(object):
     """Writes a message table for a specific language identifier.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
       message_table (MessageTable): message table.
     """
     if message_table.message_strings:

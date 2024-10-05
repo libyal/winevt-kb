@@ -164,12 +164,12 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     """Writes a message file.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
     """
     if self._database_version == '20150315':
       self._database_writer.WriteMessageFile(message_file)
 
-      for message_table in message_file.GetMessageTables():
+      for message_table in self.GetMessageTables(message_file):
         self._database_writer.WriteMessageTable(message_file, message_table)
 
     else:
@@ -180,7 +180,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
 
       message_file_identifier = message_file_descriptor.GetIdentifier()
 
-      for message_table in message_file.GetMessageTables():
+      for message_table in self.GetMessageTables(message_file):
         message_table_descriptor = resources.MessageTableDescriptor(
             language_identifier=message_table.language_identifier)
         message_table_descriptor.SetMessageFileIdentifier(
@@ -289,7 +289,7 @@ class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
     """Writes a message file.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
     """
     name = message_file.name
 
@@ -380,12 +380,12 @@ class StdoutOutputWriter(exporter.ExporterOutputWriter):
     """Writes a message file.
 
     Args:
-      message_file (ExportMessageFile): message file.
+      message_file (MessageFileAttributeContainerStore): message file.
     """
     print(message_file.name)
     print('Path:\t{message_file.windows_path:s}')
 
-    for message_table in message_file.GetMessageTables():
+    for message_table in self.GetMessageTables(message_file):
       self._WriteMessageTable(message_table)
 
 
