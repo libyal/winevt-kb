@@ -187,22 +187,23 @@ class MessageStringDescriptor(containers_interface.AttributeContainer):
 
   SCHEMA = {
       '_message_table_identifier': 'AttributeContainerIdentifier',
-      'identifier': 'int',
+      'language_identifier': 'str',
+      'message_identifier': 'int',
       'text': 'str'}
 
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
       '_message_table_identifier']
 
-  def __init__(self, identifier=None, text=None):
+  def __init__(self, message_identifier=None, text=None):
     """Initializes a Windows Event Log message string descriptor.
 
     Args:
-      identifier (Optional[int]): message identifier.
+      message_identifier (Optional[int]): message identifier.
       text (Optional[int]): message text.
     """
     super(MessageStringDescriptor, self).__init__()
     self._message_table_identifier = None
-    self.identifier = identifier
+    self.message_identifier = message_identifier
     self.text = text
 
   def GetMessageTableIdentifier(self):
@@ -231,15 +232,20 @@ class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
     event_identifier (int): event identifier.
     event_version (int): event version.
     message_identifier (int): message identifier.
-    provider_identifier (int): Event Log provider identifier.
+    provider_identifier (str): Event Log provider identifier.
   """
 
   CONTAINER_TYPE = 'message_string_mapping'
 
   SCHEMA = {
+      '_message_file_identifier': 'AttributeContainerIdentifier',
       'event_identifier': 'int',
       'event_version': 'int',
-      'message_identifier': 'int'}
+      'message_identifier': 'int',
+      'provider_identifier': 'str'}
+
+  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+      '_message_file_identifier']
 
   def __init__(
       self, event_identifier=None, event_version=None, message_identifier=None,
@@ -250,13 +256,32 @@ class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
       event_identifier (Optional[int]): event identifier.
       event_version (Optional[int]): event version.
       message_identifier (Optional[int]): message identifier.
-      provider_identifier (Optional[int]): Event Log provider identifier.
+      provider_identifier (Optional[str]): Event Log provider identifier.
     """
     super(MessageStringMappingDescriptor, self).__init__()
+    self._message_file_identifier = None
     self.event_identifier = event_identifier
     self.event_version = event_version
     self.message_identifier = message_identifier
     self.provider_identifier = provider_identifier
+
+  def GetMessageFileIdentifier(self):
+    """Retrieves the identifier of the associated message file.
+
+    Returns:
+      AttributeContainerIdentifier: message file identifier or None when
+          not set.
+    """
+    return self._message_file_identifier
+
+  def SetMessageFileIdentifier(self, message_file_identifier):
+    """Sets the identifier of the associated message file.
+
+    Args:
+      message_file_identifier (AttributeContainerIdentifier): message file
+          identifier.
+    """
+    self._message_file_identifier = message_file_identifier
 
 
 class MessageTable(object):

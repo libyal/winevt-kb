@@ -127,7 +127,7 @@ class SQLite3OutputWriter(object):
         message_string = message_table_resource.get_string(message_index)
 
         descriptor = resources.MessageStringDescriptor(
-            identifier=message_identifier, text=message_string)
+            message_identifier=message_identifier, text=message_string)
         descriptor.SetMessageTableIdentifier(message_table_identifier)
         database_writer.AddAttributeContainer(descriptor)
 

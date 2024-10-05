@@ -138,17 +138,6 @@ class ExporterOutputWriter(object):
   def Close(self):
     """Closes the output writer."""
 
-  def _ExportMessageIdentifierMappings(self, message_file):
-    """Retrieves message identifier mappings.
-
-    Args:
-      message_file (MessageFileAttributeContainerStore): message file.
-    """
-    for extracted_mappings in message_file.GetAttributeContainers(
-        resources.MessageStringMappingDescriptor.CONTAINER_TYPE):
-      # TODO: implement
-      _ = extracted_mappings
-
   def GetMessageTables(self, message_file):
     """Retrieves message tables.
 
@@ -193,8 +182,9 @@ class ExporterOutputWriter(object):
           message_file.GetAttributeContainers(
               resources.MessageStringDescriptor.CONTAINER_TYPE,
               filter_expression=filter_expression)):
-        message_table.message_strings[extracted_message_string.identifier] = (
-            extracted_message_string.text)
+        message_table.message_strings[
+            extracted_message_string.message_identifier] = (
+                extracted_message_string.text)
 
       message_tables.append((file_version, message_table))
 

@@ -191,10 +191,15 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
 
         for message_identifier, text in message_table.message_strings.items():
           message_string_descriptor = resources.MessageStringDescriptor(
-              identifier=message_identifier, text=text)
+              message_identifier=message_identifier, text=text)
           message_string_descriptor.SetMessageTableIdentifier(
               message_table_identifier)
           self._database_writer.AddAttributeContainer(message_string_descriptor)
+
+      for string_mapping in message_file.GetAttributeContainers(
+          resources.MessageStringMappingDescriptor.CONTAINER_TYPE):
+        string_mapping.SetMessageFileIdentifier(message_file_identifier)
+        self._database_writer.AddAttributeContainer(string_mapping)
 
 
 class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
