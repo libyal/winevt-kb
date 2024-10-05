@@ -102,7 +102,7 @@ class EventLogProvidersCollector(object):
     """
     if winevt_publishers_key:
       for guid_key in winevt_publishers_key.GetSubkeys():
-        event_log_provider = resources.EventLogProvider()
+        event_log_provider = resources.WinevtResourcesEventLogProvider()
         event_log_provider.identifier = guid_key.name.lower()
         event_log_provider.name = self._GetValueFromKey(guid_key, '')
 
@@ -131,7 +131,7 @@ class EventLogProvidersCollector(object):
               provider_key, 'ProviderGuid', default_value='')
           provider_identifier = provider_identifier.lower()
 
-          event_log_provider = resources.EventLogProvider()
+          event_log_provider = resources.WinevtResourcesEventLogProvider()
           event_log_provider.identifier = provider_identifier or None
           event_log_provider.log_sources = [provider_key.name]
           event_log_provider.log_types = [log_type_key.name]

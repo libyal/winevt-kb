@@ -9,12 +9,12 @@ from winevtrc import resources
 from tests import test_lib
 
 
-class EventLogProviderTest(test_lib.BaseTestCase):
+class WinevtResourcesEventLogProviderTest(test_lib.BaseTestCase):
   """Tests for the Windows Event Log provider."""
 
   def testSetCategoryMessageFilenames(self):
     """Tests the SetCategoryMessageFilenames function."""
-    event_log_provider = resources.EventLogProvider()
+    event_log_provider = resources.WinevtResourcesEventLogProvider()
     event_log_provider.identifier = 'provider_guid'
     event_log_provider.log_sources.append('log_source')
     event_log_provider.log_types = ['log_type']
@@ -34,7 +34,7 @@ class EventLogProviderTest(test_lib.BaseTestCase):
 
   def testSetEventMessageFilenames(self):
     """Tests the SetEventMessageFilenames function."""
-    event_log_provider = resources.EventLogProvider()
+    event_log_provider = resources.WinevtResourcesEventLogProvider()
     event_log_provider.identifier = 'provider_guid'
     event_log_provider.log_sources.append('log_source')
     event_log_provider.log_types = ['log_type']
@@ -54,7 +54,7 @@ class EventLogProviderTest(test_lib.BaseTestCase):
 
   def testSetParameterMessageFilenames(self):
     """Tests the SetParameterMessageFilenames function."""
-    event_log_provider = resources.EventLogProvider()
+    event_log_provider = resources.WinevtResourcesEventLogProvider()
     event_log_provider.identifier = 'provider_guid'
     event_log_provider.log_sources.append('log_source')
     event_log_provider.log_types = ['log_type']

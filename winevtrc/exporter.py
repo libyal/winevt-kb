@@ -315,7 +315,7 @@ class Exporter(object):
     providers_per_log_source = {}
 
     for event_log_provider in database_reader.GetAttributeContainers(
-        resources.EventLogProvider.CONTAINER_TYPE):
+        resources.WinevtResourcesEventLogProvider.CONTAINER_TYPE):
       name = event_log_provider.name
       if not name:
         log_sources = sorted(event_log_provider.log_sources)

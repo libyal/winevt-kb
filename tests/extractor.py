@@ -126,7 +126,7 @@ class EventMessageStringExtractorTest(test_lib.BaseTestCase):
     extractor_object = self._CreateTestEventMessageStringExtractor()
 
     # TODO: improve test.
-    event_log_provider = resources.EventLogProvider()
+    event_log_provider = resources.WinevtResourcesEventLogProvider()
     event_log_provider.identifier = 'provider_guid'
     event_log_provider.log_sources.append('log_source')
     event_log_provider.log_types = ['log_type']

@@ -410,7 +410,7 @@ class ResourcesSQLite3DatabaseReader(object):
     event_log_providers = []
     for values in self._database_file.GetValues(
         table_names, column_names, condition):
-      event_log_provider = resources.EventLogProvider()
+      event_log_provider = resources.WinevtResourcesEventLogProvider()
       event_log_provider.identifier = values['provider_guid']
 
       event_log_provider.log_sources.append(values['log_source'])

@@ -18,7 +18,6 @@ from dfvfs.lib import errors as dfvfs_errors
 import pyfwevt
 import pywrc
 
-from winevtrc import definitions
 from winevtrc import extractor
 from winevtrc import resources
 from winevtrc import storage  # pylint: disable=unused-import
@@ -75,13 +74,14 @@ class SQLite3OutputWriter(object):
       wevt_manifest.copy_from_byte_stream(resource_data)
 
       for wevt_provider in iter(wevt_manifest.providers):
+        provider_identifier = f'{{{wevt_provider.identifier:s}}}'
         for wevt_event in wevt_provider.events:
           if wevt_event.message_identifier != 0xffffffff:
             descriptor = resources.MessageStringMappingDescriptor(
                 event_identifier=wevt_event.identifier,
                 event_version=wevt_event.version,
                 message_identifier=wevt_event.message_identifier,
-                provider_identifier=wevt_provider.identifier)
+                provider_identifier=provider_identifier)
             database_writer.AddAttributeContainer(descriptor)
 
   def _WriteMessageTables(
@@ -187,17 +187,12 @@ class SQLite3OutputWriter(object):
     finally:
       database_writer.Close()
 
-  # pylint: disable=unused-argument
-  def WriteMessageResourceFile(
-      self, windows_version, message_resource_file, message_filename,
-      message_file_type):
+  def WriteMessageResourceFile(self, windows_version, message_resource_file):
     """Writes the Windows Message Resource file.
 
     Args:
       windows_version (str): Windows version.
       message_resource_file (WindowsResourceFile): message resource file.
-      message_filename (str): message filename.
-      message_file_type (str): message file type.
     """
     database_filename = self._GetDatabaseFilename(message_resource_file)
     database_path = os.path.join(self._databases_path, database_filename)
@@ -222,7 +217,8 @@ class SQLite3OutputWriter(object):
       database_writer.Close()
 
     descriptor = resources.MessageFileDatabaseDescriptor(
-        database_filename=database_filename, windows_path=message_filename)
+        database_filename=database_filename,
+        windows_path=message_resource_file.windows_path)
     self._database_writer.AddAttributeContainer(descriptor)
 
 
@@ -302,26 +298,19 @@ class StdoutOutputWriter(object):
     print('')
 
   # pylint: disable=unused-argument
-  def WriteMessageResourceFile(
-      self, windows_version, message_resource_file, message_filename,
-      message_file_type):
+  def WriteMessageResourceFile(self, windows_version, message_resource_file):
     """Writes the Windows Message Resource file.
 
     Args:
       windows_version (str): Windows version.
       message_resource_file (WindowsResourceFile): message resource file.
-      message_filename (str): message filename.
-      message_file_type (str): message file type.
     """
-    file_version = getattr(message_resource_file, 'file_version', '')
-    product_version = getattr(message_resource_file, 'product_version', '')
-
     print('Message file:')
     print(f'Path\t\t: {message_resource_file.windows_path:s}')
-    print(f'File version\t: {file_version:s}')
-    print(f'Product version\t: {product_version:s}')
+    print(f'File version\t: {message_resource_file.file_version:s}')
+    print(f'Product version\t: {message_resource_file.product_version:s}')
 
-    self._WriteMessageTable( message_resource_file)
+    self._WriteMessageTable(message_resource_file)
 
 
 def Main():
@@ -457,9 +446,7 @@ def Main():
                   f'Processing event message file: {message_filename:s}')
 
               output_writer.WriteMessageResourceFile(
-                  windows_version, message_resource_file,
-                  message_resource_file.windows_path,
-                  definitions.MESSAGE_FILE_TYPE_EVENT)
+                  windows_version, message_resource_file)
               message_resource_file.Close()
 
               template_resource_file = extractor_object.GetTemplateResourceFile(
@@ -478,9 +465,7 @@ def Main():
                   f'Processing category message file: {message_filename:s}')
 
               output_writer.WriteMessageResourceFile(
-                  windows_version, message_resource_file,
-                  message_resource_file.windows_path,
-                  definitions.MESSAGE_FILE_TYPE_CATEGORY)
+                  windows_version, message_resource_file)
               message_resource_file.Close()
 
         if event_log_provider.parameter_message_files:
@@ -493,9 +478,7 @@ def Main():
                   f'Processing parameter message file: {message_filename:s}')
 
               output_writer.WriteMessageResourceFile(
-                  windows_version, message_resource_file,
-                  message_resource_file.windows_path,
-                  definitions.MESSAGE_FILE_TYPE_PARAMETER)
+                  windows_version, message_resource_file)
               message_resource_file.Close()
 
   finally:
