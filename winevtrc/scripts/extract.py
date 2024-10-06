@@ -201,7 +201,7 @@ class SQLite3OutputWriter(object):
     database_writer.Open(path=database_path, read_only=False)
 
     try:
-      descriptor = resources.MessageFileDescriptor(
+      descriptor = resources.WinevtResourcesMessageFile(
           file_version=message_resource_file.file_version,
           product_version=message_resource_file.product_version,
           windows_path=message_resource_file.windows_path,

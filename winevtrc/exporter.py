@@ -155,7 +155,7 @@ class ExporterOutputWriter(object):
           extracted_message_table.GetMessageFileIdentifier())
       extracted_message_file = (
           message_file.GetAttributeContainerByIdentifier(
-              resources.MessageFileDescriptor.CONTAINER_TYPE,
+              resources.WinevtResourcesMessageFile.CONTAINER_TYPE,
               extracted_message_file_identifier))
 
       # pylint: disable=consider-using-generator

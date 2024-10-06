@@ -139,8 +139,8 @@ class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
     self.windows_path = windows_path
 
 
-class MessageFileDescriptor(containers_interface.AttributeContainer):
-  """Windows Event Log message file descriptor.
+class WinevtResourcesMessageFile(containers_interface.AttributeContainer):
+  """Windows Event Log message file.
 
   Attributes:
     file_version (str): file version.
@@ -160,7 +160,7 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
   def __init__(
       self, file_version=None, product_version=None, windows_path=None,
       windows_version=None):
-    """Initializes a Windows Event Log message file descriptor.
+    """Initializes a Windows Event Log message file.
 
     Args:
       file_version (Optional[str]): file version.
@@ -169,7 +169,7 @@ class MessageFileDescriptor(containers_interface.AttributeContainer):
           provider.
       windows_version (Optional[str]): Windows version.
     """
-    super(MessageFileDescriptor, self).__init__()
+    super(WinevtResourcesMessageFile, self).__init__()
     self.file_version = file_version
     self.product_version = product_version
     self.windows_path = windows_path
@@ -359,5 +359,5 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
 
 containers_manager.AttributeContainersManager.RegisterAttributeContainers([
     WinevtResourcesEventLogProvider, MessageFileDatabaseDescriptor,
-    MessageFileDescriptor, MessageStringDescriptor,
+    WinevtResourcesMessageFile, MessageStringDescriptor,
     MessageStringMappingDescriptor, MessageTableDescriptor])

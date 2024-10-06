@@ -81,6 +81,18 @@ class MessageResourceAttributeContainerStore(
 class DatabaseOutputWriter(exporter.ExporterOutputWriter):
   """Database output writer."""
 
+  # Message string specifiers that are considered white space.
+  _WHITE_SPACE_SPECIFIER_RE = re.compile(r'(%[0b]|[\r\n])')
+
+  # Message string specifiers that expand to text.
+  _TEXT_SPECIFIER_RE = re.compile(r'%([ .!%nrt])')
+
+  # Curly brackets in a message string.
+  _CURLY_BRACKETS_RE = re.compile(r'([\{\}])')
+
+  # Message string specifiers that expand to a variable place holder.
+  _PLACE_HOLDER_SPECIFIER_RE = re.compile(r'%([1-9][0-9]?)[!]?[s]?[!]?')
+
   def __init__(
       self, database_path, database_version='20150315', string_format='wrc'):
     """Initializes a database output writer.
@@ -96,6 +108,39 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     self._database_writer = None
     self._event_log_providers = {}
     self._string_format = string_format
+
+  def _ReformatMessageString(self, message_string):
+    """Reformats the message string.
+
+    Args:
+      message_string (str): message string.
+
+    Returns:
+      str: message string in Python format() (PEP 3103) style or None
+          if not available.
+    """
+    def PlaceHolderSpecifierReplacer(match_object):
+      """Replaces message string place holders into Python format() style."""
+      expanded_groups = []
+      for group in match_object.groups():
+        try:
+          place_holder_number = int(group, 10) - 1
+          expanded_group = f'{{{place_holder_number:d}:s}}'
+        except ValueError:
+          expanded_group = group
+
+        expanded_groups.append(expanded_group)
+
+      return ''.join(expanded_groups)
+
+    if not message_string:
+      return None
+
+    message_string = self._WHITE_SPACE_SPECIFIER_RE.sub(r'', message_string)
+    message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
+    message_string = self._CURLY_BRACKETS_RE.sub(r'\1\1', message_string)
+    return self._PLACE_HOLDER_SPECIFIER_RE.sub(
+        PlaceHolderSpecifierReplacer, message_string)
 
   def _WriteMessageFilesPerEventLogProvider(self):
     """Writes mappings between Event Log providers and message files."""
@@ -174,7 +219,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
 
     else:
       # TODO: add support to handle multiple versions.
-      message_file_descriptor = resources.MessageFileDescriptor(
+      message_file_descriptor = resources.WinevtResourcesMessageFile(
           windows_path=message_file.windows_path)
       self._database_writer.AddAttributeContainer(message_file_descriptor)
 
@@ -194,6 +239,11 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
               message_identifier=message_identifier, text=text)
           message_string_descriptor.SetMessageTableIdentifier(
               message_table_identifier)
+
+          if self._string_format == 'pep3101':
+            message_string_descriptor.text = self._ReformatMessageString(
+                message_string_descriptor.text)
+
           self._database_writer.AddAttributeContainer(message_string_descriptor)
 
       for string_mapping in message_file.GetAttributeContainers(
