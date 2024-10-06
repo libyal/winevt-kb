@@ -43,17 +43,17 @@ class MessageFileAttributeContainerStore(
     windows_path (str): Windows path.
   """
 
-  def __init__(self, descriptor):
+  def __init__(self, attribute_container):
     """Initializes a message file attribute container store.
 
     Args:
-      descriptor (MessageFileDatabaseDescriptor): message file database
-          descriptor.
+      attribute_container (WinevtResourcesMessageFileDatabase): message file
+          database attribute container..
     """
     super(MessageFileAttributeContainerStore, self).__init__()
     # Strip ".db" from the database filename.
-    self.name = descriptor.database_filename[:-3]
-    self.windows_path = descriptor.windows_path
+    self.name = attribute_container.database_filename[:-3]
+    self.windows_path = attribute_container.windows_path
 
 
 
@@ -180,7 +180,7 @@ class ExporterOutputWriter(object):
 
       for extracted_message_string in (
           message_file.GetAttributeContainers(
-              resources.MessageStringDescriptor.CONTAINER_TYPE,
+              resources.WinevtResourcesMessageString.CONTAINER_TYPE,
               filter_expression=filter_expression)):
         message_table.message_strings[
             extracted_message_string.message_identifier] = (
@@ -305,11 +305,11 @@ class Exporter(object):
     return True
 
   def _ExportEventLogProviders(self, database_reader, output_writer):
-    """Exports the Event Log providers from an event provider database.
+    """Exports the Event Log providers from an Event Log provider database.
 
     Args:
-      database_reader (SQLiteAttributeContainerStore): event provider database
-          reader.
+      database_reader (SQLiteAttributeContainerStore): Event Log provider
+          attribute container store.
       output_writer (ExporterOutputWriter): output writer.
     """
     providers_per_log_source = {}
@@ -349,26 +349,27 @@ class Exporter(object):
 
   def _ExportMessageResourceFiles(
       self, source_path, database_reader, output_writer):
-    """Exports the message files from an event provider database.
+    """Exports the message files from an Event Log provider database.
 
     Args:
       source_path (str): source path.
-      database_reader (SQLiteAttributeContainerStore): event provider database
-          reader.
+      database_reader (SQLiteAttributeContainerStore): Event Log provider
+          attribute container store.
       output_writer (ExporterOutputWriter): output writer.
     """
-    for descriptor in database_reader.GetAttributeContainers(
-        resources.MessageFileDatabaseDescriptor.CONTAINER_TYPE):
+    for attribute_container in database_reader.GetAttributeContainers(
+        resources.WinevtResourcesMessageFileDatabase.CONTAINER_TYPE):
       message_file_database_path = os.path.join(
-          source_path, descriptor.database_filename)
+          source_path, attribute_container.database_filename)
       if not os.path.exists(message_file_database_path):
-        logging.warning(
-            f'Missing message file database: {descriptor.database_filename:s}.')
+        logging.warning((
+            f'Missing message file database: '
+            f'{attribute_container.database_filename:s}.'))
         continue
 
-      logging.info(f'Processing: {descriptor.database_filename:s}')
+      logging.info(f'Processing: {attribute_container.database_filename:s}')
 
-      message_file = MessageFileAttributeContainerStore(descriptor)
+      message_file = MessageFileAttributeContainerStore(attribute_container)
       message_file.Open(message_file_database_path)
 
       try:

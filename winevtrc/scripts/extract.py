@@ -77,12 +77,12 @@ class SQLite3OutputWriter(object):
         provider_identifier = f'{{{wevt_provider.identifier:s}}}'
         for wevt_event in wevt_provider.events:
           if wevt_event.message_identifier != 0xffffffff:
-            descriptor = resources.MessageStringMappingDescriptor(
+            attribute_container = resources.WinevtResourcesMessageStringMapping(
                 event_identifier=wevt_event.identifier,
                 event_version=wevt_event.version,
                 message_identifier=wevt_event.message_identifier,
                 provider_identifier=provider_identifier)
-            database_writer.AddAttributeContainer(descriptor)
+            database_writer.AddAttributeContainer(attribute_container)
 
   def _WriteMessageTables(
         self, message_resource_file, message_file_identifier, database_writer):
@@ -108,12 +108,12 @@ class SQLite3OutputWriter(object):
     for wrc_resource_sub_item in wrc_resource_item.sub_items:
       language_identifier = wrc_resource_sub_item.identifier
 
-      descriptor = resources.MessageTableDescriptor(
+      attribute_container = resources.MessageTableDescriptor(
           language_identifier=language_identifier)
-      descriptor.SetMessageFileIdentifier(message_file_identifier)
-      database_writer.AddAttributeContainer(descriptor)
+      attribute_container.SetMessageFileIdentifier(message_file_identifier)
+      database_writer.AddAttributeContainer(attribute_container)
 
-      message_table_identifier = descriptor.GetIdentifier()
+      message_table_identifier = attribute_container.GetIdentifier()
 
       resource_data = wrc_resource_sub_item.read()
 
@@ -126,10 +126,10 @@ class SQLite3OutputWriter(object):
             message_index)
         message_string = message_table_resource.get_string(message_index)
 
-        descriptor = resources.MessageStringDescriptor(
+        attribute_container = resources.WinevtResourcesMessageString(
             message_identifier=message_identifier, text=message_string)
-        descriptor.SetMessageTableIdentifier(message_table_identifier)
-        database_writer.AddAttributeContainer(descriptor)
+        attribute_container.SetMessageTableIdentifier(message_table_identifier)
+        database_writer.AddAttributeContainer(attribute_container)
 
   def Close(self):
     """Closes the output writer object."""
@@ -201,14 +201,14 @@ class SQLite3OutputWriter(object):
     database_writer.Open(path=database_path, read_only=False)
 
     try:
-      descriptor = resources.WinevtResourcesMessageFile(
+      attribute_container = resources.WinevtResourcesMessageFile(
           file_version=message_resource_file.file_version,
           product_version=message_resource_file.product_version,
           windows_path=message_resource_file.windows_path,
           windows_version=windows_version)
-      database_writer.AddAttributeContainer(descriptor)
+      database_writer.AddAttributeContainer(attribute_container)
 
-      message_file_identifier = descriptor.GetIdentifier()
+      message_file_identifier = attribute_container.GetIdentifier()
 
       self._WriteMessageTables(
           message_resource_file, message_file_identifier, database_writer)
@@ -216,10 +216,10 @@ class SQLite3OutputWriter(object):
     finally:
       database_writer.Close()
 
-    descriptor = resources.MessageFileDatabaseDescriptor(
+    attribute_container = resources.WinevtResourcesMessageFileDatabase(
         database_filename=database_filename,
         windows_path=message_resource_file.windows_path)
-    self._database_writer.AddAttributeContainer(descriptor)
+    self._database_writer.AddAttributeContainer(attribute_container)
 
 
 class StdoutOutputWriter(object):

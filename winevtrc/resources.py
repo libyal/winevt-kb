@@ -113,32 +113,6 @@ class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
     self.parameter_message_files = set(parameter_message_filenames)
 
 
-class MessageFileDatabaseDescriptor(containers_interface.AttributeContainer):
-  """Windows Event Log message file database descriptor.
-
-  Attributes:
-    database_filename (str): database filename.
-    windows_path (str): Windows path of the message file.
-  """
-
-  CONTAINER_TYPE = 'winevtrc_message_file_database'
-
-  SCHEMA = {
-      'database_filename': 'str',
-      'windows_path': 'str'}
-
-  def __init__(self, database_filename=None, windows_path=None):
-    """Initializes a Windows Event Log message file database descriptor.
-
-    Args:
-      database_filename (Optional[str]): database filename.
-      windows_path (Optional[str]): message filename.
-    """
-    super(MessageFileDatabaseDescriptor, self).__init__()
-    self.database_filename = database_filename
-    self.windows_path = windows_path
-
-
 class WinevtResourcesMessageFile(containers_interface.AttributeContainer):
   """Windows Event Log message file.
 
@@ -176,8 +150,35 @@ class WinevtResourcesMessageFile(containers_interface.AttributeContainer):
     self.windows_version = windows_version
 
 
-class MessageStringDescriptor(containers_interface.AttributeContainer):
-  """Windows Event Log message string descriptor.
+class WinevtResourcesMessageFileDatabase(
+    containers_interface.AttributeContainer):
+  """Windows Event Log message file database.
+
+  Attributes:
+    database_filename (str): database filename.
+    windows_path (str): Windows path of the message file.
+  """
+
+  CONTAINER_TYPE = 'winevtrc_message_file_database'
+
+  SCHEMA = {
+      'database_filename': 'str',
+      'windows_path': 'str'}
+
+  def __init__(self, database_filename=None, windows_path=None):
+    """Initializes a Windows Event Log message file database descriptor.
+
+    Args:
+      database_filename (Optional[str]): database filename.
+      windows_path (Optional[str]): message filename.
+    """
+    super(WinevtResourcesMessageFileDatabase, self).__init__()
+    self.database_filename = database_filename
+    self.windows_path = windows_path
+
+
+class WinevtResourcesMessageString(containers_interface.AttributeContainer):
+  """Windows Event Log message string.
 
   Attributes:
     identifier (int): message identifier.
@@ -196,13 +197,13 @@ class MessageStringDescriptor(containers_interface.AttributeContainer):
       '_message_table_identifier']
 
   def __init__(self, message_identifier=None, text=None):
-    """Initializes a Windows Event Log message string descriptor.
+    """Initializes a Windows Event Log message string.
 
     Args:
       message_identifier (Optional[int]): message identifier.
       text (Optional[int]): message text.
     """
-    super(MessageStringDescriptor, self).__init__()
+    super(WinevtResourcesMessageString, self).__init__()
     self._message_table_identifier = None
     self.message_identifier = message_identifier
     self.text = text
@@ -226,8 +227,9 @@ class MessageStringDescriptor(containers_interface.AttributeContainer):
     self._message_table_identifier = message_table_identifier
 
 
-class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
-  """Windows Event Log message string mapping descriptor.
+class WinevtResourcesMessageStringMapping(
+    containers_interface.AttributeContainer):
+  """Windows Event Log message string mapping.
 
   Attributes:
     event_identifier (int): event identifier.
@@ -251,7 +253,7 @@ class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
   def __init__(
       self, event_identifier=None, event_version=None, message_identifier=None,
       provider_identifier=None):
-    """Initializes a Windows Event Log message string mapping descriptor.
+    """Initializes a Windows Event Log message string mapping.
 
     Args:
       event_identifier (Optional[int]): event identifier.
@@ -259,7 +261,7 @@ class MessageStringMappingDescriptor(containers_interface.AttributeContainer):
       message_identifier (Optional[int]): message identifier.
       provider_identifier (Optional[str]): Event Log provider identifier.
     """
-    super(MessageStringMappingDescriptor, self).__init__()
+    super(WinevtResourcesMessageStringMapping, self).__init__()
     self._message_file_identifier = None
     self.event_identifier = event_identifier
     self.event_version = event_version
@@ -358,6 +360,6 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
 
 
 containers_manager.AttributeContainersManager.RegisterAttributeContainers([
-    WinevtResourcesEventLogProvider, MessageFileDatabaseDescriptor,
-    WinevtResourcesMessageFile, MessageStringDescriptor,
-    MessageStringMappingDescriptor, MessageTableDescriptor])
+    WinevtResourcesEventLogProvider, WinevtResourcesMessageFile,
+    WinevtResourcesMessageFileDatabase, WinevtResourcesMessageString,
+    WinevtResourcesMessageStringMapping, MessageTableDescriptor])
