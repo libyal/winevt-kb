@@ -116,11 +116,11 @@ class ProcessTree(object):
     evt_file = pyevt.file()
     evt_file.open(source)
 
-    # pylint: disable=not-an-iterable
-    for evt_record in evt_file.records:
-      yield evt_record
+    try:
+      yield from iter(evt_file.records)
 
-    evt_file.close()
+    finally:
+      evt_file.close()
 
   def _ReadEVTX(self, source):
     """Read a XML EventLog file.
