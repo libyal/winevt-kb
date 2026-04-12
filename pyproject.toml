@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winevtrc"
-version = "20251126"
+version = "20260412"
 description = "Windows Event Log resources (winevtrc)"
 maintainers = [
     { name = "Joachim Metz", email = "joachim.metz@gmail.com" },
