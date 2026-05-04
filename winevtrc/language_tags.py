@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """Windows language tags."""
 
 
-class WindowsLanguageTags(object):
+class WindowsLanguageTags:
   """Windows language tags."""
 
   _TAG_PER_LCID = {

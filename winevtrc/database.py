@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Read from and write to SQLite databases."""
 
 import logging
@@ -10,7 +9,7 @@ from winevtrc import errors
 from winevtrc import resources
 
 
-class SQLite3DatabaseFile(object):
+class SQLite3DatabaseFile:
   """A SQLite database file."""
 
   _HAS_TABLE_QUERY = (
@@ -19,7 +18,7 @@ class SQLite3DatabaseFile(object):
 
   def __init__(self):
     """Initializes the database file."""
-    super(SQLite3DatabaseFile, self).__init__()
+    super().__init__()
     self._connection = None
     self._cursor = None
     self.filename = None
@@ -247,12 +246,12 @@ class SQLite3DatabaseFile(object):
     return True
 
 
-class ResourcesSQLite3DatabaseReader(object):
+class ResourcesSQLite3DatabaseReader:
   """Event Log resources SQLite database reader."""
 
   def __init__(self):
     """Initializes the database reader."""
-    super(ResourcesSQLite3DatabaseReader, self).__init__()
+    super().__init__()
     self._database_file = SQLite3DatabaseFile()
 
   def _GetEventLogProviderKey(self, log_source):
@@ -526,7 +525,7 @@ class ResourcesSQLite3DatabaseReader(object):
     return self._database_file.Open(filename, read_only=True)
 
 
-class ResourcesSQLite3DatabaseWriter(object):
+class ResourcesSQLite3DatabaseWriter:
   """Event Log resources SQLite database writer."""
 
   _VERSION = '20150315'
@@ -547,7 +546,7 @@ class ResourcesSQLite3DatabaseWriter(object):
       string_format (Optional[str]): string format. The default is the Windows
           Resource (wrc) format.
     """
-    super(ResourcesSQLite3DatabaseWriter, self).__init__()
+    super().__init__()
     self._database_file = SQLite3DatabaseFile()
     self._string_format = string_format
 

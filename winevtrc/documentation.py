@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Documentation writers."""
 
 import re
@@ -6,12 +5,12 @@ import re
 from winevtrc import versions
 
 
-class DocumentationFileWriter(object):
+class DocumentationFileWriter:
   """Documentation file writer."""
 
   def __init__(self, path):
     """Initializes a documentation file writer."""
-    super(DocumentationFileWriter, self).__init__()
+    super().__init__()
     self._file_object = None
     self._path = path
 

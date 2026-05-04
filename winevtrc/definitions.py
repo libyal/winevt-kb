@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The Windows Event Log resource definitions."""
 
 MESSAGE_FILE_TYPE_CATEGORY = 'category'

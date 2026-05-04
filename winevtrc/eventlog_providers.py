@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """Windows Event Log providers collector."""
 
 from winevtrc import resources
 
 
-class EventLogProvidersCollector(object):
+class EventLogProvidersCollector:
   """Windows Event Log providers collector."""
 
   _SERVICES_EVENTLOG_KEY_PATH = (

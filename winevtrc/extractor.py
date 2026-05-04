@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Event Log message resource extractor."""
 
 import logging
@@ -46,7 +45,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       debug (Optional[bool]): True if debug information should be printed.
       mediator (dfvfs.VolumeScannerMediator): a volume scanner mediator or None.
     """
-    super(EventMessageStringExtractor, self).__init__(mediator=mediator)
+    super().__init__(mediator=mediator)
     self._debug = debug
     self._registry = None
     self._processed_message_filenames = []
@@ -487,7 +486,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
           is not a file or directory, or if the format of or within
           the source file is not supported.
     """
-    result = super(EventMessageStringExtractor, self).ScanForWindowsVolume(
+    result = super().ScanForWindowsVolume(
         source_path, options=options)
     if not result:
       return False

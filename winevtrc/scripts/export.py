@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Script to export strings extracted from Windows EventLog message files."""
 
 import argparse
@@ -38,7 +37,7 @@ class MessageResourceAttributeContainerStore(
       string_format (Optional[str]): string format. The default is the Windows
           Resource (wrc) format.
     """
-    super(MessageResourceAttributeContainerStore, self).__init__()
+    super().__init__()
     self._string_format = string_format
 
   def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
@@ -74,7 +73,7 @@ class MessageResourceAttributeContainerStore(
       IOError: when there is an error querying the attribute container store.
       OSError: when there is an error querying the attribute container store.
     """
-    super(MessageResourceAttributeContainerStore, self)._WriteMetadata()
+    super()._WriteMetadata()
     self._WriteMetadataValue('string_format', self._string_format)
 
 
@@ -102,7 +101,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
       database_version (Optional[str]): database version.
       string_format (Optional[str]): string format.
     """
-    super(DatabaseOutputWriter, self).__init__()
+    super().__init__()
     self._database_version = database_version
     self._database_path = database_path
     self._database_writer = None
@@ -260,7 +259,7 @@ class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
     Args:
       path (str): path to the directory containing the documentation files.
     """
-    super(DocumentationFilesOutputWriter, self).__init__()
+    super().__init__()
     self._event_log_providers_directory = None
     self._event_log_providers_index_writer = None
     self._message_files_directory = None

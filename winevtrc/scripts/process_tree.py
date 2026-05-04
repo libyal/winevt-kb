@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Script to represent process start and stop events as a process tree."""
 
 import argparse
@@ -13,7 +12,7 @@ import pyevt
 import pyevtx
 
 
-class EventLogRecord(object):
+class EventLogRecord:
   """An EventLog record.
 
   Attributes:
@@ -23,7 +22,7 @@ class EventLogRecord(object):
 
   def __init__(self):
     """Initializes an EventLog record."""
-    super(EventLogRecord, self).__init__()
+    super().__init__()
     self.event_identifier = None
     self.strings = []
 
@@ -39,7 +38,7 @@ class EventLogRecord(object):
     return self.strings[string_index]
 
 
-class Process(object):
+class Process:
   """Class to represent a process.
 
   Attributes:
@@ -48,14 +47,14 @@ class Process(object):
 
   def __init__(self):
     """Initializes an process start event."""
-    super(Process, self).__init__()
+    super().__init__()
     self.process_identifier = None
     self.process_name = None
     self.start_time = None
     self.stop_time = None
 
 
-class ProcessStartEvent(object):
+class ProcessStartEvent:
   """Class to represent a process start event.
 
   Attributes:
@@ -64,7 +63,7 @@ class ProcessStartEvent(object):
 
   def __init__(self):
     """Initializes an process start event."""
-    super(ProcessStartEvent, self).__init__()
+    super().__init__()
     self.command_line = None
     self.new_process_id = None
     self.new_process_name = None
@@ -77,7 +76,7 @@ class ProcessStartEvent(object):
     self.written_time = None
 
 
-class ProcessStopEvent(object):
+class ProcessStopEvent:
   """Class to represent a process stop event.
 
   Attributes:
@@ -86,7 +85,7 @@ class ProcessStopEvent(object):
 
   def __init__(self):
     """Initializes an process stop event."""
-    super(ProcessStopEvent, self).__init__()
+    super().__init__()
     self.process_id = None
     self.process_name = None
     self.status = None
@@ -97,7 +96,7 @@ class ProcessStopEvent(object):
     self.written_time = None
 
 
-class ProcessTree(object):
+class ProcessTree:
   """Class to represent process start and stop events as a process tree.
 
   event identifiers: 592, 593
@@ -266,7 +265,7 @@ class ProcessTree(object):
     # TODO: implement.
 
 
-class StdoutOutputWriter(object):
+class StdoutOutputWriter:
   """Class that defines a stdout output writer."""
 
   def Open(self):

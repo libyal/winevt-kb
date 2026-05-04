@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Attribute container store."""
 
 from acstore import interface as acstore_interface

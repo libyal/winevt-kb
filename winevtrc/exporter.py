@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Event Log message resource exporter."""
 
 import abc
@@ -12,7 +11,7 @@ from winevtrc import resources
 from winevtrc import storage  # pylint: disable=unused-import
 
 
-class ExportEventLogProvider(object):
+class ExportEventLogProvider:
   """Event Log provider.
 
   Attributes:
@@ -27,7 +26,7 @@ class ExportEventLogProvider(object):
     Args:
       name (str): name.
     """
-    super(ExportEventLogProvider, self).__init__()
+    super().__init__()
     self.name = name
     self.providers_with_versions = []
 
@@ -50,14 +49,14 @@ class MessageFileAttributeContainerStore(
       attribute_container (WinevtResourcesMessageFileDatabase): message file
           database attribute container..
     """
-    super(MessageFileAttributeContainerStore, self).__init__()
+    super().__init__()
     # Strip ".db" from the database filename.
     self.name = attribute_container.database_filename[:-3]
     self.windows_path = attribute_container.windows_path
 
 
 
-class ExporterOutputWriter(object):
+class ExporterOutputWriter:
   """Exporter output writer."""
 
   def _DiffMessageString(
@@ -255,7 +254,7 @@ class ExporterOutputWriter(object):
     """
 
 
-class Exporter(object):
+class Exporter:
   """Exports the strings extracted from Windows EventLog message files."""
 
   _EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'

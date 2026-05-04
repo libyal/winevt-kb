@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winevtrc"
-version = "20260413"
+version = "20260501"
 description = "Windows Event Log resources (winevtrc)"
 maintainers = [
     { name = "Joachim Metz", email = "joachim.metz@gmail.com" },
@@ -75,7 +75,5 @@ Documentation = "https://winevtrc.readthedocs.io/en/latest"
 Homepage = "https://github.com/libyal/winevt-kb"
 Repository = "https://github.com/libyal/winevt-kb"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["winevtrc"]
-exclude = ["docs", "tests", "tests.*", "utils"]
+[tool.setuptools]
+package-dir = {"winevtrc" = "winevtrc"}

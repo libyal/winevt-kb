@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Resource file."""
 
 import logging
@@ -7,7 +6,7 @@ import pyexe
 import pywrc
 
 
-class WindowsResourceFile(object):
+class WindowsResourceFile:
   """Windows Resource file.
 
   Attributes:
@@ -28,7 +27,7 @@ class WindowsResourceFile(object):
       preferred_language_identifier (Optional[int]): preferred language
           identifier (LCID).
     """
-    super(WindowsResourceFile, self).__init__()
+    super().__init__()
     self._ascii_codepage = ascii_codepage
     self._exe_file = pyexe.file()
     self._exe_file.set_ascii_codepage(self._ascii_codepage)

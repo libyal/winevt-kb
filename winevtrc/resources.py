@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """Windows Event Log resources."""
 
 from acstore.containers import interface as containers_interface
 from acstore.containers import manager as containers_manager
 
 
-class EnvironmentVariable(object):
+class EnvironmentVariable:
   """Environment variable.
 
   Attributes:
@@ -20,7 +19,7 @@ class EnvironmentVariable(object):
       name (str): name.
       value (str): value.
     """
-    super(EnvironmentVariable, self).__init__()
+    super().__init__()
     self.name = name
     self.value = value
 
@@ -57,7 +56,7 @@ class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
 
   def __init__(self):
     """Initializes the Windows Event Log provider."""
-    super(WinevtResourcesEventLogProvider, self).__init__()
+    super().__init__()
     self.additional_identifier = None
     self.category_message_files = set()
     self.event_message_files = set()
@@ -143,7 +142,7 @@ class WinevtResourcesMessageFile(containers_interface.AttributeContainer):
           provider.
       windows_version (Optional[str]): Windows version.
     """
-    super(WinevtResourcesMessageFile, self).__init__()
+    super().__init__()
     self.file_version = file_version
     self.product_version = product_version
     self.windows_path = windows_path
@@ -172,7 +171,7 @@ class WinevtResourcesMessageFileDatabase(
       database_filename (Optional[str]): database filename.
       windows_path (Optional[str]): message filename.
     """
-    super(WinevtResourcesMessageFileDatabase, self).__init__()
+    super().__init__()
     self.database_filename = database_filename
     self.windows_path = windows_path
 
@@ -203,7 +202,7 @@ class WinevtResourcesMessageString(containers_interface.AttributeContainer):
       message_identifier (Optional[int]): message identifier.
       text (Optional[int]): message text.
     """
-    super(WinevtResourcesMessageString, self).__init__()
+    super().__init__()
     self._message_table_identifier = None
     self.message_identifier = message_identifier
     self.text = text
@@ -261,7 +260,7 @@ class WinevtResourcesMessageStringMapping(
       message_identifier (Optional[int]): message identifier.
       provider_identifier (Optional[str]): Event Log provider identifier.
     """
-    super(WinevtResourcesMessageStringMapping, self).__init__()
+    super().__init__()
     self._message_file_identifier = None
     self.event_identifier = event_identifier
     self.event_version = event_version
@@ -287,7 +286,7 @@ class WinevtResourcesMessageStringMapping(
     self._message_file_identifier = message_file_identifier
 
 
-class MessageTable(object):
+class MessageTable:
   """Class that contains the messages per language.
 
   Attributes:
@@ -303,7 +302,7 @@ class MessageTable(object):
     Args:
       lcid (int): language identifier (LCID).
     """
-    super(MessageTable, self).__init__()
+    super().__init__()
     self.file_versions = []
     self.language_identifier = language_identifier
     self.message_strings = {}
@@ -336,7 +335,7 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
     Args:
       language_identifier (Optional[int]): language identifier (LCID).
     """
-    super(MessageTableDescriptor, self).__init__()
+    super().__init__()
     self._message_file_identifier = None
     self.language_identifier = language_identifier
 

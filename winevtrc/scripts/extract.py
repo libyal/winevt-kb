@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Script to extract the strings from Event Log message resource files."""
 
 import argparse
@@ -23,7 +22,7 @@ from winevtrc import resources
 from winevtrc import storage  # pylint: disable=unused-import
 
 
-class SQLite3OutputWriter(object):
+class SQLite3OutputWriter:
   """SQLite3 output writer."""
 
   EVENT_PROVIDERS_DATABASE_FILENAME = 'winevt-kb.db'
@@ -34,7 +33,7 @@ class SQLite3OutputWriter(object):
     Args:
       databases_path (str): path to the database files.
     """
-    super(SQLite3OutputWriter, self).__init__()
+    super().__init__()
     self._databases_path = databases_path
     self._database_writer = None
 
@@ -222,7 +221,7 @@ class SQLite3OutputWriter(object):
     self._database_writer.AddAttributeContainer(attribute_container)
 
 
-class StdoutOutputWriter(object):
+class StdoutOutputWriter:
   """Stdout output writer."""
 
   def _WriteMessageTable(self,  message_resource_file):
