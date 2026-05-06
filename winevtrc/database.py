@@ -61,11 +61,10 @@ class SQLite3DatabaseFile:
     """Closes the database file.
 
     Raises:
-      IOError: if the database is not opened.
       OSError: if the database is not opened.
     """
     if not self._connection:
-      raise IOError('Cannot close database not opened.')
+      raise OSError('Cannot close database not opened.')
 
     # We need to run commit or not all data is stored in the database.
     self._connection.commit()
@@ -85,16 +84,14 @@ class SQLite3DatabaseFile:
 
     Raises:
       BackendError: if the database back-end raises an exception.
-      IOError: if the database is not opened or
-          if the database is in read-only mode.
       OSError: if the database is not opened or
           if the database is in read-only mode.
     """
     if not self._connection:
-      raise IOError('Cannot create table database not opened.')
+      raise OSError('Cannot create table database not opened.')
 
     if self.read_only:
-      raise IOError('Cannot create table database in read-only mode.')
+      raise OSError('Cannot create table database in read-only mode.')
 
     column_definitions = ', '.join(column_definitions)
 
@@ -116,11 +113,10 @@ class SQLite3DatabaseFile:
       generator: values generator.
 
     Raises:
-      IOError: if the database is not opened.
       OSError: if the database is not opened.
     """
     if not self._connection:
-      raise IOError('Cannot retrieve values database not opened.')
+      raise OSError('Cannot retrieve values database not opened.')
 
     cursor = self._connection.cursor()
     return self._GetValues(cursor, table_names, column_names, condition)
@@ -136,11 +132,10 @@ class SQLite3DatabaseFile:
 
     Raises:
       BackendError: if the database back-end raises an exception.
-      IOError: if the database is not opened.
       OSError: if the database is not opened.
     """
     if not self._connection:
-      raise IOError('Cannot determine if table exists database not opened.')
+      raise OSError('Cannot determine if table exists database not opened.')
 
     sql_query = self._HAS_TABLE_QUERY.format(table_name)
 
@@ -164,18 +159,15 @@ class SQLite3DatabaseFile:
 
     Raises:
       BackendError: if the database back-end raises an exception.
-      IOError: if the database is not opened or
-          if the database is in read-only mode or
-          if an unsupported value type is encountered.
       OSError: if the database is not opened or
           if the database is in read-only mode or
           if an unsupported value type is encountered.
     """
     if not self._connection:
-      raise IOError('Cannot insert values database not opened.')
+      raise OSError('Cannot insert values database not opened.')
 
     if self.read_only:
-      raise IOError('Cannot insert values database in read-only mode.')
+      raise OSError('Cannot insert values database in read-only mode.')
 
     if not values:
       return
@@ -195,7 +187,7 @@ class SQLite3DatabaseFile:
         value = 'NULL'
       else:
         value_type = type(value)
-        raise IOError(f'Unsupported value type: {value_type!s}.')
+        raise OSError(f'Unsupported value type: {value_type!s}.')
       sql_values.append(value)
 
     column_names = ', '.join(column_names)
@@ -222,11 +214,10 @@ class SQLite3DatabaseFile:
 
     Raises:
       BackendError: if the database back-end raises an exception.
-      IOError: if the database is already opened.
       OSError: if the database is already opened.
     """
     if self._connection:
-      raise IOError('Cannot open database already opened.')
+      raise OSError('Cannot open database already opened.')
 
     self.filename = filename
     self.read_only = read_only
@@ -264,7 +255,6 @@ class ResourcesSQLite3DatabaseReader:
       int: an Event Log provider key or None if not available.
 
     Raises:
-      IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
     table_names = ['event_log_providers']
@@ -282,7 +272,7 @@ class ResourcesSQLite3DatabaseReader:
       values = values_list[0]
       return values['event_log_provider_key']
 
-    raise IOError('More than one value found in database.')
+    raise OSError('More than one value found in database.')
 
   def _GetMessage(self, message_file_key, lcid, message_identifier):
     """Retrieves a specific message from a specific message table.
@@ -296,7 +286,6 @@ class ResourcesSQLite3DatabaseReader:
       str: the message string or None if not available.
 
     Raises:
-      IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
     table_name = f'message_table_{message_file_key:d}_0x{lcid:08x}'
@@ -318,7 +307,7 @@ class ResourcesSQLite3DatabaseReader:
     if number_of_values == 1:
       return values[0]['message_string']
 
-    raise IOError('More than one value found in database.')
+    raise OSError('More than one value found in database.')
 
   def _GetMessageFileKeys(self, event_log_provider_key):
     """Retrieves the message file keys.
@@ -489,7 +478,6 @@ class ResourcesSQLite3DatabaseReader:
       str: value of the metadata attribute or None.
 
     Raises:
-      IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
     table_name = 'metadata'
@@ -511,7 +499,7 @@ class ResourcesSQLite3DatabaseReader:
     if number_of_values == 1:
       return values[0]['value']
 
-    raise IOError('More than one value found in database.')
+    raise OSError('More than one value found in database.')
 
   def Open(self, filename):
     """Opens the database reader.
@@ -560,7 +548,6 @@ class ResourcesSQLite3DatabaseWriter:
       int: the Event Log provider key or None if no such value.
 
     Raises:
-      IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
     if event_log_provider.identifier:
@@ -568,7 +555,7 @@ class ResourcesSQLite3DatabaseWriter:
     elif event_log_provider.log_source:
       condition = f'log_source = "{event_log_provider.log_source:s}"'
     else:
-      raise IOError('Missing Event Log provider identifier.')
+      raise OSError('Missing Event Log provider identifier.')
 
     table_names = ['event_log_providers']
     column_names = ['event_log_provider_key']
@@ -584,7 +571,7 @@ class ResourcesSQLite3DatabaseWriter:
       values = values_list[0]
       return values['event_log_provider_key']
 
-    raise IOError('More than one value found in database.')
+    raise OSError('More than one value found in database.')
 
   def _GetMessageFileKey(self, message_file):
     """Retrieves the key of a message file.
@@ -596,7 +583,6 @@ class ResourcesSQLite3DatabaseWriter:
       int: the message file key or None if no such value.
 
     Raises:
-      IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
     table_names = ['message_files']
@@ -613,7 +599,7 @@ class ResourcesSQLite3DatabaseWriter:
       values = values_list[0]
       return values['message_file_key']
 
-    raise IOError('More than one value found in database.')
+    raise OSError('More than one value found in database.')
 
   def _GetMessageFileKeyByPath(self, message_filename):
     """Retrieves the key of a message file for a specific path.
@@ -625,7 +611,6 @@ class ResourcesSQLite3DatabaseWriter:
       int: the message file key or None if no such value.
 
     Raises:
-      IOError: if more than one value is found in the database.
       OSError: if more than one value is found in the database.
     """
     table_names = ['message_files']
@@ -642,7 +627,7 @@ class ResourcesSQLite3DatabaseWriter:
       values = values_list[0]
       return values['message_file_key']
 
-    raise IOError('More than one value found in database.')
+    raise OSError('More than one value found in database.')
 
   def _ReformatMessageString(self, message_string):
     """Reformats the message string.

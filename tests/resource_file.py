@@ -114,7 +114,7 @@ class TestWrcStream:
     Returns:
       object: resource or None.
     """
-    return self.resources.get(identifier, None)
+    return self.resources.get(identifier)
 
   def get_resource_by_name(self, name):
     """Retrieves a specific resource by name.
@@ -125,7 +125,7 @@ class TestWrcStream:
     Returns:
       object: resource or None.
     """
-    return self.resources.get(name, None)
+    return self.resources.get(name)
 
 
 class WindowsResourceFileTest(test_lib.BaseTestCase):
@@ -342,7 +342,7 @@ class WindowsResourceFileTest(test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       windows_resource_file.OpenFileObject(file_object)
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         windows_resource_file.OpenFileObject(file_object)
 
       windows_resource_file.Close()
@@ -358,7 +358,7 @@ class WindowsResourceFileTest(test_lib.BaseTestCase):
     with open(test_file_path, 'rb') as file_object:
       windows_resource_file.OpenFileObject(file_object)
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         windows_resource_file.OpenFileObject(file_object)
 
       windows_resource_file.Close()

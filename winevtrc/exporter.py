@@ -322,7 +322,7 @@ class Exporter:
 
       is_equivalent = False
 
-      export_event_log_provider = providers_per_log_source.get(name, None)
+      export_event_log_provider = providers_per_log_source.get(name)
       if not export_event_log_provider:
         export_event_log_provider = ExportEventLogProvider(name)
 

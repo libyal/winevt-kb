@@ -49,7 +49,6 @@ class MessageResourceAttributeContainerStore(
           to see if it can be read and written to.
 
     Raises:
-      IOError: when there is an error querying the attribute container store.
       OSError: when there is an error querying the attribute container store.
     """
     metadata_values = self._ReadMetadata()
@@ -57,10 +56,10 @@ class MessageResourceAttributeContainerStore(
     self._CheckStorageMetadata(
         metadata_values, check_readable_only=check_readable_only)
 
-    string_format = metadata_values.get('string_format', None)
+    string_format = metadata_values.get('string_format')
 
     if not string_format:
-      raise IOError('Missing string format.')
+      raise OSError('Missing string format.')
 
     self._string_format = metadata_values['string_format']
     self.format_version = metadata_values['format_version']
@@ -70,7 +69,6 @@ class MessageResourceAttributeContainerStore(
     """Writes metadata.
 
     Raises:
-      IOError: when there is an error querying the attribute container store.
       OSError: when there is an error querying the attribute container store.
     """
     super()._WriteMetadata()

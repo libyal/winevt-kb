@@ -21,13 +21,13 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
     database_file = database.SQLite3DatabaseFile()
     database_file.Open(test_file_path, read_only=True)
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       database_file.Open(test_file_path, read_only=True)
 
     database_file.Close()
 
     # Test close after close.
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       database_file.Close()
 
   def testCreateTable(self):
@@ -44,7 +44,7 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
 
       database_file.Close()
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       database_file.CreateTable(table_name, column_names)
 
   def testCreateTableReadOnly(self):
@@ -57,7 +57,7 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_file.Open(test_file_path, read_only=True)
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         database_file.CreateTable(table_name, column_names)
 
       database_file.Close()
@@ -83,7 +83,7 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
 
     database_file.Close()
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       database_file.GetValues(['metadata'], ['name', 'value'], '')
 
   def testHasTable(self):
@@ -102,7 +102,7 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
 
     database_file.Close()
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       database_file.HasTable('metadata')
 
   def testInsertValues(self):
@@ -126,13 +126,13 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
 
       database_file.InsertValues(table_name, column_names, [])
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         database_file.InsertValues(
             table_name, column_names, [database_file, "", ""])
 
       database_file.Close()
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       database_file.InsertValues(table_name, column_names, values)
 
   def testInsertValuesReadOnly(self):
@@ -148,7 +148,7 @@ class SQLite3DatabaseFileTest(test_lib.BaseTestCase):
       test_file_path = os.path.join(temporary_directory, 'winevt-rc.db')
       database_file.Open(test_file_path, read_only=True)
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         database_file.InsertValues(table_name, column_names, values)
 
       database_file.Close()

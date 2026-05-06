@@ -183,7 +183,7 @@ def Main():
 
   for name, providers in sorted(providers_per_log_source.items()):
     for windows_version, event_log_providers in event_log_providers_per_version:
-      event_log_provider = event_log_providers.get(name, None)
+      event_log_provider = event_log_providers.get(name)
       if not event_log_provider:
         continue
 
