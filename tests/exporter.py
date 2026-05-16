@@ -9,17 +9,17 @@ from tests import test_lib
 
 
 class ExporterTest(test_lib.BaseTestCase):
-  """Tests for the Windows Event Log message resource exporter."""
+    """Tests for the Windows Event Log message resource exporter."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  # TODO: add tests for _ExportEventLogProviders
-  # TODO: add tests for _ExportMessageFile
-  # TODO: add tests for _ExportMessageFiles
-  # TODO: add tests for _ExportMessageFilesPerEventLogProvider
-  # TODO: add tests for _ExportMessageStrings
-  # TODO: add tests for Export
+    # TODO: add tests for _ExportEventLogProviders
+    # TODO: add tests for _ExportMessageFile
+    # TODO: add tests for _ExportMessageFiles
+    # TODO: add tests for _ExportMessageFilesPerEventLogProvider
+    # TODO: add tests for _ExportMessageStrings
+    # TODO: add tests for Export
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

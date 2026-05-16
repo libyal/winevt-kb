@@ -1,3 +1,3 @@
 """Windows Event Log resources (winevtrc)."""
 
-__version__ = '20260413'
+__version__ = "20260413"

@@ -2,8 +2,8 @@
 
 
 class Error(Exception):
-  """The error interface."""
+    """The error interface."""
 
 
 class BackendError(Error):
-  """Error that is raised for database back-end exceptions."""
+    """Error that is raised for database back-end exceptions."""

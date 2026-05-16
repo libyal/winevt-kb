@@ -13,320 +13,334 @@ import pyevtx
 
 
 class EventLogRecord:
-  """An EventLog record.
+    """An EventLog record.
 
-  Attributes:
-    event_identifier (int): event identifier.
-    strings (list[str]): string values.
-  """
-
-  def __init__(self):
-    """Initializes an EventLog record."""
-    super().__init__()
-    self.event_identifier = None
-    self.strings = []
-
-  def GetStringValue(self, string_index):
-    """Retrieves a specific string value.
-
-    Args:
-      string_index (int): string index
-
-    Return:
-      str: string value.
+    Attributes:
+      event_identifier (int): event identifier.
+      strings (list[str]): string values.
     """
-    return self.strings[string_index]
+
+    def __init__(self):
+        """Initializes an EventLog record."""
+        super().__init__()
+        self.event_identifier = None
+        self.strings = []
+
+    def GetStringValue(self, string_index):
+        """Retrieves a specific string value.
+
+        Args:
+          string_index (int): string index
+
+        Return:
+          str: string value.
+        """
+        return self.strings[string_index]
 
 
 class Process:
-  """Class to represent a process.
+    """Class to represent a process.
 
-  Attributes:
-    TODO
-  """
+    Attributes:
+      TODO
+    """
 
-  def __init__(self):
-    """Initializes an process start event."""
-    super().__init__()
-    self.process_identifier = None
-    self.process_name = None
-    self.start_time = None
-    self.stop_time = None
+    def __init__(self):
+        """Initializes an process start event."""
+        super().__init__()
+        self.process_identifier = None
+        self.process_name = None
+        self.start_time = None
+        self.stop_time = None
 
 
 class ProcessStartEvent:
-  """Class to represent a process start event.
+    """Class to represent a process start event.
 
-  Attributes:
-    TODO
-  """
+    Attributes:
+      TODO
+    """
 
-  def __init__(self):
-    """Initializes an process start event."""
-    super().__init__()
-    self.command_line = None
-    self.new_process_id = None
-    self.new_process_name = None
-    self.process_id = None
-    self.subject_domain_name = None
-    self.subject_logon_id = None
-    self.subject_user_name = None
-    self.subject_user_sid = None
-    self.token_elevation_type = None
-    self.written_time = None
+    def __init__(self):
+        """Initializes an process start event."""
+        super().__init__()
+        self.command_line = None
+        self.new_process_id = None
+        self.new_process_name = None
+        self.process_id = None
+        self.subject_domain_name = None
+        self.subject_logon_id = None
+        self.subject_user_name = None
+        self.subject_user_sid = None
+        self.token_elevation_type = None
+        self.written_time = None
 
 
 class ProcessStopEvent:
-  """Class to represent a process stop event.
+    """Class to represent a process stop event.
 
-  Attributes:
-    TODO
-  """
+    Attributes:
+      TODO
+    """
 
-  def __init__(self):
-    """Initializes an process stop event."""
-    super().__init__()
-    self.process_id = None
-    self.process_name = None
-    self.status = None
-    self.subject_domain_name = None
-    self.subject_logon_id = None
-    self.subject_user_name = None
-    self.subject_user_sid = None
-    self.written_time = None
+    def __init__(self):
+        """Initializes an process stop event."""
+        super().__init__()
+        self.process_id = None
+        self.process_name = None
+        self.status = None
+        self.subject_domain_name = None
+        self.subject_logon_id = None
+        self.subject_user_name = None
+        self.subject_user_sid = None
+        self.written_time = None
 
 
 class ProcessTree:
-  """Class to represent process start and stop events as a process tree.
+    """Class to represent process start and stop events as a process tree.
 
-  event identifiers: 592, 593
-  """
-
-  def _ReadEVT(self, source):
-    """Read an EventLog file.
-
-    Args:
-      source (str): name of the EventLog file that contains the process start
-          and stop events.
-
-    Yields:
-      pyevt.record: EventLog record.
+    event identifiers: 592, 593
     """
-    evt_file = pyevt.file()
-    evt_file.open(source)
 
-    try:
-      yield from iter(evt_file.records)
+    def _ReadEVT(self, source):
+        """Read an EventLog file.
 
-    finally:
-      evt_file.close()
+        Args:
+          source (str): name of the EventLog file that contains the process start
+              and stop events.
 
-  def _ReadEVTX(self, source):
-    """Read a XML EventLog file.
-
-    Args:
-      source (str): name of the EventLog file that contains the process start
-          and stop events.
-
-    Yields:
-      pyevtx.record: XML EventLog record.
-    """
-    evtx_file = pyevtx.file()
-    evtx_file.open(source)
-
-    # pylint: disable=not-an-iterable
-    for evtx_record in evtx_file.records:
-      if evtx_record.event_identifier == 4688:
-        process_start_event = ProcessStartEvent()
-        process_start_event.command_line = evtx_record.get_string(8)
+        Yields:
+          pyevt.record: EventLog record.
+        """
+        evt_file = pyevt.file()
+        evt_file.open(source)
 
         try:
-          string_value = evtx_record.get_string(4)
-          process_start_event.new_process_id = int(string_value, 16)
-        except ValueError:
-          pass
+            yield from iter(evt_file.records)
 
-        process_start_event.new_process_name = evtx_record.get_string(5)
+        finally:
+            evt_file.close()
 
-        try:
-          string_value = evtx_record.get_string(7)
-          process_start_event.process_id = int(string_value, 16)
-        except ValueError:
-          pass
+    def _ReadEVTX(self, source):
+        """Read a XML EventLog file.
 
-        process_start_event.subject_domain_name = evtx_record.get_string(2)
-        process_start_event.subject_logon_id = evtx_record.get_string(3)
-        process_start_event.subject_user_name = evtx_record.get_string(1)
-        process_start_event.subject_user_sid = evtx_record.get_string(0)
-        process_start_event.token_elevation_type = evtx_record.get_string(6)
-        process_start_event.written_time = evtx_record.written_time
+        Args:
+          source (str): name of the EventLog file that contains the process start
+              and stop events.
 
-        yield process_start_event
+        Yields:
+          pyevtx.record: XML EventLog record.
+        """
+        evtx_file = pyevtx.file()
+        evtx_file.open(source)
 
-      elif evtx_record.event_identifier == 4689:
-        process_stop_event = ProcessStopEvent()
+        # pylint: disable=not-an-iterable
+        for evtx_record in evtx_file.records:
+            if evtx_record.event_identifier == 4688:
+                process_start_event = ProcessStartEvent()
+                process_start_event.command_line = evtx_record.get_string(8)
 
-        try:
-          string_value = evtx_record.get_string(5)
-          process_stop_event.process_id = int(string_value, 16)
-        except ValueError:
-          pass
+                try:
+                    string_value = evtx_record.get_string(4)
+                    process_start_event.new_process_id = int(string_value, 16)
+                except ValueError:
+                    pass
 
-        process_stop_event.process_name = evtx_record.get_string(6)
-        process_stop_event.status = evtx_record.get_string(4)
-        process_stop_event.subject_domain_name = evtx_record.get_string(2)
-        process_stop_event.subject_logon_id = evtx_record.get_string(3)
-        process_stop_event.subject_user_name = evtx_record.get_string(1)
-        process_stop_event.subject_user_sid = evtx_record.get_string(0)
-        process_stop_event.written_time = evtx_record.written_time
+                process_start_event.new_process_name = evtx_record.get_string(5)
 
-        yield process_stop_event
+                try:
+                    string_value = evtx_record.get_string(7)
+                    process_start_event.process_id = int(string_value, 16)
+                except ValueError:
+                    pass
 
-    evtx_file.close()
+                process_start_event.subject_domain_name = evtx_record.get_string(2)
+                process_start_event.subject_logon_id = evtx_record.get_string(3)
+                process_start_event.subject_user_name = evtx_record.get_string(1)
+                process_start_event.subject_user_sid = evtx_record.get_string(0)
+                process_start_event.token_elevation_type = evtx_record.get_string(6)
+                process_start_event.written_time = evtx_record.written_time
 
-  def _ReadXML(self, source):
-    """Read an export of the EventLog messages in XML.
+                yield process_start_event
 
-    Args:
-      source (str): name of the EventLog file that contains the process start
-          and stop events.
+            elif evtx_record.event_identifier == 4689:
+                process_stop_event = ProcessStopEvent()
 
-    Yields:
-      EventLogRecord: EventLog record.
-    """
-    with open(source, 'r', encoding='utf-8') as file_object:
-      for line_index, line in enumerate(file_object.readlines()):
-        line = line.strip()
+                try:
+                    string_value = evtx_record.get_string(5)
+                    process_stop_event.process_id = int(string_value, 16)
+                except ValueError:
+                    pass
 
-        try:
-          xml = ElementTree.fromstring(line)
-        except ElementTree.ParseError:
-          logging.error(f'Unable to parse line: {line_index:d} "{line:s}"')
-          continue
+                process_stop_event.process_name = evtx_record.get_string(6)
+                process_stop_event.status = evtx_record.get_string(4)
+                process_stop_event.subject_domain_name = evtx_record.get_string(2)
+                process_stop_event.subject_logon_id = evtx_record.get_string(3)
+                process_stop_event.subject_user_name = evtx_record.get_string(1)
+                process_stop_event.subject_user_sid = evtx_record.get_string(0)
+                process_stop_event.written_time = evtx_record.written_time
 
-        xml_system = xml.find(
-            '{http://schemas.microsoft.com/win/2004/08/events/event}System')
-        xml_event_id = xml_system.find(
-            '{http://schemas.microsoft.com/win/2004/08/events/event}EventID')
-        xml_event_data = xml.find(
-            '{http://schemas.microsoft.com/win/2004/08/events/event}EventData')
+                yield process_stop_event
 
-        event_log_record = EventLogRecord()
+        evtx_file.close()
 
-        try:
-          event_log_record.event_identifier = int(xml_event_id.text, 10)
-        except ValueError:
-          continue
+    def _ReadXML(self, source):
+        """Read an export of the EventLog messages in XML.
 
-        for xml_data in xml_event_data:
-          event_log_record.strings.append(xml_data.text)
+        Args:
+          source (str): name of the EventLog file that contains the process start
+              and stop events.
 
-        yield event_log_record
+        Yields:
+          EventLogRecord: EventLog record.
+        """
+        with open(source, "r", encoding="utf-8") as file_object:
+            for line_index, line in enumerate(file_object.readlines()):
+                line = line.strip()
 
-  def Generate(self, source):
-    """Generates a process tree from the source.
+                try:
+                    xml = ElementTree.fromstring(line)
+                except ElementTree.ParseError:
+                    logging.error(f'Unable to parse line: {line_index:d} "{line:s}"')
+                    continue
 
-    Args:
-      source (str): name of the EventLog file that contains the process start
-          and stop events.
-    """
-    if pyevt.check_file_signature(source):
-      record_generator = self._ReadEVT
-    elif pyevtx.check_file_signature(source):
-      record_generator = self._ReadEVTX
-    else:
-      record_generator = self._ReadXML
+                xml_system = xml.find(
+                    "{http://schemas.microsoft.com/win/2004/08/events/event}System"
+                )
+                xml_event_id = xml_system.find(
+                    "{http://schemas.microsoft.com/win/2004/08/events/event}EventID"
+                )
+                xml_event_data = xml.find(
+                    "{http://schemas.microsoft.com/win/2004/08/events/event}EventData"
+                )
 
-    active_processes = {}
-    for process_event in record_generator(source):
-      if isinstance(process_event, ProcessStartEvent):
-        print((f'Process started: (PID: {process_event.new_process_id:d}, '
-               f'PPID: {process_event.process_id:d}) '
-               f'{process_event.new_process_name:s} '
-               f'{process_event.command_line:s}'))
+                event_log_record = EventLogRecord()
 
-      elif isinstance(process_event, ProcessStopEvent):
-        active_process = active_processes.get(
-            process_event.process_id, None)
+                try:
+                    event_log_record.event_identifier = int(xml_event_id.text, 10)
+                except ValueError:
+                    continue
 
-        if active_process:
-          active_process.stop_time = process_event.written_time
+                for xml_data in xml_event_data:
+                    event_log_record.strings.append(xml_data.text)
 
-        print((f'Process stopped: (PID: {process_event.process_id:d}) '
-               f'{process_event.process_name:s}'))
+                yield event_log_record
 
-  def Output(self, source):
-    """Outputs a process tree.
+    def Generate(self, source):
+        """Generates a process tree from the source.
 
-    Args:
-      source (str): name of the EventLog file that contains the process start
-          and stop events.
-    """
-    # TODO: implement.
+        Args:
+          source (str): name of the EventLog file that contains the process start
+              and stop events.
+        """
+        if pyevt.check_file_signature(source):
+            record_generator = self._ReadEVT
+        elif pyevtx.check_file_signature(source):
+            record_generator = self._ReadEVTX
+        else:
+            record_generator = self._ReadXML
+
+        active_processes = {}
+        for process_event in record_generator(source):
+            if isinstance(process_event, ProcessStartEvent):
+                print(
+                    (
+                        f"Process started: (PID: {process_event.new_process_id:d}, "
+                        f"PPID: {process_event.process_id:d}) "
+                        f"{process_event.new_process_name:s} "
+                        f"{process_event.command_line:s}"
+                    )
+                )
+
+            elif isinstance(process_event, ProcessStopEvent):
+                active_process = active_processes.get(process_event.process_id, None)
+
+                if active_process:
+                    active_process.stop_time = process_event.written_time
+
+                print(
+                    (
+                        f"Process stopped: (PID: {process_event.process_id:d}) "
+                        f"{process_event.process_name:s}"
+                    )
+                )
+
+    def Output(self, source):
+        """Outputs a process tree.
+
+        Args:
+          source (str): name of the EventLog file that contains the process start
+              and stop events.
+        """
+        # TODO: implement.
 
 
 class StdoutOutputWriter:
-  """Class that defines a stdout output writer."""
+    """Class that defines a stdout output writer."""
 
-  def Open(self):
-    """Opens the file.
+    def Open(self):
+        """Opens the file.
 
-    Returns:
-      bool: True if successful or False if not.
-    """
-    return True
+        Returns:
+          bool: True if successful or False if not.
+        """
+        return True
 
-  def Close(self):
-    """Closes the file."""
+    def Close(self):
+        """Closes the file."""
 
 
 def Main():
-  """Entry point of console script to represent events a process tree.
+    """Entry point of console script to represent events a process tree.
 
-  Returns:
-    int: exit code that is provided to sys.exit().
-  """
-  args_parser = argparse.ArgumentParser(description=(
-      'Represents process start and stop events as a process tree.'))
+    Returns:
+      int: exit code that is provided to sys.exit().
+    """
+    args_parser = argparse.ArgumentParser(
+        description=("Represents process start and stop events as a process tree.")
+    )
 
-  args_parser.add_argument(
-      'source', nargs='?', action='store', metavar='EVENT_LOG',
-      default=None, help=(
-          'EventLog file that contains the start and stop events.'))
+    args_parser.add_argument(
+        "source",
+        nargs="?",
+        action="store",
+        metavar="EVENT_LOG",
+        default=None,
+        help=("EventLog file that contains the start and stop events."),
+    )
 
-  options = args_parser.parse_args()
+    options = args_parser.parse_args()
 
-  if not options.source:
-    print('Source value is missing.')
-    print('')
-    args_parser.print_help()
-    print('')
-    return 1
+    if not options.source:
+        print("Source value is missing.")
+        print("")
+        args_parser.print_help()
+        print("")
+        return 1
 
-  if not os.path.isfile(options.source):
-    print('Invalid source.')
-    print('')
-    return 1
+    if not os.path.isfile(options.source):
+        print("Invalid source.")
+        print("")
+        return 1
 
-  logging.basicConfig(
-      level=logging.INFO, format='[%(levelname)s] %(message)s')
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-  output_writer = StdoutOutputWriter()
+    output_writer = StdoutOutputWriter()
 
-  if not output_writer.Open():
-    print('Unable to open output writer.')
-    print('')
-    return 1
+    if not output_writer.Open():
+        print("Unable to open output writer.")
+        print("")
+        return 1
 
-  process_tree = ProcessTree()
-  process_tree.Generate(options.source)
+    process_tree = ProcessTree()
+    process_tree.Generate(options.source)
 
-  process_tree.Output(output_writer)
+    process_tree.Output(output_writer)
 
-  output_writer.Close()
+    output_writer.Close()
 
-  return 0
+    return 0
 
 
-if __name__ == '__main__':
-  sys.exit(Main())
+if __name__ == "__main__":
+    sys.exit(Main())

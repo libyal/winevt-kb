@@ -9,86 +9,108 @@ from winevtrc import database
 
 
 def Main():
-  """Entry point of console script to query a winevt-kb database.
+    """Entry point of console script to query a winevt-kb database.
 
-  Returns:
-    int: exit code that is provided to sys.exit().
-  """
-  argument_parser = argparse.ArgumentParser(description=(
-      'Export strings extracted from message files.'))
+    Returns:
+      int: exit code that is provided to sys.exit().
+    """
+    argument_parser = argparse.ArgumentParser(
+        description=("Export strings extracted from message files.")
+    )
 
-  argument_parser.add_argument(
-      'database', nargs='?', action='store', metavar='DATABASE',
-      default=None, help='filename of the sqlite3 database to read from.')
+    argument_parser.add_argument(
+        "database",
+        nargs="?",
+        action="store",
+        metavar="DATABASE",
+        default=None,
+        help="filename of the sqlite3 database to read from.",
+    )
 
-  argument_parser.add_argument(
-      'event_provider', nargs='?', action='store', metavar='EVENT_PROVIDER',
-      default=None, help='specific event provider to query.')
+    argument_parser.add_argument(
+        "event_provider",
+        nargs="?",
+        action="store",
+        metavar="EVENT_PROVIDER",
+        default=None,
+        help="specific event provider to query.",
+    )
 
-  argument_parser.add_argument(
-      'message_identifier', nargs='?', action='store',
-      metavar='MESSAGE_IDENTIFIER', default=None,
-      help='specific message identifier to query.')
+    argument_parser.add_argument(
+        "message_identifier",
+        nargs="?",
+        action="store",
+        metavar="MESSAGE_IDENTIFIER",
+        default=None,
+        help="specific message identifier to query.",
+    )
 
-  argument_parser.add_argument(
-      '--lcid', dest='lcid', action='store', metavar='LCID', type=int,
-      default=0x00000409, help='the preferred LCID.')
+    argument_parser.add_argument(
+        "--lcid",
+        dest="lcid",
+        action="store",
+        metavar="LCID",
+        type=int,
+        default=0x00000409,
+        help="the preferred LCID.",
+    )
 
-  options = argument_parser.parse_args()
+    options = argument_parser.parse_args()
 
-  if not options.database:
-    print('Database value is missing.')
-    print('')
-    argument_parser.print_help()
-    print('')
-    return 1
+    if not options.database:
+        print("Database value is missing.")
+        print("")
+        argument_parser.print_help()
+        print("")
+        return 1
 
-  logging.basicConfig(
-      level=logging.INFO, format='[%(levelname)s] %(message)s')
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-  database_reader = database.ResourcesSQLite3DatabaseReader()
-  database_reader.Open(options.database)
+    database_reader = database.ResourcesSQLite3DatabaseReader()
+    database_reader.Open(options.database)
 
-  message_identifier = None
-  if getattr(options, 'message_identifier', None):
-    try:
-      message_identifier = int(options.message_identifier, 10)
-    except ValueError:
-      pass
+    message_identifier = None
+    if getattr(options, "message_identifier", None):
+        try:
+            message_identifier = int(options.message_identifier, 10)
+        except ValueError:
+            pass
 
-    if message_identifier is None:
-      try:
-        message_identifier = int(options.message_identifier, 16)
-      except ValueError:
-        pass
+        if message_identifier is None:
+            try:
+                message_identifier = int(options.message_identifier, 16)
+            except ValueError:
+                pass
 
-    if message_identifier is None:
-      print(f'Unsupported message identifier: {options.message_identifier:s}')
-      return 1
+        if message_identifier is None:
+            print(f"Unsupported message identifier: {options.message_identifier:s}")
+            return 1
 
-  if not getattr(options, 'event_provider', None):
-    print('Event Log providers:')
-    for event_log_provider in database_reader.GetEventLogProviders():
-      print(event_log_provider.log_source)
+    if not getattr(options, "event_provider", None):
+        print("Event Log providers:")
+        for event_log_provider in database_reader.GetEventLogProviders():
+            print(event_log_provider.log_source)
 
-  elif message_identifier is None:
-    print('Message strings:')
-    for message_identifier, message_string in database_reader.GetMessages(
-        options.event_provider, options.lcid):
-      print(f'{message_identifier:s}:\t{message_string:s}')
+    elif message_identifier is None:
+        print("Message strings:")
+        for message_identifier, message_string in database_reader.GetMessages(
+            options.event_provider, options.lcid
+        ):
+            print(f"{message_identifier:s}:\t{message_string:s}")
 
-  else:
-    message_string = database_reader.GetMessage(
-        options.event_provider, options.lcid, message_identifier)
+    else:
+        message_string = database_reader.GetMessage(
+            options.event_provider, options.lcid, message_identifier
+        )
 
-    print('Message string:')
-    if message_string:
-      print(f'0x{message_identifier:08x}:\t{message_string:s}')
+        print("Message string:")
+        if message_string:
+            print(f"0x{message_identifier:08x}:\t{message_string:s}")
 
-  database_reader.Close()
+    database_reader.Close()
 
-  return 0
+    return 0
 
 
-if __name__ == '__main__':
-  sys.exit(Main())
+if __name__ == "__main__":
+    sys.exit(Main())
