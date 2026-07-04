@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winevtrc"
-version = "20260516"
+version = "20260704"
 description = "Windows Event Log resources (winevtrc)"
 maintainers = [
     { name = "Joachim Metz", email = "joachim.metz@gmail.com" },
@@ -84,6 +84,14 @@ include = "\\.pyi?$"
 black = true
 non-cap = ["dfVFS", "int:", "str:"]
 non-strict = true
+
+[tool.l2tdevtools]
+name = "Windows Event Log knowledge base (winevt-kb)"
+status = "experimental"
+description = """
+winevtrc is a Python module part of winevt-kb to allow easy reuse of the \
+Windows Event Log resource extraction and database functionality. \
+"""
 
 [tool.setuptools]
 package-dir = {"winevtrc" = "winevtrc"}

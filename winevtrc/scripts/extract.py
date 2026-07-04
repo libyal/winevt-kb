@@ -61,10 +61,8 @@ class SQLite3OutputWriter:
 
         if wrc_resource.number_of_items != 1:
             logging.warning(
-                (
-                    f"More than 1 WEVT_TEMPLATE resource item in resource file: "
-                    f"{template_resource_file.windows_path:s}."
-                )
+                f"More than 1 WEVT_TEMPLATE resource item in resource file: "
+                f"{template_resource_file.windows_path:s}."
             )
 
         wrc_resource_item = wrc_resource.items[0]
@@ -106,10 +104,8 @@ class SQLite3OutputWriter:
 
         if wrc_resource.number_of_items != 1:
             logging.warning(
-                (
-                    f"More than 1 message table resource item in resource file: "
-                    f"{message_resource_file.windows_path:s}."
-                )
+                f"More than 1 message table resource item in resource file: "
+                f"{message_resource_file.windows_path:s}."
             )
 
         wrc_resource_item = wrc_resource.items[0]
@@ -162,10 +158,8 @@ class SQLite3OutputWriter:
         )
         if os.path.exists(event_providers_database_path):
             logging.warning(
-                (
-                    f"event providers database: {event_providers_database_path:s} "
-                    f"already exists."
-                )
+                f"event providers database: {event_providers_database_path:s} "
+                f"already exists."
             )
             return False
 
@@ -229,7 +223,6 @@ class SQLite3OutputWriter:
             self._WriteMessageTables(
                 message_resource_file, message_file_identifier, database_writer
             )
-
         finally:
             database_writer.Close()
 
@@ -255,10 +248,8 @@ class StdoutOutputWriter:
 
         if wrc_resource.number_of_items != 1:
             logging.warning(
-                (
-                    f"More than 1 message table resource item in resource file: "
-                    f"{message_resource_file.windows_path:s}."
-                )
+                f"More than 1 message table resource item in resource file: "
+                f"{message_resource_file.windows_path:s}."
             )
 
         wrc_resource_item = wrc_resource.items[0]
@@ -346,7 +337,6 @@ def Main():
             "Extract strings from message resource files for Event Log sources."
         )
     )
-
     argument_parser.add_argument(
         "-d",
         "--debug",
@@ -355,7 +345,6 @@ def Main():
         default=False,
         help="enable debug output.",
     )
-
     # TODO: replace by --output
     argument_parser.add_argument(
         "--db",
@@ -366,7 +355,6 @@ def Main():
         default=None,
         help=("directory to write the SQLite3 databases to."),
     )
-
     argument_parser.add_argument(
         "-w",
         "--windows_version",
@@ -377,7 +365,6 @@ def Main():
         default=None,
         help="string that identifies the Windows version.",
     )
-
     argument_parser.add_argument(
         "source",
         nargs="?",
@@ -389,7 +376,6 @@ def Main():
             "a storage media image containing the C:\\Windows directory."
         ),
     )
-
     options = argument_parser.parse_args()
 
     if not options.source:
@@ -443,7 +429,6 @@ def Main():
             extractor_object = extractor.EventMessageStringExtractor(
                 debug=options.debug, mediator=mediator
             )
-
             try:
                 result = extractor_object.ScanForWindowsVolume(
                     source_path, options=volume_scanner_options
@@ -453,10 +438,8 @@ def Main():
 
             if not result:
                 print(
-                    (
-                        f"Unable to retrieve the volume with the Windows directory "
-                        f"from: {source_path:s}."
-                    )
+                    f"Unable to retrieve the volume with the Windows directory "
+                    f"from: {source_path:s}."
                 )
                 print("")
                 return 1
@@ -474,10 +457,8 @@ def Main():
                 windows_version = source_definition["windows_version"]
                 if not windows_version and options.database:
                     print(
-                        (
-                            "Database output requires a Windows version, specify one with "
-                            "--windows-version."
-                        )
+                        "Database output requires a Windows version, specify one with "
+                        "--windows-version."
                     )
                     print("")
                     return 1
@@ -498,12 +479,10 @@ def Main():
                         message_resource_file = extractor_object.GetMessageResourceFile(
                             event_log_provider, message_filename
                         )
-
                         if message_resource_file:
                             logging.info(
                                 f"Processing event message file: {message_filename:s}"
                             )
-
                             output_writer.WriteMessageResourceFile(
                                 windows_version, message_resource_file
                             )
@@ -524,12 +503,11 @@ def Main():
                         message_resource_file = extractor_object.GetMessageResourceFile(
                             event_log_provider, message_filename
                         )
-
                         if message_resource_file:
                             logging.info(
-                                f"Processing category message file: {message_filename:s}"
+                                f"Processing category message file: "
+                                f"{message_filename:s}"
                             )
-
                             output_writer.WriteMessageResourceFile(
                                 windows_version, message_resource_file
                             )
@@ -540,12 +518,11 @@ def Main():
                         message_resource_file = extractor_object.GetMessageResourceFile(
                             event_log_provider, message_filename
                         )
-
                         if message_resource_file:
                             logging.info(
-                                f"Processing parameter message file: {message_filename:s}"
+                                f"Processing parameter message file: "
+                                f"{message_filename:s}"
                             )
-
                             output_writer.WriteMessageResourceFile(
                                 windows_version, message_resource_file
                             )

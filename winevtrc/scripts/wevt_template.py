@@ -20,9 +20,8 @@ def Main():
       int: exit code that is provided to sys.exit().
     """
     argument_parser = argparse.ArgumentParser(
-        description=("Extracts WEVT_TEMPLATE information from a PE/COFF resource file.")
+        description="Extracts WEVT_TEMPLATE information from a PE/COFF resource file."
     )
-
     argument_parser.add_argument(
         "-d",
         "--debug",
@@ -31,7 +30,6 @@ def Main():
         default=False,
         help="enable debug output.",
     )
-
     dfvfs_helpers.AddDFVFSCLIArguments(argument_parser)
 
     argument_parser.add_argument(
@@ -42,7 +40,6 @@ def Main():
         default=None,
         help=("path of the PE/COFF resource file."),
     )
-
     options = argument_parser.parse_args()
 
     if dfvfs_helpers and getattr(options, "image", None):
@@ -87,7 +84,6 @@ def Main():
         0x14: "win:HexInt32",
         0x15: "win:HexInt64",
     }
-
     output_data_types = {
         0x01: "xs:string",
         0x02: "xs:dateTime",
@@ -126,7 +122,20 @@ def Main():
         0x23: "win:Utf8",
         0x24: "win:Pkcs7WithTypeInfo",
     }
-
+    xml_header = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        "<instrumentationManifest",
+        (
+            '    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/'
+            'events eventman.xsd"'
+        ),
+        '    xmlns="http://schemas.microsoft.com/win/2004/08/events"',
+        '    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"'
+        '    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+        '    xmlns:xs="http://www.w3.org/2001/XMLSchema"',
+        '    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">',
+        "    <instrumentation>",
+    ]
     file_object = file_system_helper.OpenFileByPath(options.source)
 
     exe_file = pyexe.file()
@@ -144,30 +153,7 @@ def Main():
         if wevt_template_wrc_resource:
             # Note that symbols do not appear to be stored in the binary format.
 
-            print(
-                "\n".join(
-                    [
-                        '<?xml version="1.0" encoding="UTF-8"?>',
-                        "<instrumentationManifest",
-                        (
-                            '    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/'
-                            'events eventman.xsd"'
-                        ),
-                        '    xmlns="http://schemas.microsoft.com/win/2004/08/events"',
-                        (
-                            '    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/'
-                            'events"'
-                        ),
-                        '    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
-                        '    xmlns:xs="http://www.w3.org/2001/XMLSchema"',
-                        (
-                            '    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/'
-                            'trace">'
-                        ),
-                        "    <instrumentation>",
-                    ]
-                )
-            )
+            print("\n".join(xml_header))
 
             for wrc_resource_item in wevt_template_wrc_resource.items:
                 for wrc_resource_sub_item in wrc_resource_item.sub_items:
@@ -182,13 +168,10 @@ def Main():
                         for wevt_provider in iter(wevt_manifest.providers):
                             provider_identifier = wevt_provider.identifier.upper()
 
+                            print("            <provider")
                             print(
-                                "\n".join(
-                                    [
-                                        "            <provider",
-                                        f'                guid="{{{provider_identifier:s}}}">',
-                                    ]
-                                )
+                                f"                guid="
+                                f'"{{{provider_identifier:s}}}">'
                             )
 
                             # TODO: implement support for other known values if possible
@@ -202,20 +185,17 @@ def Main():
                                 for wevt_event in wevt_provider.events:
                                     event_version = wevt_event.version or 0
 
+                                    print("                    <event")
                                     print(
-                                        "\n".join(
-                                            [
-                                                "                    <event",
-                                                (
-                                                    f"                        value="
-                                                    f'"{wevt_event.identifier:d}"'
-                                                ),
-                                                f'                        version="{event_version:d}"',
-                                            ]
-                                        )
+                                        f"                        value="
+                                        f'"{wevt_event.identifier:d}"'
                                     )
-
-                                    # TODO: implement support for other known values if possible
+                                    print(
+                                        f"                        version="
+                                        f'"{event_version:d}"'
+                                    )
+                                    # TODO: implement support for other known values
+                                    # if possible
                                     # channel
                                     # keywords
 
@@ -230,28 +210,24 @@ def Main():
                                                 wevt_template.identifier.upper()
                                             )
                                             print(
-                                                (
-                                                    f"                        template="
-                                                    f'"{{{template_identifier:s}}}"'
-                                                )
+                                                f"                        template="
+                                                f'"{{{template_identifier:s}}}"'
                                             )
+
+                                    message_identifier = wevt_event.message_identifier
 
                                     if message_table_wrc_resource:
                                         print(
-                                            (
-                                                f"                        message="
-                                                f'"$(string.MessageTable.'
-                                                f'0x{wevt_event.message_identifier:08x})">'
-                                            )
+                                            f"                        message="
+                                            f'"$(string.MessageTable.'
+                                            f'0x{message_identifier:08x})">'
                                         )
                                     else:
-                                        # TODO: it is current unknown what the $mc.symbolid syntax
-                                        # looks like in practice.
+                                        # TODO: it is current unknown what the
+                                        # $mc.symbolid syntax looks like in practice.
                                         print(
-                                            (
-                                                f"                        message="
-                                                f'"$(mc.0x{wevt_event.message_identifier:08x})">'
-                                            )
+                                            f"                        message="
+                                            f'"$(mc.0x{message_identifier:08x})">'
                                         )
 
                                     print("                    </event>")
@@ -262,21 +238,19 @@ def Main():
                                 print("                <channels>")
 
                                 for wevt_channel in wevt_provider.channels:
+                                    print("                    <channel")
                                     print(
-                                        "\n".join(
-                                            [
-                                                "                    <channel",
-                                                f'                        name="{wevt_channel.name:s}"',
-                                                (
-                                                    f"                        chid="
-                                                    f'"{wevt_channel.identifier:d}">'
-                                                ),
-                                                "                    </channel>",
-                                            ]
-                                        )
+                                        f"                        name="
+                                        f'"{wevt_channel.name:s}"'
                                     )
+                                    print(
+                                        f"                        chid="
+                                        f'"{wevt_channel.identifier:d}">'
+                                    )
+                                    print("                    </channel>")
 
-                                    # TODO: implement support for other known values if possible
+                                    # TODO: implement support for other known values
+                                    # if possible
                                     # type
                                     # enabled
                                     # message
@@ -295,61 +269,52 @@ def Main():
                                         wevt_template.identifier.upper()
                                     )
                                     print(
-                                        (
-                                            f"                    <template tid="
-                                            f'"{{{template_identifier:s}}}">'
-                                        )
+                                        f"                    <template tid="
+                                        f'"{{{template_identifier:s}}}">'
                                     )
 
-                                    # TODO: add support for template name, get from BinXML
+                                    # TODO: add support for template name, get from
+                                    # BinXML
                                     # TODO: add support for UserData
 
                                     for wevt_template_item in wevt_template.items:
+                                        number_of_values = (
+                                            wevt_template_item.number_of_values
+                                        )
+                                        value_data_size = (
+                                            wevt_template_item.value_data_size
+                                        )
                                         input_type = input_data_types.get(
                                             wevt_template_item.input_data_type, None
                                         )
                                         output_type = output_data_types.get(
                                             wevt_template_item.output_data_type, None
                                         )
-
+                                        print("                        <data")
                                         print(
-                                            "\n".join(
-                                                [
-                                                    "                        <data",
-                                                    (
-                                                        f"                            name="
-                                                        f'"{wevt_template_item.name:s}"'
-                                                    ),
-                                                    (
-                                                        f"                            inType="
-                                                        f'"{input_type:s}"'
-                                                    ),
-                                                ]
-                                            )
+                                            f"                            name="
+                                            f'"{wevt_template_item.name:s}"'
                                         )
-
-                                        if wevt_template_item.number_of_values > 0:
+                                        print(
+                                            f"                            inType="
+                                            f'"{input_type:s}"'
+                                        )
+                                        if number_of_values > 0:
                                             print(
-                                                (
-                                                    f"                            count="
-                                                    f'"{wevt_template_item.number_of_values:d}"'
-                                                )
+                                                f"                            count="
+                                                f'"{number_of_values:d}"'
                                             )
 
-                                        if wevt_template_item.value_data_size > 0:
+                                        if value_data_size > 0:
                                             print(
-                                                (
-                                                    f"                            length="
-                                                    f'"{wevt_template_item.value_data_size:d}"'
-                                                )
+                                                f"                            length="
+                                                f'"{value_data_size:d}"'
                                             )
 
                                         if output_type:
                                             print(
-                                                (
-                                                    f"                            outType="
-                                                    f'"{output_type:s}">'
-                                                )
+                                                f"                            outType="
+                                                f'"{output_type:s}">'
                                             )
 
                                         print("                        </data>")
@@ -380,14 +345,8 @@ def Main():
                     message_table_resource = pywrc.message_table_resource()
                     message_table_resource.copy_from_byte_stream(resource_data)
 
-                    print(
-                        "\n".join(
-                            [
-                                '        <resources culture="en-US">',
-                                "            <stringTable>",
-                            ]
-                        )
-                    )
+                    print('        <resources culture="en-US">')
+                    print("            <stringTable>")
 
                     number_of_messages = message_table_resource.get_number_of_messages()
                     for message_index in range(number_of_messages):
@@ -398,25 +357,16 @@ def Main():
                             message_index
                         ).rstrip()
 
+                        print("                <string")
                         print(
-                            "\n".join(
-                                [
-                                    "                <string",
-                                    (
-                                        f"                    id="
-                                        f'"MessageTable.0x{message_identifier:08x}"'
-                                    ),
-                                    f'                    value="{message_string:s}">',
-                                    "                </string>",
-                                ]
-                            )
+                            f"                    id="
+                            f'"MessageTable.0x{message_identifier:08x}"'
                         )
+                        print(f'                    value="{message_string:s}">')
+                        print("                </string>")
 
-                    print(
-                        "\n".join(
-                            ["            </stringTable>", "        </resources>"]
-                        )
-                    )
+                    print("            </stringTable>")
+                    print("        </resources>")
 
                 print("    </localization>")
 
