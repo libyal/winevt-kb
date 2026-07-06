@@ -218,24 +218,5 @@ class ResourcesSQLite3DatabaseReaderTest(test_lib.BaseTestCase):
         database_reader.Close()
 
 
-class ResourcesSQLite3DatabaseWriterTest(test_lib.BaseTestCase):
-    """Tests for the resources SQLite database writer."""
-
-    # pylint: disable=protected-access
-
-    # TODO: add test for _GetEventLogProviderKey
-    # TODO: add test for _GetMessageFileKey
-    # TODO: add test for _GetMessageFileKeyByPath
-    # TODO: add test for _ReformatMessageString
-    # TODO: add test for _WriteMessage
-    # TODO: add test for _WriteMessageTableLanguage
-    # TODO: add test for _WriteMetadataAttribute
-    # TODO: add test for WriteEventLogProvider
-    # TODO: add test for WriteMessageFile
-    # TODO: add test for WriteMessageFilesPerEventLogProvider
-    # TODO: add test for WriteMessageTable
-    # TODO: add test for WriteMetadata
-
-
 if __name__ == "__main__":
     unittest.main()

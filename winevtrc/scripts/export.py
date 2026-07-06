@@ -57,7 +57,6 @@ class MessageResourceAttributeContainerStore(
         self._CheckStorageMetadata(
             metadata_values, check_readable_only=check_readable_only
         )
-
         string_format = metadata_values.get("string_format")
 
         if not string_format:
@@ -92,7 +91,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     # Message string specifiers that expand to a variable place holder.
     _PLACE_HOLDER_SPECIFIER_RE = re.compile(r"%([1-9][0-9]?)[!]?[s]?[!]?")
 
-    def __init__(self, database_path, database_version="20150315", string_format="wrc"):
+    def __init__(self, database_path, database_version="20240929", string_format="wrc"):
         """Initializes a database output writer.
 
         Args:
@@ -155,9 +154,6 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
     def Close(self):
         """Closes the output writer object."""
         if self._database_writer:
-            if self._database_version == "20150315":
-                self._WriteMessageFilesPerEventLogProvider()
-
             self._database_writer.Close()
             self._database_writer = None
             self._database_path = None
@@ -171,18 +167,10 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
         if os.path.isdir(self._database_path):
             return False
 
-        if self._database_version == "20150315":
-            self._database_writer = database.ResourcesSQLite3DatabaseWriter(
-                string_format=self._string_format
-            )
-            self._database_writer.Open(path=self._database_path)
-            self._database_writer.WriteMetadata()
-
-        else:
-            self._database_writer = MessageResourceAttributeContainerStore(
-                string_format=self._string_format
-            )
-            self._database_writer.Open(path=self._database_path, read_only=False)
+        self._database_writer = MessageResourceAttributeContainerStore(
+            string_format=self._string_format
+        )
+        self._database_writer.Open(path=self._database_path, read_only=False)
 
         return True
 
@@ -194,10 +182,8 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
         """
         if len(export_event_log_provider.providers_with_versions) > 1:
             logging.warning(
-                (
-                    f"More than one definitions for event provider: "
-                    f"{export_event_log_provider.name:s} defaulting to first."
-                )
+                f"More than one definitions for event provider: "
+                f"{export_event_log_provider.name:s} defaulting to first."
             )
 
         # TODO: add support for windows_versions.
@@ -205,12 +191,7 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
 
         # TODO: check if event provider already exists.
 
-        if self._database_version == "20150315":
-            self._database_writer.WriteEventLogProvider(event_log_provider)
-
-            self._event_log_providers[event_log_provider.name] = event_log_provider
-        else:
-            self._database_writer.AddAttributeContainer(event_log_provider)
+        self._database_writer.AddAttributeContainer(event_log_provider)
 
     def WriteMessageFile(self, message_file):
         """Writes a message file.
@@ -218,50 +199,40 @@ class DatabaseOutputWriter(exporter.ExporterOutputWriter):
         Args:
           message_file (MessageFileAttributeContainerStore): message file.
         """
-        if self._database_version == "20150315":
-            self._database_writer.WriteMessageFile(message_file)
+        # TODO: add support to handle multiple versions.
+        attribute_container = resources.WinevtResourcesMessageFile(
+            windows_path=message_file.windows_path
+        )
+        self._database_writer.AddAttributeContainer(attribute_container)
 
-            for message_table in self.GetMessageTables(message_file):
-                self._database_writer.WriteMessageTable(message_file, message_table)
+        message_file_identifier = attribute_container.GetIdentifier()
 
-        else:
-            # TODO: add support to handle multiple versions.
-            attribute_container = resources.WinevtResourcesMessageFile(
-                windows_path=message_file.windows_path
+        for message_table in self.GetMessageTables(message_file):
+            attribute_container = resources.MessageTableDescriptor(
+                language_identifier=message_table.language_identifier
             )
+            attribute_container.SetMessageFileIdentifier(message_file_identifier)
             self._database_writer.AddAttributeContainer(attribute_container)
 
-            message_file_identifier = attribute_container.GetIdentifier()
+            message_table_identifier = attribute_container.GetIdentifier()
 
-            for message_table in self.GetMessageTables(message_file):
-                attribute_container = resources.MessageTableDescriptor(
-                    language_identifier=message_table.language_identifier
+            for message_identifier, text in message_table.message_strings.items():
+                attribute_container = resources.WinevtResourcesMessageString(
+                    message_identifier=message_identifier, text=text
                 )
-                attribute_container.SetMessageFileIdentifier(message_file_identifier)
+                attribute_container.SetMessageTableIdentifier(message_table_identifier)
+                if self._string_format == "pep3101":
+                    attribute_container.text = self._ReformatMessageString(
+                        attribute_container.text
+                    )
+
                 self._database_writer.AddAttributeContainer(attribute_container)
 
-                message_table_identifier = attribute_container.GetIdentifier()
-
-                for message_identifier, text in message_table.message_strings.items():
-                    attribute_container = resources.WinevtResourcesMessageString(
-                        message_identifier=message_identifier, text=text
-                    )
-                    attribute_container.SetMessageTableIdentifier(
-                        message_table_identifier
-                    )
-
-                    if self._string_format == "pep3101":
-                        attribute_container.text = self._ReformatMessageString(
-                            attribute_container.text
-                        )
-
-                    self._database_writer.AddAttributeContainer(attribute_container)
-
-            for string_mapping in message_file.GetAttributeContainers(
-                resources.WinevtResourcesMessageStringMapping.CONTAINER_TYPE
-            ):
-                string_mapping.SetMessageFileIdentifier(message_file_identifier)
-                self._database_writer.AddAttributeContainer(string_mapping)
+        for string_mapping in message_file.GetAttributeContainers(
+            resources.WinevtResourcesMessageStringMapping.CONTAINER_TYPE
+        ):
+            string_mapping.SetMessageFileIdentifier(message_file_identifier)
+            self._database_writer.AddAttributeContainer(string_mapping)
 
 
 class DocumentationFilesOutputWriter(exporter.ExporterOutputWriter):
@@ -469,7 +440,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Export strings extracted from message files.")
     )
-
     argument_parser.add_argument(
         "source",
         nargs="?",
@@ -478,7 +448,6 @@ def Main():
         default=None,
         help="directory that contains the SQLite3 with the extracted strings.",
     )
-
     # TODO: replace by --output
     argument_parser.add_argument(
         "--db",
@@ -489,7 +458,6 @@ def Main():
         default=None,
         help=("filename of the SQLite3 database to write to."),
     )
-
     argument_parser.add_argument(
         "--database_version",
         "--database-version",
@@ -497,10 +465,9 @@ def Main():
         action="store",
         metavar="VERSION",
         default="20240929",
-        choices=["20150315", "20240929"],
+        choices=["20240929"],
         help="the database version.",
     )
-
     argument_parser.add_argument(
         "--string_format",
         "--string-format",
@@ -511,7 +478,6 @@ def Main():
         choices=["pep3101", "wrc"],
         help="the message string format.",
     )
-
     argument_parser.add_argument(
         "--wiki",
         dest="wiki",
@@ -520,7 +486,6 @@ def Main():
         default=None,
         help="path to write the wiki pages to.",
     )
-
     # TODO: allow to set preferred language.
 
     options = argument_parser.parse_args()
@@ -540,14 +505,6 @@ def Main():
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
     if options.database:
-        if options.database_version == 20150315:
-            logging.warning(
-                (
-                    "Database verion: 20150315 has been deprecated due to lack "
-                    "of support of more recent Windows Event Log features."
-                )
-            )
-
         output_writer = DatabaseOutputWriter(
             options.database,
             database_version=options.database_version,
