@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the Attribute container store."""
+"""Tests for the JSON strings list attribute serializer."""
 
 import unittest
 

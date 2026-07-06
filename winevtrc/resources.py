@@ -28,16 +28,15 @@ class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
     """Windows Event Log provider.
 
     Attributes:
-      additional_identifier (str): additional identifier of the provider,
-          contains a GUID.
+      additional_identifier (str): additional identifier of the provider, contains a
+          GUID.
       category_message_files (set[str]): paths of the category message files.
       event_message_files (set[str]): paths of the event message files.
       identifier (str): identifier of the provider, contains a GUID.
       log_sources (list[str]): names of the corresponding Event Log sources.
       log_types (list[str]): Windows Event Log types.
       name (str): name of the provider.
-      parameter_message_files (set[str]): paths of the parameter message
-          files.
+      parameter_message_files (set[str]): paths of the parameter message files.
       windows_version (str): Windows version.
     """
 
@@ -80,8 +79,8 @@ class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
         """Sets the category message filenames.
 
         Args:
-          category_message_filenames (str|list[str]): category message filenames,
-              where multiple filenames in the same string are separated by ';'.
+          category_message_filenames (str|list[str]): category message filenames, where
+              multiple filenames in the same string are separated by ';'.
         """
         if isinstance(category_message_filenames, str):
             category_message_filenames = category_message_filenames.split(";")
@@ -92,8 +91,8 @@ class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
         """Sets the event message filenames.
 
         Args:
-          event_message_filenames (str|list[str]): event message filenames,
-              where multiple filenames in the same string are separated by ';'.
+          event_message_filenames (str|list[str]): event message filenames, where
+              multiple filenames in the same string are separated by ';'.
         """
         if isinstance(event_message_filenames, str):
             event_message_filenames = event_message_filenames.split(";")
@@ -214,8 +213,7 @@ class WinevtResourcesMessageString(containers_interface.AttributeContainer):
         """Retrieves the identifier of the associated message table.
 
         Returns:
-          AttributeContainerIdentifier: message table identifier or None when not
-              set.
+          AttributeContainerIdentifier: message table identifier or None when not set.
         """
         return self._message_table_identifier
 
@@ -277,8 +275,7 @@ class WinevtResourcesMessageStringMapping(containers_interface.AttributeContaine
         """Retrieves the identifier of the associated message file.
 
         Returns:
-          AttributeContainerIdentifier: message file identifier or None when
-              not set.
+          AttributeContainerIdentifier: message file identifier or None when not set.
         """
         return self._message_file_identifier
 
@@ -298,8 +295,8 @@ class MessageTable:
     Attributes:
       file_versions (list[str]): Windows Event Log resource file versions.
       language_identifier (int): language identifier (LCID).
-      message_strings (dict[int, str]): Windows Event Log resource message
-         strings per identifier.
+      message_strings (dict[int, str]): Windows Event Log resource message strings per
+          identifier.
     """
 
     def __init__(self, language_identifier):
@@ -349,8 +346,7 @@ class MessageTableDescriptor(containers_interface.AttributeContainer):
         """Retrieves the identifier of the associated message file.
 
         Returns:
-          AttributeContainerIdentifier: message file identifier or None when not
-              set.
+          AttributeContainerIdentifier: message file identifier or None when not set.
         """
         return self._message_file_identifier
 

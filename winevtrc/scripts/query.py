@@ -15,9 +15,8 @@ def Main():
       int: exit code that is provided to sys.exit().
     """
     argument_parser = argparse.ArgumentParser(
-        description=("Export strings extracted from message files.")
+        description="Export strings extracted from message files."
     )
-
     argument_parser.add_argument(
         "database",
         nargs="?",
@@ -26,7 +25,6 @@ def Main():
         default=None,
         help="filename of the sqlite3 database to read from.",
     )
-
     argument_parser.add_argument(
         "event_provider",
         nargs="?",
@@ -35,7 +33,6 @@ def Main():
         default=None,
         help="specific event provider to query.",
     )
-
     argument_parser.add_argument(
         "message_identifier",
         nargs="?",
@@ -44,7 +41,6 @@ def Main():
         default=None,
         help="specific message identifier to query.",
     )
-
     argument_parser.add_argument(
         "--lcid",
         dest="lcid",
@@ -54,7 +50,6 @@ def Main():
         default=0x00000409,
         help="the preferred LCID.",
     )
-
     options = argument_parser.parse_args()
 
     if not options.database:
@@ -84,15 +79,18 @@ def Main():
 
         if message_identifier is None:
             print(f"Unsupported message identifier: {options.message_identifier:s}")
+
             return 1
 
     if not getattr(options, "event_provider", None):
         print("Event Log providers:")
+
         for event_log_provider in database_reader.GetEventLogProviders():
             print(event_log_provider.log_source)
 
     elif message_identifier is None:
         print("Message strings:")
+
         for message_identifier, message_string in database_reader.GetMessages(
             options.event_provider, options.lcid
         ):
@@ -102,8 +100,8 @@ def Main():
         message_string = database_reader.GetMessage(
             options.event_provider, options.lcid, message_identifier
         )
-
         print("Message string:")
+
         if message_string:
             print(f"0x{message_identifier:08x}:\t{message_string:s}")
 
