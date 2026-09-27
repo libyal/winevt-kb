@@ -6,19 +6,19 @@ import re
 class MessageStringFormatter:
     """Message string formatter."""
 
-    # Message string specifiers that mark end-of-string.
+    # Specifiers that mark end-of-string ("%0").
     _END_OF_STRING_SPECIFIER_RE = re.compile(r"%0(?!\d)")
 
-    # Message string specifiers that are considered white space.
+    # Specifiers that are considered white space ("%b", "\r" and "\n").
     _WHITE_SPACE_SPECIFIER_RE = re.compile(r"(%b|[\r\n])")
 
-    # Message string specifiers that expand to text.
+    # Specifiers that expand to text ("% ", "%.", "%!", "%n", "%r", "%t").
     _TEXT_SPECIFIER_RE = re.compile(r"%([ .!%nrt])")
 
-    # Curly brackets in a message string.
+    # Curly brackets.
     _CURLY_BRACKETS_RE = re.compile(r"([\{\}])")
 
-    # Message string specifiers that expand to a variable place holder.
+    # Specifiers that expand to a variable place holder (e.g. %1 or %12).
     _PLACE_HOLDER_SPECIFIER_RE = re.compile(r"%([1-9][0-9]?)[!]?[s]?[!]?")
 
     def FormatMessageStringInPEP3101(self, message_string):

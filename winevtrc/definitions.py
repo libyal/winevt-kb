@@ -4,6 +4,7 @@ MESSAGE_FILE_TYPE_CATEGORY = "category"
 MESSAGE_FILE_TYPE_EVENT = "event"
 MESSAGE_FILE_TYPE_PARAMETER = "parameter"
 
+# typos:disable
 LANGUAGES = {
     0x0001: ["ar", "Arabic"],
     0x0002: ["bg", "Bulgarian"],
@@ -400,3 +401,4 @@ LANGUAGES = {
     0x7C5F: ["tzm-Latn", "Central Atlas Tamazight, Latin"],
     0x7C68: ["ha-Latn", "Hausa, Latin"],
 }
+# typos:enable
